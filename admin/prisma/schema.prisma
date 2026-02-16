@@ -1,0 +1,113 @@
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+
+model Admin {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  full_name String?
+  password  String?
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+}
+
+
+model categories {
+  id                 Int      @id @default(autoincrement())
+  category_name      String
+  slug               String   @unique
+  parent_category_id Int?
+  category_level     Int      @default(1)
+  is_active          Boolean  @default(true)
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  products products[]
+}
+
+
+model products {
+  id            Int     @id @default(autoincrement())
+  category_id   Int
+
+  // basic
+  product_name  String
+  slug          String?   @unique
+  description   String?
+  short_desc    String?
+
+  // pricing
+  price         Float
+  compare_price Float?
+
+  // inventory
+  stock         Int     @default(0)
+  sku           String? @unique
+
+  // status
+  is_active     Boolean @default(true)
+  is_featured   Boolean @default(false)
+
+  // seo
+  meta_title    String?
+  meta_desc     String?
+
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  category categories @relation(fields: [category_id], references: [id])
+
+  images product_images[]
+}
+
+model product_images {
+  id         Int     @id @default(autoincrement())
+  product_id Int
+  image_url  String
+  sort_order Int     @default(0)
+
+  product products @relation(fields: [product_id], references: [id], onDelete: Cascade)
+}
+
+
+
+
+
+model User {
+  id          String   @id @default(uuid())
+  full_name   String
+  email       String   @unique
+  password    String
+  phone       String
+  is_verified Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  addresses   Address[]
+
+
+model Address {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  full_name String
+  phone     String
+  line1     String
+  line2     String?
+  city      String
+  state     String
+  pincode   String
+  country   String
+
+  createdAt DateTime @default(now())}
+}
