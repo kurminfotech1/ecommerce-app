@@ -1,15 +1,33 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useDispatch } from "react-redux";
 // internal
 import ErrorMsg from "@/components/common/error-msg";
-import { useGetActiveBrandsQuery } from "@/redux/features/brandApi";
+import {  getActiveBrands } from "@/redux/features/brandApi";
 import { handleFilterSidebarClose } from "@/redux/features/shop-filter-slice";
 import ShopBrandLoader from "@/components/loader/shop/shop-brand-loader";
 
 const ProductBrand = ({setCurrPage,shop_right=false}) => {
-  const { data: brands, isError, isLoading } = useGetActiveBrandsQuery();
+  const [brands, setBrands] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const data = await getActiveBrands();
+        setBrands(data?.result || []);
+        console.log("data", data?.data);
+      } catch (err) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBrands();
+  }, []);
   const router = useRouter();
   const dispatch = useDispatch();
   // handle brand route 

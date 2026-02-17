@@ -1,14 +1,32 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Rating } from 'react-simple-star-rating';
 import Link from 'next/link';
 // internal
 import ErrorMsg from '@/components/common/error-msg';
-import { useGetTopRatedProductsQuery } from '@/redux/features/productApi';
+import { getTopRatedProducts } from '@/redux/features/productApi';
 import ShopTopRatedLoader from '@/components/loader/shop/top-rated-prd-loader';
 
 const TopRatedProducts = () => {
-  const { data: products, isError, isLoading } = useGetTopRatedProductsQuery();
+  // const { data: products, isError, isLoading } = useGetTopRatedProductsQuery();
+  const [products,setProducts] = useState([]);
+  const [isError,setIsError] = useState(false);
+  const [isLoading,setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      try {
+        const res = await getTopRatedProducts();
+        setProducts(res);
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
   // decide what to render
   let content = null;
 

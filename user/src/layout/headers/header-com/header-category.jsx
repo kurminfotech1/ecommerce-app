@@ -1,17 +1,30 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 // internal
-import { useGetProductTypeCategoryQuery } from "@/redux/features/categoryApi";
+import { getProductTypeCategory } from "@/redux/features/categoryApi";
 import ErrorMsg from "@/components/common/error-msg";
 import Loader from "@/components/loader/loader";
 
 const HeaderCategory = ({ isCategoryActive, categoryType = "electronics" }) => {
-  const {
-    data: categories,
-    isError,
-    isLoading,
-  } = useGetProductTypeCategoryQuery(categoryType);
+  const [categories, setCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await getProductTypeCategory(categoryType);
+        setCategories(data || []);
+      } catch (err) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
   const router = useRouter();
 
   // handle category route
@@ -22,7 +35,7 @@ const HeaderCategory = ({ isCategoryActive, categoryType = "electronics" }) => {
           .toLowerCase()
           .replace("&", "")
           .split(" ")
-          .join("-")}`
+          .join("-")}`,
       );
     } else {
       router.push(
@@ -30,7 +43,7 @@ const HeaderCategory = ({ isCategoryActive, categoryType = "electronics" }) => {
           .toLowerCase()
           .replace("&", "")
           .split(" ")
-          .join("-")}`
+          .join("-")}`,
       );
     }
   };

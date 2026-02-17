@@ -2,11 +2,13 @@ import React from "react";
 import menu_data from "@/data/menu-data";
 import Link from "next/link";
 import Image from "next/image";
-import OfferCouponArea from "@/components/offerHeader/OfferCouponArea";
-import { useGetProductTypeQuery } from "@/redux/features/productApi";
+
+import { getProductType, useGetProductTypeQuery } from "@/redux/features/productApi";
 import { HomeNewArrivalPrdLoader } from "@/components/loader";
 import ErrorMsg from "@/components/common/error-msg";
 import ProductItem from "@/components/products/electronics/product-item";
+
+import { useEffect, useState } from "react";
 
 // internal
 import insta_1 from '@assets/img/instagram/4/instagram-1.jpg';
@@ -22,31 +24,42 @@ const instagram_data = [
   { id: 4, link: 'https://www.instagram.com/', img: insta_6 },
 ]
 const Menus = () => {
-  const { data: products, isError, isLoading } = useGetProductTypeQuery({
-    type: 'electronics',
-    query: 'new=true'
-  });
-  
-  // decide what to render
+  const [products, setProducts] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const result = await getProductType({type:"electronics", query:{new:true}});
+        setProducts(result);
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   let content = null;
-  
+
   if (isLoading) {
-    content = (
-      <HomeNewArrivalPrdLoader loading={isLoading} />
-    );
+    content = <HomeNewArrivalPrdLoader loading={isLoading} />;
   }
-  
+
   if (!isLoading && isError) {
     content = <ErrorMsg msg="There was an error" />;
   }
-  
+
   if (!isLoading && !isError && products?.data?.length === 0) {
     content = <ErrorMsg msg="No Products found!" />;
   }
-  
+
   if (!isLoading && !isError && products?.data?.length > 0) {
     const product_items = products.data;
-  
+
     content = (
       <div className="row">
         {product_items.slice(0, 4).map((item) => (
@@ -56,10 +69,8 @@ const Menus = () => {
         ))}
       </div>
     );
-  } else {
-    // If there are no products or an error occurs, set content to an empty array
-    content = [];
   }
+
   return (
     <ul>
       {menu_data.map((menu) =>

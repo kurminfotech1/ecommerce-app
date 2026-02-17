@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper';
 import { Rating } from 'react-simple-star-rating';
 import Link from 'next/link';
 // internal
-import { useGetProductTypeQuery } from '@/redux/features/productApi';
+import { getProductType } from '@/redux/features/productApi';
 import { ArrowRightLong, NextLongArr, PrevLongArr, TextShapeLine } from '@/svg';
 import ErrorMsg from '@/components/common/error-msg';
 import { HomeTwoFeaturedPrdLoader } from '@/components/loader';
@@ -37,8 +37,27 @@ const slider_setting = {
 }
 
 const WeeksFeatured = () => {
-  const { data: products, isError, isLoading } =
-    useGetProductTypeQuery({ type: 'fashion', query: `featured=true` });
+  // const { data: products, isError, isLoading } =
+  //   useGetProductTypeQuery({ type: 'fashion', query: `featured=true` });
+  
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const result = await getProductType({type:'fashion', query:{featured:true}});
+        setProducts(result?.data || []);
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
   // decide what to render
   let content = null;
 

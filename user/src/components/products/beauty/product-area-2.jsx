@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import ProductItem from "./product-item";
 import ErrorMsg from "@/components/common/error-msg";
-import { useGetProductTypeQuery } from "@/redux/features/productApi";
+import { getProductType } from "@/redux/features/productApi";
 import { HomeThreePrdTwoLoader } from "@/components/loader";
 
 // tabs
@@ -9,11 +9,25 @@ const tabs = ["All Collection", "Trending", "Beauty", "Cosmetics"];
 
 const ProductAreaTwo = () => {
   const [activeTab, setActiveTab] = useState(tabs[0]);
-  const {
-    data: products,
-    isError,
-    isLoading,
-  } = useGetProductTypeQuery({ type: "beauty" });
+  const [products, setProducts] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const result = await getProductType('beauty', {new:true});
+        setProducts(result?.data || []);
+     
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
   const activeRef = useRef(null);
   const marker = useRef(null);
 

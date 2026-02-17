@@ -93,7 +93,7 @@ model User {
   updatedAt   DateTime @updatedAt
 
   addresses   Address[]
-
+}
 
 model Address {
   id        String   @id @default(uuid())
@@ -109,5 +109,5 @@ model Address {
   pincode   String
   country   String
 
-  createdAt DateTime @default(now())}
+  createdAt DateTime @default(now())
 }

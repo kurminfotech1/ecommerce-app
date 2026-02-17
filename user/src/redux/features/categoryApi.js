@@ -1,26 +1,39 @@
-import { apiSlice } from "../api/apiSlice";
+import axios from "axios";
+import { toast } from "react-toastify";
 
-export const categoryApi = apiSlice.injectEndpoints({
-  overrideExisting:true,
-  endpoints: (builder) => ({
-    addCategory: builder.mutation({
-      query: (data) => ({
-        url: "https://shofy-backend.vercel.app/api/category/add",
-        method: "POST",
-        body: data,
-      }),
-    }),
-    getShowCategory: builder.query({
-      query: () => `https://shofy-backend.vercel.app/api/category/show`
-    }),
-    getProductTypeCategory: builder.query({
-      query: (type) => `https://shofy-backend.vercel.app/api/category/show/${type}`
-    }),
-  }),
-});
+// Add category
+const BASE_URL = "https://shofy-backend.vercel.app/api";
 
-export const {
- useAddCategoryMutation,
- useGetProductTypeCategoryQuery,
- useGetShowCategoryQuery,
-} = categoryApi;
+export const addCategory = async (data) => {
+  try {
+    const res = await axios.post(`${BASE_URL}/category/add`, data);
+
+    toast.success(res.data?.message || "Category added successfully");
+    return res.data;
+  } catch (error) {
+    toast.error(error?.response?.data?.error || "Failed to add category");
+    throw error;
+  }
+};
+
+// Get all categories
+export const getShowCategory = async () => {
+  try {
+    const res = await axios.get(`${BASE_URL}/category/show`);
+    return res.data;
+  } catch (error) {
+    toast.error(error?.response?.data?.error || "Failed to fetch categories");
+    throw error;
+  }
+};
+
+// Get category by product type
+export const getProductTypeCategory = async (type) => {
+  try {
+    const res = await axios.get(`${BASE_URL}/category/show/${type}`);
+    return res.data;
+  } catch (error) {
+    toast.error(error?.response?.data?.error || "Failed to fetch category");
+    throw error;
+  }
+};

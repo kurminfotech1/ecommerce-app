@@ -1,14 +1,32 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useDispatch } from "react-redux";
 // internal
 import ErrorMsg from "@/components/common/error-msg";
-import { useGetShowCategoryQuery } from "@/redux/features/categoryApi";
+import { getShowCategory, useGetShowCategoryQuery } from "@/redux/features/categoryApi";
 import { handleFilterSidebarClose } from "@/redux/features/shop-filter-slice";
 import ShopCategoryLoader from "@/components/loader/shop/shop-category-loader";
 
 const CategoryFilter = ({setCurrPage,shop_right=false}) => {
-  const { data: categories, isLoading, isError } = useGetShowCategoryQuery();
+  // const { data: categories, isLoading, isError } = useGetShowCategoryQuery();
+  const [categories,setCategories] = useState([]);
+  const [isLoading,setIsLoading] = useState(false);
+  const [isError,setIsError] = useState(false);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setIsLoading(true);
+      try {
+        const res = await getShowCategory();
+        setCategories(res);
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCategories();
+  }, []);
   const router = useRouter();
   const dispatch = useDispatch();
 

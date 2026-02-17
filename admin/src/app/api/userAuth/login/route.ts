@@ -6,48 +6,46 @@ import jwt from "jsonwebtoken";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+    const { email, password } = body;
 
-    if (!body.email || !body.password) {
+    if (!email || !password) {
       return NextResponse.json(
-        { error: "Email and password required" },
+        { success: false, message: "Email and password are required" },
         { status: 400 }
       );
     }
 
     const user = await prisma.user.findUnique({
-      where: { email: body.email },
+      where: { email },
     });
 
+    // Email validation
     if (!user) {
       return NextResponse.json(
-        { error: "Invalid email or password" },
-        { status: 401 }
+        { success: false, message: "Email does not exist" },
+        { status: 404 }
       );
     }
 
-    const isPasswordValid = await bcrypt.compare(
-      body.password,
-      user.password
-    );
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
+    // Password validation
     if (!isPasswordValid) {
       return NextResponse.json(
-        { error: "Invalid email or password" },
+        { success: false, message: "Incorrect password" },
         { status: 401 }
       );
     }
 
     const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-      },
+      { id: user.id, email: user.email },
       process.env.JWT_SECRET as string,
       { expiresIn: "7d" }
     );
 
     return NextResponse.json(
       {
+        success: true,
         message: "Login successful",
         token,
         user: {
@@ -60,11 +58,10 @@ export async function POST(req: Request) {
       },
       { status: 200 }
     );
-
   } catch (error) {
-    console.error(error);
+    console.error("Login error:", error);
     return NextResponse.json(
-      { error: "Login failed" },
+      { success: false, message: "Something went wrong. Please try again." },
       { status: 500 }
     );
   }

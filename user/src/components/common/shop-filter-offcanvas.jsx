@@ -19,7 +19,7 @@ const ShopFilterOffCanvas = ({
   const dispatch = useDispatch();
 
   // max price
-  const maxPrice = all_products.reduce((max, product) => {
+  const maxPrice = all_products?.reduce((max, product) => {
     return product.price > max ? product.price : max;
   }, 0);
 

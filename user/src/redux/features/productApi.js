@@ -1,52 +1,85 @@
-import { apiSlice } from "../api/apiSlice";
+import axios from "axios";
 
-export const productApi = apiSlice.injectEndpoints({
-  overrideExisting: true,
-  endpoints: (builder) => ({
-    getAllProducts: builder.query({
-      query: () => `https://shofy-backend.vercel.app/api/product/all`,
-      providesTags:['Products']
-    }),
-    getProductType: builder.query({
-      query: ({ type, query }) => `https://shofy-backend.vercel.app/api/product/${type}?${query}`,
-      providesTags:['ProductType']
-    }),
-    getOfferProducts: builder.query({
-      query: (type) => `https://shofy-backend.vercel.app/api/product/offer?type=${type}`,
-      providesTags:['OfferProducts']
-    }),
-    getPopularProductByType: builder.query({
-      query: (type) => `https://shofy-backend.vercel.app/api/product/popular/${type}`,
-      providesTags:['PopularProducts']
-    }),
-    getTopRatedProducts: builder.query({
-      query: () => `https://shofy-backend.vercel.app/api/product/top-rated`,
-      providesTags:['TopRatedProducts']
-    }),
-    // get single product
-    getProduct: builder.query({
-      query: (id) => `https://shofy-backend.vercel.app/api/product/single-product/${id}`,
-      providesTags: (result, error, arg) => [{ type: "Product", id: arg }],
-      invalidatesTags: (result, error, arg) => [
-        { type: "RelatedProducts", id:arg },
-      ],
-    }),
-    // get related products
-    getRelatedProducts: builder.query({
-      query: (id) => `https://shofy-backend.vercel.app/api/product/related-product/${id}`,
-      providesTags: (result, error, arg) => [
-        { type: "RelatedProducts", id: arg },
-      ],
-    }),
-  }),
-});
+const BASE_URL = "https://shofy-backend.vercel.app/api/product";
 
-export const {
-  useGetAllProductsQuery,
-  useGetProductTypeQuery,
-  useGetOfferProductsQuery,
-  useGetPopularProductByTypeQuery,
-  useGetTopRatedProductsQuery,
-  useGetProductQuery,
-  useGetRelatedProductsQuery,
-} = productApi;
+// ✅ Get all products
+export const getAllProducts = async () => {
+  try {
+    const res = await axios.get(`${BASE_URL}/all`);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching all products:", error);
+    throw error;
+  }
+};
+
+// ✅ Get product by type
+export const getProductType = async ({ type, query = {} }) => {
+  try {
+    // Convert query object to URL params
+    const queryString = new URLSearchParams(query).toString();
+
+    const res = await axios.get(`${BASE_URL}/${type}?${queryString}`);
+
+    console.log("res", res.data);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching product type:", error);
+    throw error;
+  }
+};
+
+// ✅ Offer products
+export const getOfferProducts = async (type) => {
+  try {
+    const res = await axios.get(`${BASE_URL}/offer?type=${type}`);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching offer products:", error);
+    throw error;
+  }
+};
+
+// ✅ Popular products
+export const getPopularProductByType = async (type) => {
+  try {
+    const res = await axios.get(`${BASE_URL}/popular/${type}`);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching popular products:", error);
+    throw error;
+  }
+};
+
+// ✅ Top rated
+export const getTopRatedProducts = async () => {
+  try {
+    const res = await axios.get(`${BASE_URL}/top-rated`);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching top rated:", error);
+    throw error;
+  }
+};
+
+// ✅ Single product
+export const getProduct = async (id) => {
+  try {
+    const res = await axios.get(`${BASE_URL}/single-product/${id}`);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    throw error;
+  }
+};
+
+// ✅ Related products
+export const getRelatedProducts = async (id) => {
+  try {
+    const res = await axios.get(`${BASE_URL}/related-product/${id}`);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching related products:", error);
+    throw error;
+  }
+};

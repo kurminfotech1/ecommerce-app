@@ -5,7 +5,7 @@ import Image from 'next/image';
 // internal
 import special_thumb from '@assets/img/product/special/big/special-big-1.jpg';
 import { ArrowNextSm, ArrowPrevSm, PlusTwo } from '@/svg';
-import { useGetProductTypeQuery } from '@/redux/features/productApi';
+import { getProductType } from '@/redux/features/productApi';
 import ErrorMsg from '@/components/common/error-msg';
 import ProductItem from './product-item';
 import { HomeThreeTrendingPrdLoader } from '@/components/loader';
@@ -26,8 +26,24 @@ const sliderSetting = {
 }
 
 const TrendingSpecialPrd = () => {
-  const { data: products, isError, isLoading } =
-    useGetProductTypeQuery({ type: 'beauty', query: `new=true` });
+  const [products, setProducts] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const result = await getProductType('beauty', {new:true});
+        setProducts(result?.data || []);
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
   // decide what to render
   let content = null;
 
@@ -39,11 +55,11 @@ const TrendingSpecialPrd = () => {
   if (!isLoading && isError) {
     content = <ErrorMsg msg="There was an error" />;
   }
-  if (!isLoading && !isError && products?.data?.length === 0) {
+  if (!isLoading && !isError && products?.length === 0) {
     content = <ErrorMsg msg="No Products found!" />;
   }
-  if (!isLoading && !isError && products?.data?.length > 0) {
-    const product_items = products.data.slice(0, 7);
+  if (!isLoading && !isError && products?.length > 0) {
+    const product_items = products.slice(0, 7);
     content = (
       <Swiper {...sliderSetting} modules={[Pagination,Navigation,EffectFade]} className="tp-special-slider-active swiper-container">
         {product_items.map((item) => (
