@@ -12,6 +12,8 @@ import {
 } from "@/redux/categories/categoriesApi";
 
 import { Pencil, Trash2, Check, X } from "lucide-react";
+import { DeleteModal } from "@/components/common/DeleteModal";
+
 
 /* ---------- Skeleton Loader ---------- */
 
@@ -34,7 +36,7 @@ export default function CategoriesPage() {
   const { categories, loading } = useSelector(
     (state: RootState) => state.categories
   );
-
+  console.log("Categories from Redux:", categories);
   const [name, setName] = useState("");
   const [editId, setEditId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
@@ -82,12 +84,6 @@ export default function CategoriesPage() {
   const cancelEdit = () => {
     setEditId(null);
     setEditName("");
-  };
-
-  const confirmDelete = (id: number) => {
-    if (confirm("Delete this category?")) {
-      dispatch(deleteCategory(id));
-    }
   };
 
   /* ---------- UI ---------- */
@@ -141,7 +137,7 @@ export default function CategoriesPage() {
       {loading && <Skeleton />}
 
       {/* Empty */}
-      {!loading && categories.length === 0 && (
+      {!loading && categories?.length === 0 && (
         <div className="bg-white p-10 rounded-xl shadow border text-center text-gray-400">
           No categories yet
         </div>
@@ -161,7 +157,7 @@ export default function CategoriesPage() {
             </thead>
 
             <tbody>
-              {categories.map((cat) => (
+              {categories?.map((cat) => (
                 <tr key={cat.id} className="border-t hover:bg-gray-50">
 
                   <td className="p-3">
@@ -207,12 +203,11 @@ export default function CategoriesPage() {
                       </button>
                     )}
 
-                    <button
-                      onClick={() => confirmDelete(cat.id)}
-                      className="p-2 hover:bg-red-100 rounded-lg text-red-600"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    <DeleteModal
+    onConfirm={() => dispatch(deleteCategory(cat.id))}
+    parentTitle="Delete category?"
+    childTitle="This will permanently delete this category."
+  />
 
                   </td>
                 </tr>

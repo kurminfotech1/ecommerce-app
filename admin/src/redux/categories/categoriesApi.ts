@@ -1,5 +1,6 @@
 import Axios from "@/lib/api/axios";
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { toast } from "react-toastify";
 
 export interface Category {
   id: number;
@@ -18,8 +19,12 @@ export const createCategory = createAsyncThunk<
   async (data, { rejectWithValue }) => {
     try {
       const res = await Axios.post("categories", data);
-      return res.data;
+      toast.success(res.data?.message);
+      return res.data.category;
     } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message
+      );
       return rejectWithValue(error.message);
     }
   }
@@ -31,8 +36,13 @@ export const updateCategory = createAsyncThunk(
   async (data: any, { rejectWithValue }) => {
     try {
       const res = await Axios.put(`categories?id=${data.id}`, data);
-      return res.data;
+      
+      toast.success(res.data?.message);
+      return res.data.updated;
     } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message
+      );
       return rejectWithValue(error.message);
     }
   }
@@ -50,6 +60,9 @@ export const getCategories = createAsyncThunk<
       const res = await Axios.get("categories");
       return res.data;
     } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message
+      );
       return rejectWithValue(error.message);
     }
   }
@@ -64,10 +77,19 @@ export const deleteCategory = createAsyncThunk<
   "categories/delete",
   async (id, { rejectWithValue }) => {
     try {
-      await Axios.delete(`categories?id=${id}`);
+      const res = await Axios.delete(`categories?id=${id}`);
+
+      toast.success(res.data?.message);
+
       return id;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      toast.error(
+        error?.response?.data?.message
+      );
+
+      return rejectWithValue(
+        error?.response?.data?.message || error.message
+      );
     }
   }
 );

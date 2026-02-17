@@ -1,18 +1,56 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch } from "../../redux/store";
+import { fetchAdminById, updateAdmin } from "../../redux/auth/authApi";
+import { RootState } from "../../redux/rootReducer";
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
+import * as Yup from "yup";
+import { useFormik } from "formik";
 
 export default function UserInfoCard() {
   const { isOpen, openModal, closeModal } = useModal();
-  const handleSave = () => {
-    // Handle save logic here
-    console.log("Saving changes...");
+  const dispatch = useDispatch<AppDispatch>();
+  const userId = localStorage.getItem("userId");
+  const adminData = useSelector((state: RootState) => state.auth.user);
+  
+  useEffect(() => {
+  if (!userId) return;
+    dispatch(fetchAdminById(userId));
+  }, [dispatch, userId]);
+
+  const formik = useFormik({
+  enableReinitialize: true,
+  initialValues: {
+    full_name: adminData?.full_name || "",
+    email: adminData?.email || "",
+    phone: adminData?.phone || "",
+    country: adminData?.country || "",
+    state: adminData?.state || "",
+    city: adminData?.city || "",
+    postal_code: adminData?.postal_code || "",
+  },
+  validationSchema: Yup.object({
+  full_name: Yup.string().required("Full name is required"),
+  email: Yup.string().email("Invalid email").required("Email is required"),
+  phone: Yup.string().nullable(),
+  country: Yup.string().nullable(),
+  state: Yup.string().nullable(),
+  city: Yup.string().nullable(),
+  postal_code: Yup.string().nullable(),
+}),
+  onSubmit: (values) => {
+    if (!userId) return;
+
+    dispatch(updateAdmin({ id: userId, data: values }));
     closeModal();
-  };
+  },
+});
+
   return (
     <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -27,7 +65,7 @@ export default function UserInfoCard() {
                 First Name
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Musharof
+                {adminData?.full_name?.split(" ")[0] || "N/A"}
               </p>
             </div>
 
@@ -36,7 +74,7 @@ export default function UserInfoCard() {
                 Last Name
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Chowdhury
+                {adminData?.full_name?.split(" ")[1] || "N/A"}
               </p>
             </div>
 
@@ -45,7 +83,7 @@ export default function UserInfoCard() {
                 Email address
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                randomuser@pimjo.com
+                {adminData?.email || "N/A"}
               </p>
             </div>
 
@@ -54,17 +92,49 @@ export default function UserInfoCard() {
                 Phone
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                +09 363 398 46
+                {adminData?.phone || "N/A"}
               </p>
             </div>
+          </div>
 
-            <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Bio
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Team Manager
-              </p>
+          {/* Address Section */}
+          <div className="mt-8">
+            <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
+              Address
+            </h4>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
+              <div>
+                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  Country
+                </p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {adminData?.country || "N/A"}
+                </p>
+              </div>
+              <div>
+                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  State
+                </p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {adminData?.state || "N/A"}
+                </p>
+              </div>
+              <div>
+                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  City
+                </p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {adminData?.city || "N/A"}
+                </p>
+              </div>
+              <div>
+                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  Postal Code
+                </p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {adminData?.postal_code || "N/A"}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -102,44 +172,8 @@ export default function UserInfoCard() {
               Update your details to keep your profile up-to-date.
             </p>
           </div>
-          <form className="flex flex-col">
+          <form onSubmit={formik.handleSubmit} className="flex flex-col">
             <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
-              <div>
-                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-                  Social Links
-                </h5>
-
-                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                  <div>
-                    <Label>Facebook</Label>
-                    <Input
-                      type="text"
-                      defaultValue="https://www.facebook.com/PimjoHQ"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>X.com</Label>
-                    <Input type="text" defaultValue="https://x.com/PimjoHQ" />
-                  </div>
-
-                  <div>
-                    <Label>Linkedin</Label>
-                    <Input
-                      type="text"
-                      defaultValue="https://www.linkedin.com/company/pimjo"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Instagram</Label>
-                    <Input
-                      type="text"
-                      defaultValue="https://instagram.com/PimjoHQ"
-                    />
-                  </div>
-                </div>
-              </div>
               <div className="mt-7">
                 <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
                   Personal Information
@@ -147,28 +181,66 @@ export default function UserInfoCard() {
 
                 <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>First Name</Label>
-                    <Input type="text" defaultValue="Musharof" />
+                   <Label>Name</Label>
+              <Input
+                name="full_name"
+                type="text"
+                value={formik.values.full_name}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+              {formik.touched.full_name && formik.errors.full_name && (
+                <p className="text-red-500 text-xs">{formik.errors.full_name}</p>
+              )}
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>Last Name</Label>
-                    <Input type="text" defaultValue="Chowdhury" />
+                       <Label>Email Address</Label>
+              <Input
+                name="email"
+                type="text"
+                value={formik.values.email}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+              {formik.touched.email && formik.errors.email && (
+                <p className="text-red-500 text-xs">{formik.errors.email}</p>
+              )}
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>Email Address</Label>
-                    <Input type="text" defaultValue="randomuser@pimjo.com" />
+                     <Label>Phone</Label>
+              <Input
+                name="phone"
+                type="text"
+                value={formik.values.phone}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
                   </div>
-
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label>Phone</Label>
-                    <Input type="text" defaultValue="+09 363 398 46" />
+                </div>
+              </div>
+              {/* Address Edit Section */}
+              <div className="mt-7">
+                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
+                  Address
+                </h5>
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                  <div>
+                    <Label>Country</Label>
+                    <Input type="text" name="country" value={formik.values.country} onChange={formik.handleChange} onBlur={formik.handleBlur} />
                   </div>
-
-                  <div className="col-span-2">
-                    <Label>Bio</Label>
-                    <Input type="text" defaultValue="Team Manager" />
+                  <div>
+                    <Label>State</Label>
+                    <Input type="text" name="state" value={formik.values.state} onChange={formik.handleChange} onBlur={formik.handleBlur} />
+                  </div>
+                  <div>
+                    <Label>City</Label>
+                    <Input type="text" name="city" value={formik.values.city} onChange={formik.handleChange} onBlur={formik.handleBlur} />
+                  </div>
+                  <div>
+                    <Label>Postal Code</Label>
+                    <Input type="text" name="postal_code" value={formik.values.postal_code} onChange={formik.handleChange} onBlur={formik.handleBlur} />
                   </div>
                 </div>
               </div>
@@ -177,7 +249,7 @@ export default function UserInfoCard() {
               <Button size="sm" variant="outline" onClick={closeModal}>
                 Close
               </Button>
-              <Button size="sm" onClick={handleSave}>
+              <Button size="sm" type="submit">
                 Save Changes
               </Button>
             </div>

@@ -101,6 +101,8 @@ export async function POST(req: Request) {
         slug: body.slug ?? null,
         description: body.description ?? null,
         short_desc: body.short_desc ?? null,
+        size: body.size ?? null,
+        color: body.color ?? null,
         price: Number(body.price),
         compare_price: body.compare_price
           ? Number(body.compare_price)
@@ -140,7 +142,11 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json(updated, { status: 201 });
+    return NextResponse.json({
+  message: "Product created successfully",
+  data: updated,
+}, { status: 201 });
+
 
   } catch (error) {
     console.error("POST PRODUCT ERROR:", error);
@@ -165,6 +171,8 @@ export async function PUT(req: Request) {
         slug: body.slug,
         description: body.description,
         short_desc: body.short_desc,
+        size: body.size,
+        color: body.color,
 
         price: Number(body.price),
         compare_price: body.compare_price
@@ -188,7 +196,10 @@ export async function PUT(req: Request) {
       },
     });
 
-    return NextResponse.json(updated);
+    return NextResponse.json({
+  message: "Product updated successfully",
+  data: updated,
+});
 
   } catch (error) {
     console.error("PUT PRODUCT ERROR:", error);

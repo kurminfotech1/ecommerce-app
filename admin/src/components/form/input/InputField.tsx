@@ -15,6 +15,7 @@ interface InputProps {
   success?: boolean;
   error?: boolean;
   hint?: string; // Optional hint text
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void; // Optional onBlur handler
 }
 
 const Input: FC<InputProps> = ({

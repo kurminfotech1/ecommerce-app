@@ -13,7 +13,7 @@ import { add_to_wishlist } from "@/redux/features/wishlist-slice";
 
 const ProductItem = ({ product, offer_style = false }) => {
   const { _id, img, category, title, reviews, price, discount,status,offerDate } = product || {};
-  console.log(status)
+  
   const { cart_products } = useSelector((state) => state.cart);
   const { wishlist } = useSelector((state) => state.wishlist);
   const isAddedToCart = cart_products.some((prd) => prd._id === _id);

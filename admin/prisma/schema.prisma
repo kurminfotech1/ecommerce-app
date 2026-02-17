@@ -17,6 +17,11 @@ model Admin {
   full_name String?
   password  String?
   role      String   @default("admin")
+  phone     String?
+  country   String?
+  state     String?
+  city      String?
+  postal_code String?
   createdAt DateTime @default(now())
 }
 
@@ -44,6 +49,8 @@ model products {
   slug          String?   @unique
   description   String?
   short_desc    String?
+  size          String?
+  color         String?
 
   // pricing
   price         Float

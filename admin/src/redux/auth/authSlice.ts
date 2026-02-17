@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchUsers, login, register } from "./authApi";
+import { fetchAdminById, fetchUsers, login, register, updateAdmin } from "./authApi";
 import { Admin } from "@/types/auth";
 
 interface AdminState {
@@ -26,6 +26,8 @@ const adminSlice = createSlice({
   reducers: {
     logout: (state) => {
       localStorage.removeItem("token");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("role");
       state.user = null;
       state.isAuthenticated = false;
     },
@@ -73,7 +75,34 @@ const adminSlice = createSlice({
       .addCase(login.rejected, (state, action: any) => {
         state.loading = false;
         state.error = action.payload;
+      })
+
+      // FETCH ADMIN BY ID
+      .addCase(fetchAdminById.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchAdminById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(fetchAdminById.rejected, (state, action: any) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // UPDATE ADMIN BY ID
+      .addCase(updateAdmin.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updateAdmin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(updateAdmin.rejected, (state, action: any) => {
+        state.loading = false;
+        state.error = action.payload;
       });
+
   },
 });
 

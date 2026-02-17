@@ -11,8 +11,6 @@ export async function PUT(
     // ✅ unwrap params promise
     const { id } = await context.params;
 
-    console.log("SERVER PARAM ID:", id);
-
     if (!id) {
       return NextResponse.json(
         { error: "User id required" },
