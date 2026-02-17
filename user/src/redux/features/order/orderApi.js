@@ -86,7 +86,7 @@ export const useGetUserOrdersQuery = async () => {
     const response = await axios.get(`${BASE_URL}/user-order`);
     return response.data;
   } catch (error) {
-    console.error("Error fetching user orders:", error);
+    console.error("Error fetching user order:", error);
     throw error;
   }
 };
