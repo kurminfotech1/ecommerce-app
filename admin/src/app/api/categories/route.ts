@@ -37,7 +37,7 @@ export async function POST(req: Request) {
       },
     });
   
-    return NextResponse.json(category, { status: 201 });
+    return NextResponse.json( {category, message: "Category created successfully"}, { status: 201 });
   } catch (error) {
     console.error("POST ERROR:", error);
     return NextResponse.json({ error: "Failed" }, { status: 500 });
@@ -54,7 +54,7 @@ export async function PUT(req: Request) {
       data: body,
     });
   
-    return NextResponse.json(updated);
+    return NextResponse.json({ updated, message: "Category updated successfully" }, { status: 200 });
   } catch (error) {
     console.error("PUT ERROR:", error);
     return NextResponse.json({ error: "Update failed" }, { status: 500 });

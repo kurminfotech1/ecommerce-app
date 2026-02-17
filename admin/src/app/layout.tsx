@@ -5,6 +5,8 @@ import './globals.css';
 import "flatpickr/dist/flatpickr.css";
 import { SidebarProvider } from '@/context/SidebarContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { Provider } from 'react-redux';
 import { store } from '@/redux/store';
 
@@ -22,6 +24,7 @@ export default function RootLayout({
       <body className={`${outfit.className} dark:bg-gray-900`}>
         <Provider store={store}>
         <ThemeProvider>
+           <ToastContainer />
           <SidebarProvider>{children}</SidebarProvider>
         </ThemeProvider>
         </Provider>

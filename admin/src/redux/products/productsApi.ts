@@ -1,5 +1,6 @@
 import Axios from "@/lib/api/axios";
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { toast } from "react-toastify";
 
 export interface ProductImage {
   id: number;
@@ -12,6 +13,8 @@ export interface Product {
   slug?: string;
   description?: string;
   short_desc?: string;
+  size?: string;
+  color?: string;
   price: number;
   compare_price?: number;
   stock: number;
@@ -47,12 +50,15 @@ export const createProduct = createAsyncThunk(
   async (data: any, { rejectWithValue }) => {
     try {
       const res = await Axios.post("products", data);
-      return res.data;
+      toast.success(res.data.message);
+      return res.data.data;
     } catch (e: any) {
+      toast.error(e?.response?.data?.error || "Create failed");
       return rejectWithValue(e.message);
     }
   }
 );
+
 
 /* UPDATE */
 
@@ -61,12 +67,15 @@ export const updateProduct = createAsyncThunk(
   async (data: any, { rejectWithValue }) => {
     try {
       const res = await Axios.put(`products?id=${data.id}`, data);
-      return res.data;
+      toast.success(res.data.message);
+      return res.data.data;
     } catch (e: any) {
+      toast.error(e?.response?.data?.error || "Update failed");
       return rejectWithValue(e.message);
     }
   }
 );
+
 
 /* DELETE */
 
@@ -74,10 +83,13 @@ export const deleteProduct = createAsyncThunk(
   "products/delete",
   async (id: number, { rejectWithValue }) => {
     try {
-      await Axios.delete(`products?id=${id}`);
+      const res = await Axios.delete(`products?id=${id}`);
+      toast.success(res.data.message);
       return id;
     } catch (e: any) {
+      toast.error(e?.response?.data?.error || "Delete failed");
       return rejectWithValue(e.message);
     }
   }
 );
+

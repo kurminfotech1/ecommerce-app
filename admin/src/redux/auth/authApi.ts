@@ -45,9 +45,10 @@ export const login = createAsyncThunk(
   async (data: { email: string; password: string }, { rejectWithValue }) => {
     try {
       const res = await Axios.post("auth/login", data);
-
       // save token
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("userId", res.data.admin.id);
+      localStorage.setItem("role", res.data.admin.role);
 
       return res.data;
     } catch (error: any) {
@@ -55,3 +56,35 @@ export const login = createAsyncThunk(
     }
   }
 );
+
+// get one admin
+export const fetchAdminById = createAsyncThunk<
+  Admin,
+  string,
+  { rejectValue: string }
+>(
+  "admin/fetchById",
+  async (id, { rejectWithValue }) => {
+    try {
+      const res = await Axios.get(`auth/getone/${id}`);
+      return res.data.admin;
+    } catch (error: any) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const updateAdmin = createAsyncThunk<
+  Admin,
+  { id: string; data: Partial<Admin> },
+  { rejectValue: string }
+>(
+  "admin/update",
+  async ({ id, data }, { rejectWithValue }) => {
+    try {      const res = await Axios.put(`auth/update/${id}`, data);
+      return res.data.admin;
+    } catch (error: any) {
+      return rejectWithValue(error);
+    }
+  }
+)

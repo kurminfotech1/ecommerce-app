@@ -15,6 +15,7 @@ import {
 import { getCategories } from "@/redux/categories/categoriesApi";
 
 import { Eye, Pencil, Trash2, X } from "lucide-react";
+import { DeleteModal } from "@/components/common/DeleteModal";
 
 const SkeletonTable = () => (
   <div className="bg-white rounded-xl shadow border overflow-hidden">
@@ -57,6 +58,8 @@ export default function ProductsPage() {
     product_name: "",
     slug: "",
     short_desc: "",
+    size: "",
+    color: "",
     description: "",
     price: "",
     compare_price: "",
@@ -274,6 +277,8 @@ export default function ProductsPage() {
                   <th className="p-3">Category</th>
                   <th className="p-3">Price</th>
                   <th className="p-3">Stock</th>
+                  <th className="p-3">Size</th>
+                  <th className="p-3">Color</th>
                   <th className="p-3">SKU</th>
                   <th className="p-3 text-right">Actions</th>
                 </tr>
@@ -315,6 +320,8 @@ export default function ProductsPage() {
 
                     <td className="p-3">₹{p.price}</td>
                     <td className="p-3">{p.stock}</td>
+                    <td className="p-3">{p.size || "-"}</td>
+                    <td className="p-3">{p.color || "-"}</td>
                     <td className="p-3 text-xs">{p.sku}</td>
 
                     <td
@@ -335,12 +342,11 @@ export default function ProductsPage() {
                         <Pencil size={18} />
                       </button>
 
-                      <button
-                        onClick={() => dispatch(deleteProduct(p.id))}
-                        className="p-2 hover:bg-red-100 rounded-lg text-red-600"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      <DeleteModal
+                          onConfirm={() => dispatch(deleteProduct(p.id))}
+                          parentTitle="Delete product?"
+                          childTitle="This will permanently delete this product."
+                        />
                     </td>
                   </tr>
                 ))}
@@ -639,6 +645,24 @@ export default function ProductsPage() {
                 value={form.stock}
                 onChange={(e) =>
                   setForm({ ...form, stock: e.target.value })
+                }
+                className="border px-4 py-2 rounded-lg"
+              />
+
+              <input
+                placeholder="size"
+                value={form.size}
+                onChange={(e) =>
+                  setForm({ ...form, size: e.target.value })
+                }
+                className="border px-4 py-2 rounded-lg"
+              />
+
+              <input
+                placeholder="color"
+                value={form.color}
+                onChange={(e) =>
+                  setForm({ ...form, color: e.target.value })
                 }
                 className="border px-4 py-2 rounded-lg"
               />

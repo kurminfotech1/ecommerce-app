@@ -110,7 +110,7 @@ export default function MonthlyTarget() {
             </Dropdown>
           </div>
         </div>
-        <div className="relative ">
+        <div className="relative">
           <div className="max-h-[330px]">
             <ReactApexChart
               options={options}
