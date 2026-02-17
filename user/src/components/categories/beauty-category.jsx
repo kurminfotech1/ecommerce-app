@@ -1,17 +1,33 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 // internal
 import ErrorMsg from "../common/error-msg";
 import { ArrowRightSm, ArrowRightSmTwo } from "@/svg";
-import { useGetProductTypeCategoryQuery } from "@/redux/features/categoryApi";
+import { getProductTypeCategory } from "@/redux/features/categoryApi";
 import { HomeThreeCategoryLoader } from "../loader";
 
 const BeautyCategory = () => {
-  const {
-    data: categories,
-    isLoading,
-    isError,
-  } = useGetProductTypeCategoryQuery("beauty");
+  const [categories, setCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await getProductTypeCategory("beauty");
+        setCategories(data || []);
+      } catch (err) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const router = useRouter();
 
   // handle category route
   const handleCategoryRoute = (title) => {
@@ -20,14 +36,14 @@ const BeautyCategory = () => {
         .toLowerCase()
         .replace("&", "")
         .split(" ")
-        .join("-")}`
+        .join("-")}`,
     );
   };
   // decide what to render
   let content = null;
 
   if (isLoading) {
-    content = <HomeThreeCategoryLoader loading={isLoading}/>;
+    content = <HomeThreeCategoryLoader loading={isLoading} />;
   }
   if (!isLoading && isError) {
     content = <ErrorMsg msg="There was an error" />;

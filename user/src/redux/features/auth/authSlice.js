@@ -18,6 +18,7 @@ const authSlice = createSlice({
       state.accessToken = undefined;
       state.user = undefined;
       Cookies.remove('userInfo');
+      toast.success("Logged out successfully");
     },
   },
 });

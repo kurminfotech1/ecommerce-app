@@ -1,15 +1,14 @@
-import { apiSlice } from "@/redux/api/apiSlice";
+import axios from "axios";
 
-export const authApi = apiSlice.injectEndpoints({
-  overrideExisting:true,
-  endpoints: (builder) => ({
-    // get offer coupon
-    getOfferCoupons: builder.query({
-      query: () => `https://shofy-backend.vercel.app/api/coupon`,
-      providesTags:['Coupon'],
-      keepUnusedDataFor: 600,
-    }),
-  }),
-});
+const BASE_URL = "https://shofy-backend.vercel.app/api";
 
-export const { useGetOfferCouponsQuery } = authApi;
+// ✅ Get offer coupons
+export const getOfferCoupons = async () => {
+  try {
+    const res = await axios.get(`${BASE_URL}/coupon`);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching coupons:", error);
+    throw error;
+  }
+};

@@ -1,35 +1,44 @@
-import { apiSlice } from '@/redux/api/apiSlice';
 
-export const addressApi = apiSlice.injectEndpoints({
-  overrideExisting: true,
-  endpoints: (builder) => ({
-    // GET addresses
-    getAddresses: builder.query({
-      query: (userId) => `/userAuth/address?userId=${userId}`,
-      providesTags: ['Address'],
-    }),
+import { toast } from "react-toastify";
+import api from "@/redux/api/apiSlice";
 
-    // CREATE address
-    createAddress: builder.mutation({
-      query: (data) => ({
-        url: '/userAuth/address',
-        method: 'POST',
-        body: data,
-      }),
-      invalidatesTags: ['Address'],
-      
-    }),
+// GET addresses
+export const getAddresses = async (userId) => {
+  try {
+    const res = await api.get(`/userAuth/address?userId=${userId}`);
+    return res.data;
+  } catch (error) {
+    toast.error(
+      error?.response?.data?.error 
+    );
+    throw error;
+  }
+};
 
-    // UPDATE address
-    updateAddress: builder.mutation({
-      query: (data) => ({
-        url: '/userAuth/address',
-        method: 'PUT',
-        body: data,
-      }),
-      invalidatesTags: ['Address'],
-    }),
-  }),
-});
+// CREATE address
+export const createAddress = async (data) => {
+  try {
+    const res = await api.post("/userAuth/address", data);
+    toast.success(res?.data?.message);
+    return res.data;
+  } catch (error) {
+    toast.error(
+      error?.response?.data?.error  
+    );
+    throw error;
+  }
+};
 
-export const { useGetAddressesQuery, useCreateAddressMutation, useUpdateAddressMutation } = addressApi;
+// UPDATE address
+export const updateAddress = async (data) => {
+  try {
+    const res = await api.put("/userAuth/address", data);
+    toast.success(res?.data?.message);
+    return res.data;
+  } catch (error) {
+    toast.error(
+      error?.response?.data?.error
+    );
+    throw error;
+  }
+};

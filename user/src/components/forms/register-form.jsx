@@ -1,26 +1,30 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as Yup from 'yup';
-import { useRouter } from 'next/router';
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as Yup from "yup";
+import { useRouter } from "next/router";
 // internal
-import { CloseEye, OpenEye } from '@/svg';
-import ErrorMsg from '../common/error-msg';
-import { notifyError, notifySuccess } from '@/utils/toast';
-import { useRegisterUserMutation } from '@/redux/features/auth/authApi';
+import { CloseEye, OpenEye } from "@/svg";
+import ErrorMsg from "../common/error-msg";
+import { notifyError, notifySuccess } from "@/utils/toast";
+import { registerUser } from "@/redux/features/auth/authApi";
+import Spinner from "../common/Spinner";
 
 // schema
 const schema = Yup.object().shape({
-  full_name: Yup.string().required().label('Name'),
-  email: Yup.string().required().email().label('Email'),
-  phone: Yup.string().required().label('Phone'),
-  password: Yup.string().required().min(6).label('Password'),
-  remember: Yup.bool().oneOf([true], 'You must agree to the terms and conditions to proceed.'),
+  full_name: Yup.string().required().label("Name"),
+  email: Yup.string().required().email().label("Email"),
+  phone: Yup.string().required().label("Phone"),
+  password: Yup.string().required().min(6).label("Password"),
+  remember: Yup.bool().oneOf(
+    [true],
+    "You must agree to the terms and conditions to proceed.",
+  ),
 });
 
 const RegisterForm = () => {
   const [showPass, setShowPass] = useState(false);
-  const [registerUser, {}] = useRegisterUserMutation();
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { redirect } = router.query;
 
@@ -36,19 +40,22 @@ const RegisterForm = () => {
 
   // on submit
   const onSubmit = (data) => {
+    setIsLoading(true);
     registerUser({
       full_name: data.full_name,
       email: data.email,
       password: data.password,
       phone: data.phone,
-    }).then((result) => {
-      if (result?.error) {
-        notifyError('Register Failed');
-      } else {
-        notifySuccess('Register successful');
-        router.push('/login');
-      }
-    });
+    })
+      .then((result) => {
+        if (result) {
+          router.push("/login");
+        }
+      })
+      .catch((err) => {
+        setIsLoading(false);
+        console.error("Login Error:", err);
+      });
 
     reset();
   };
@@ -59,11 +66,10 @@ const RegisterForm = () => {
         <div className="tp-login-input-box">
           <div className="tp-login-input">
             <input
-              {...register('full_name', { required: `Fullname is required!` })}
-              id="name"
-              name="name"
+              {...register("full_name")}
+              id="full_name"
               type="text"
-              placeholder="Shahnewaz Sakil"
+              placeholder="Your Name"
             />
           </div>
           <div className="tp-login-input-title">
@@ -75,11 +81,11 @@ const RegisterForm = () => {
         <div className="tp-login-input-box">
           <div className="tp-login-input">
             <input
-              {...register('email', { required: `Email is required!` })}
+              {...register("email", { required: `Email is required!` })}
               id="email"
               name="email"
               type="email"
-              placeholder="shofy@mail.com"
+              placeholder="Your Email"
             />
           </div>
           <div className="tp-login-input-title">
@@ -90,7 +96,11 @@ const RegisterForm = () => {
 
         <div className="tp-login-input-box">
           <div className="tp-login-input">
-            <input {...register('phone')} type="text" placeholder="Phone number" />
+            <input
+              {...register("phone")}
+              type="text"
+              placeholder="Your Phone Number"
+            />
           </div>
           <div className="tp-login-input-title">
             <label>Phone</label>
@@ -102,11 +112,11 @@ const RegisterForm = () => {
           <div className="p-relative">
             <div className="tp-login-input">
               <input
-                {...register('password', { required: `Password is required!` })}
+                {...register("password", { required: `Password is required!` })}
                 id="password"
                 name="password"
-                type={showPass ? 'text' : 'password'}
-                placeholder="Min. 6 character"
+                type={showPass ? "text" : "password"}
+                placeholder="Your Password"
               />
             </div>
             <div className="tp-login-input-eye" id="password-show-toggle">
@@ -124,7 +134,7 @@ const RegisterForm = () => {
       <div className="tp-login-suggetions d-sm-flex align-items-center justify-content-between mb-20">
         <div className="tp-login-remeber">
           <input
-            {...register('remember', {
+            {...register("remember", {
               required: `Terms and Conditions is required!`,
             })}
             id="remember"
@@ -138,8 +148,19 @@ const RegisterForm = () => {
         </div>
       </div>
       <div className="tp-login-bottom">
-        <button type="submit" className="tp-login-btn w-100">
-          Sign Up
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="tp-login-btn w-100 d-flex align-items-center justify-content-center"
+        >
+          {isLoading ? (
+            <>
+              <Spinner size={20} color="white" className="me-2" />
+              Registering...
+            </>
+          ) : (
+            "Sign Up"
+          )}
         </button>
       </div>
     </form>

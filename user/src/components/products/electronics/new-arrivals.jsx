@@ -2,7 +2,7 @@ import React from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation,Pagination } from 'swiper';
 // internal
-import { useGetProductTypeQuery } from '@/redux/features/productApi';
+import { getProductType } from '@/redux/features/productApi';
 import { NextArr, PrevArr, ShapeLine } from '@/svg';
 import ErrorMsg from '@/components/common/error-msg';
 import ProductItem from './product-item';
@@ -40,7 +40,24 @@ const slider_setting = {
 }
 
 const NewArrivals = () => {
-  const { data: products, isError, isLoading } = useGetProductTypeQuery({type:'electronics',query:'new=true'});
+  const [products, setProducts] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const result = await getProductType('electronics', {new:true});
+        setProducts(result?.data || []);
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
   // decide what to render
   let content = null;
 
@@ -52,11 +69,11 @@ const NewArrivals = () => {
   if (!isLoading && isError) {
     content = <ErrorMsg msg="There was an error" />;
   }
-  if (!isLoading && !isError && products?.data?.length === 0) {
+  if (!isLoading && !isError && products?.length === 0) {
     content = <ErrorMsg msg="No Products found!" />;
   }
-  if (!isLoading && !isError && products?.data?.length > 0) {
-    const product_items = products.data;
+  if (!isLoading && !isError && products?.length > 0) {
+    const product_items = products;
     content = <Swiper {...slider_setting} modules={[Navigation,Pagination]} className="tp-product-arrival-active swiper-container">
       {product_items.map((item) => (
         <SwiperSlide key={item._id}>
