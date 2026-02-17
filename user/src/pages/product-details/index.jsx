@@ -1,21 +1,40 @@
-import React from 'react';
+import React, { useEffect, useState } from "react";
 // internal
-import SEO from '@/components/seo';
-import HeaderTwo from '@/layout/headers/header-2';
-import Footer from '@/layout/footers/footer';
-import Wrapper from '@/layout/wrapper';
-import ErrorMsg from '@/components/common/error-msg';
-import { useGetProductQuery } from '@/redux/features/productApi';
-import ProductDetailsBreadcrumb from '@/components/breadcrumb/product-details-breadcrumb';
-import ProductDetailsArea from '@/components/product-details/product-details-area';
-import PrdDetailsLoader from '@/components/loader/prd-details-loader';
+import SEO from "@/components/seo";
+import HeaderTwo from "@/layout/headers/header-2";
+import Footer from "@/layout/footers/footer";
+import Wrapper from "@/layout/wrapper";
+import ErrorMsg from "@/components/common/error-msg";
+import { getProduct } from "@/redux/features/productApi";
+import ProductDetailsBreadcrumb from "@/components/breadcrumb/product-details-breadcrumb";
+import ProductDetailsArea from "@/components/product-details/product-details-area";
+import PrdDetailsLoader from "@/components/loader/prd-details-loader";
 
 const ProductDetailsPage = ({ query }) => {
-  const { data: product, isLoading, isError } = useGetProductQuery("6431364df5a812bd37e765ac");
+  // const { data: product, isLoading, isError } = useGetProductQuery("6431364df5a812bd37e765ac");
+  const [product, setProduct] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  let id = "6431364df5a812bd37e765ac";
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const data = await getProduct(id);
+        setProduct(data || null);
+        console.log("dfsdfsd", data);
+      } catch (err) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, []);
   // decide what to render
   let content = null;
   if (isLoading) {
-    content = <PrdDetailsLoader loading={isLoading}/>;
+    content = <PrdDetailsLoader loading={isLoading} />;
   }
   if (!isLoading && isError) {
     content = <ErrorMsg msg="There was an error" />;
@@ -23,7 +42,10 @@ const ProductDetailsPage = ({ query }) => {
   if (!isLoading && !isError && product) {
     content = (
       <>
-        <ProductDetailsBreadcrumb category={product.category.name} title={product.title} />
+        <ProductDetailsBreadcrumb
+          category={product?.category?.name}
+          title={product?.title}
+        />
         <ProductDetailsArea productItem={product} />
       </>
     );

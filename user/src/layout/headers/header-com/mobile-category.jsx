@@ -1,27 +1,41 @@
-import { useState } from "react";
+"use client";
 import Image from "next/image";
 import { useRouter } from "next/router";
-// internal
-import { useGetProductTypeCategoryQuery } from "@/redux/features/categoryApi";
 import ErrorMsg from "@/components/common/error-msg";
 import Loader from "@/components/loader/loader";
+import { useEffect, useState } from "react";
+import { getProductTypeCategory } from "@/redux/features/categoryApi";
+
 
 const MobileCategory = ({ isCategoryActive, categoryType }) => {
-  const {data: categories,isError,isLoading} = useGetProductTypeCategoryQuery(categoryType);
-  const [isActiveSubMenu,setIsActiveSubMenu] = useState("")
+  const [categories, setCategories] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  const [isActiveSubMenu, setIsActiveSubMenu] = useState("");
+
   const router = useRouter();
 
-  // handleOpenSubMenu
-  const handleOpenSubMenu = (title) => {
-    if(title === isActiveSubMenu){
-      setIsActiveSubMenu("")
-    }
-    else {
-      setIsActiveSubMenu(title)
-    }
-  }
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const result = await getProductTypeCategory(categoryType);
+        setCategories(result);
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // handle category route
+    fetchCategories();
+  }, [categoryType]);
+
+  // submenu toggle
+  const handleOpenSubMenu = (title) => {
+    setIsActiveSubMenu((prev) => (prev === title ? "" : title));
+  };
+
+  // route handler
   const handleCategoryRoute = (title, route) => {
     if (route === "parent") {
       router.push(
@@ -41,7 +55,7 @@ const MobileCategory = ({ isCategoryActive, categoryType }) => {
       );
     }
   };
-  // decide what to render
+
   let content = null;
 
   if (isLoading) {
@@ -51,15 +65,17 @@ const MobileCategory = ({ isCategoryActive, categoryType }) => {
       </div>
     );
   }
+
   if (!isLoading && isError) {
     content = <ErrorMsg msg="There was an error" />;
   }
+
   if (!isLoading && !isError && categories?.result?.length === 0) {
     content = <ErrorMsg msg="No Category found!" />;
   }
+
   if (!isLoading && !isError && categories?.result?.length > 0) {
-    const category_items = categories.result;
-    content = category_items.map((item) => (
+    content = categories.result.map((item) => (
       <li className="has-dropdown" key={item._id}>
         <a className="cursor-pointer">
           {item.img && (
@@ -68,15 +84,23 @@ const MobileCategory = ({ isCategoryActive, categoryType }) => {
             </span>
           )}
           {item.parent}
+
           {item.children && (
-            <button onClick={()=> handleOpenSubMenu(item.parent)} className="dropdown-toggle-btn">
+            <button
+              onClick={() => handleOpenSubMenu(item.parent)}
+              className="dropdown-toggle-btn"
+            >
               <i className="fa-regular fa-angle-right"></i>
             </button>
           )}
         </a>
 
         {item.children && (
-          <ul className={`tp-submenu ${isActiveSubMenu === item.parent ? 'active':''}`}>
+          <ul
+            className={`tp-submenu ${
+              isActiveSubMenu === item.parent ? "active" : ""
+            }`}
+          >
             {item.children.map((child, i) => (
               <li
                 key={i}
@@ -90,6 +114,7 @@ const MobileCategory = ({ isCategoryActive, categoryType }) => {
       </li>
     ));
   }
+
   return <ul className={isCategoryActive ? "active" : ""}>{content}</ul>;
 };
 

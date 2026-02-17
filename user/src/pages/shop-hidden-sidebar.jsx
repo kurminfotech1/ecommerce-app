@@ -3,7 +3,7 @@ import SEO from "@/components/seo";
 import Wrapper from "@/layout/wrapper";
 import HeaderTwo from "@/layout/headers/header-2";
 import ShopBreadcrumb from "@/components/breadcrumb/shop-breadcrumb";
-import { useGetAllProductsQuery } from "@/redux/features/productApi";
+import { getAllProducts } from "@/redux/features/productApi";
 import ErrorMsg from "@/components/common/error-msg";
 import ShopHiddenSidebarArea from "@/components/shop/shop-hidden-sidebar-area";
 import ShopFilterOffCanvas from "@/components/common/shop-filter-offcanvas";
@@ -11,7 +11,24 @@ import Footer from "@/layout/footers/footer";
 import ShopHiddenLoader from "@/components/loader/shop/shop-hidden-loader";
 
 const ShopHiddenSidebarPage = () => {
-  const { data: products, isError, isLoading } = useGetAllProductsQuery();
+  const [products,setProducts] = useState([]);
+  const [isError,setIsError] = useState(false);
+  const [isLoading,setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      try {
+        const res = await getAllProducts();
+        setProducts(res);
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
   const [selectValue, setSelectValue] = useState("");
   const [currPage, setCurrPage] = useState(1);
   const [priceValue, setPriceValue] = useState([0, 0]);

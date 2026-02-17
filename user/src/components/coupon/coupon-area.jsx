@@ -1,12 +1,32 @@
-import React,{useState} from "react";
+import React,{useEffect, useState} from "react";
 import ErrorMsg from "../common/error-msg";
 import CouponItem from "./coupon-item";
-import { useGetOfferCouponsQuery } from "@/redux/features/coupon/couponApi";
+import { getOfferCoupons } from "@/redux/features/coupon/couponApi";
 import CouponLoader from "../loader/coupon-loader";
 
 const CouponArea = () => {
   const [copiedCode, setCopiedCode] = useState("");
   const [copied, setCopied] = useState(false);
+ const [couponData,setCouponData]=useState(null);
+ const [isLoading,setIsLoading]=useState(true);
+ const [isError,setIsError]=useState(false);
+
+  useEffect(() => {
+    const loadCoupons = async () => {
+      try {
+        const data = await getOfferCoupons();
+        setCouponData(data || []);
+      console.log("dcfsdf",data);
+      
+      } catch {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCoupons();
+  }, []);
 
   const handleCopied = (code) => {
     setCopiedCode(code);
@@ -16,7 +36,7 @@ const CouponArea = () => {
     }, 3000);
   };
 
-  const { data: offerCoupons, isError, isLoading } = useGetOfferCouponsQuery();
+ 
   // decide what to render
   let content = null;
 
@@ -28,12 +48,12 @@ const CouponArea = () => {
     content = <ErrorMsg msg="There was an error" />;
   }
 
-  if (!isLoading && !isError && offerCoupons?.length === 0) {
+  if (!isLoading && !isError && couponData?.length === 0) {
     content = <ErrorMsg msg="No Coupons found!" />;
   }
 
-  if (!isLoading && !isError && offerCoupons?.length > 0) {
-    const coupon_items = offerCoupons;
+  if (!isLoading && !isError && couponData?.length > 0) {
+    const coupon_items = couponData;
     // const coupon_items = offerCoupons.slice(0, 2);
     content = coupon_items.map((coupon) => (
       <div key={coupon._id} className="col-xl-6">

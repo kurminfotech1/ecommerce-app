@@ -1,11 +1,29 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ErrorMsg from "../common/error-msg";
-import { useGetShowCategoryQuery } from "@/redux/features/categoryApi";
+import { getShowCategory } from "@/redux/features/categoryApi";
 import { useRouter } from "next/router";
 import ShopCategoryLoader from "../loader/shop/shop-category-loader";
 
 const ShopCategoryArea = () => {
-  const { data: categories, isLoading, isError } = useGetShowCategoryQuery();
+  // const { data: categories, isLoading, isError } = useGetShowCategoryQuery();
+  const [categories,setCategories] = useState([]);
+  const [isLoading,setIsLoading] = useState(false);
+  const [isError,setIsError] = useState(false);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setIsLoading(true);
+      try {
+        const res = await getShowCategory();
+        setCategories(res);
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCategories();
+  }, []);
   const router = useRouter();
   // handle category route
   const handleCategoryRoute = (title) => {

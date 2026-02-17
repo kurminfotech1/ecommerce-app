@@ -1,28 +1,35 @@
-import React from 'react';
-import { yupResolver } from '@hookform/resolvers/yup';
-import { useForm } from 'react-hook-form';
-import { useSelector } from 'react-redux';
-import * as Yup from 'yup';
+import React, { useState } from "react";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
+import * as Yup from "yup";
 // internal
-import ErrorMsg from '../common/error-msg';
-import { useChangePasswordMutation } from '@/redux/features/auth/authApi';
-import { notifyError, notifySuccess } from '@/utils/toast';
+import ErrorMsg from "../common/error-msg";
+import { changePassword } from "@/redux/features/auth/authApi";
+
+import Spinner from "../common/Spinner";
 
 // schema
 const schema = Yup.object().shape({
-  password: Yup.string().required().min(6).label('Password'),
-  newPassword: Yup.string().required().min(6).label('New Password'),
-  confirmPassword: Yup.string().oneOf([Yup.ref('newPassword'), null], 'Passwords must match'),
+  password: Yup.string().required().min(6).label("Password"),
+  newPassword: Yup.string().required().min(6).label("New Password"),
+  confirmPassword: Yup.string().oneOf(
+    [Yup.ref("newPassword"), null],
+    "Passwords must match",
+  ),
 });
 // schemaTwo
 const schemaTwo = Yup.object().shape({
-  newPassword: Yup.string().required().min(6).label('New Password'),
-  confirmPassword: Yup.string().oneOf([Yup.ref('newPassword'), null], 'Passwords must match'),
+  newPassword: Yup.string().required().min(6).label("New Password"),
+  confirmPassword: Yup.string().oneOf(
+    [Yup.ref("newPassword"), null],
+    "Passwords must match",
+  ),
 });
 
 const ChangePassword = () => {
   const { user } = useSelector((state) => state.auth);
-  const [changePassword, {}] = useChangePasswordMutation();
+  const [isLoading, setIsLoading] = useState(false);
   // react hook form
   const {
     register,
@@ -34,20 +41,23 @@ const ChangePassword = () => {
   });
 
   // on submit
-  const onSubmit = (data) => {
-    changePassword({
-      email: user?.email,
-      password: data.password,
-      newPassword: data.newPassword,
-      googleSignIn: user?.googleSignIn,
-    }).then((result) => {
-      if (result?.error) {
-        notifyError(result?.error?.data?.message);
-      } else {
-        notifySuccess(result?.data?.message);
+  const onSubmit = async (data) => {
+    setIsLoading(true);
+    try {
+      const result = await changePassword({
+        email: user?.email,
+        password: data.password,
+        newPassword: data.newPassword,
+        googleSignIn: user?.googleSignIn,
+      });
+      if (result) {
+        reset();
       }
-    });
-    reset();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
   return (
     <div className="profile__password">
@@ -58,7 +68,7 @@ const ChangePassword = () => {
               <div className="tp-profile-input-box">
                 <div className="tp-contact-input">
                   <input
-                    {...register('password', {
+                    {...register("password", {
                       required: `Password is required!`,
                     })}
                     name="password"
@@ -77,7 +87,7 @@ const ChangePassword = () => {
             <div className="tp-profile-input-box">
               <div className="tp-profile-input">
                 <input
-                  {...register('newPassword', {
+                  {...register("newPassword", {
                     required: `New Password is required!`,
                   })}
                   name="newPassword"
@@ -94,7 +104,12 @@ const ChangePassword = () => {
           <div className="col-xxl-6 col-md-6">
             <div className="tp-profile-input-box">
               <div className="tp-profile-input">
-                <input {...register('confirmPassword')} name="confirmPassword" id="confirmPassword" type="password" />
+                <input
+                  {...register("confirmPassword")}
+                  name="confirmPassword"
+                  id="confirmPassword"
+                  type="password"
+                />
               </div>
               <div className="tp-profile-input-title">
                 <label htmlFor="confirmPassword">Confirm Password</label>
@@ -104,8 +119,15 @@ const ChangePassword = () => {
           </div>
           <div className="col-xxl-6 col-md-6">
             <div className="profile__btn">
-              <button type="submit" className="tp-btn">
-                Update
+              <button type="submit" className="tp-btn" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Spinner size={20} color="white" className="me-2" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Password"
+                )}
               </button>
             </div>
           </div>

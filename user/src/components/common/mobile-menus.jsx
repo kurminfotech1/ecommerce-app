@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState ,useEffect} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { mobile_menu } from '@/data/menu-data';
 import ProductItem from '../products/electronics/product-item';
 import ErrorMsg from './error-msg';
 import { HomeNewArrivalPrdLoader } from '../loader';
-import { useGetProductTypeQuery } from '@/redux/features/productApi';
+
 // internal
 import insta_1 from '@assets/img/instagram/4/instagram-1.jpg';
 import insta_3 from '@assets/img/instagram/4/instagram-3.jpg';
 import insta_4 from '@assets/img/instagram/4/instagram-4.jpg';
 import insta_6 from '@assets/img/instagram/4/instagram-6.jpg';
+import { getProductType } from '@/redux/features/productApi';
 
 // instagram data
 const instagram_data = [
@@ -21,17 +22,25 @@ const instagram_data = [
 ];
 const MobileMenus = () => {
   const [isActiveMenu, setIsActiveMenu] = useState('');
+  const [products, setProducts] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
 
-  const {
-    data: products,
-    isError,
-    isLoading,
-  } = useGetProductTypeQuery({
-    type: 'electronics',
-    query: 'new=true',
-  });
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const result = await getProductType('electronics', {new:true});
+        setProducts(result?.data || []);
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // decide what to render
+    fetchProducts();
+  }, []);
+
   let content = null;
 
   if (isLoading) {
@@ -58,10 +67,8 @@ const MobileMenus = () => {
         ))}
       </div>
     );
-  } else {
-    // If there are no products or an error occurs, set content to an empty array
-    content = [];
   }
+
 
   // handleOpenSubMenu
   const handleOpenSubMenu = (title) => {

@@ -1,5 +1,5 @@
 import ErrorMsg from '@/components/common/error-msg';
-import { useGetProductTypeQuery } from '@/redux/features/productApi';
+import { getProductType } from '@/redux/features/productApi';
 import React, { useEffect, useRef, useState } from 'react';
 import ProductItem from './product-item';
 import { HomeTwoPrdLoader } from '@/components/loader';
@@ -11,7 +11,25 @@ const ProductArea = () => {
   const [activeTab, setActiveTab] = useState(tabs[0]);
   const activeRef = useRef(null);
   const marker = useRef(null);
-  const { data: products, isError, isLoading } = useGetProductTypeQuery({ type: 'jewelry' });
+  const [products, setProducts] = useState([]);
+  const [isLoading, setLoading] = useState(true);
+  const [isError, setError] = useState(false);
+
+useEffect(() => {
+  const fetchProducts = async () => {
+    try {
+      const data = await getProductType({ type: "jewelry" });
+      setProducts(data?.data);
+    } catch (err) {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchProducts();
+}, []);
+
   // handleActiveTab
   useEffect(() => {
     // Position the marker after the active tab has been updated
@@ -36,23 +54,23 @@ const ProductArea = () => {
   if (!isLoading && isError) {
     content = <ErrorMsg msg="There was an error" />;
   }
-  if (!isLoading && !isError && products?.data?.length === 0) {
+  if (!isLoading && !isError && products?.length === 0) {
     content = <ErrorMsg msg="No Products found!" />;
   }
-  if (!isLoading && !isError && products?.data?.length > 0) {
+  if (!isLoading && !isError && products?.length > 0) {
 
-    let product_items = products.data;
+    let product_items = products;
     if (activeTab === 'All Collection') {
-      product_items = products.data
+      product_items = products
     }
     else if (activeTab === 'Bracelets') {
-      product_items = products.data.filter(p => p.category.name === 'Bracelets')
+      product_items = products.filter(p => p.category.name === 'Bracelets')
     } else if (activeTab === 'Necklaces') {
-      product_items = products.data.filter(p => p.category.name === 'Necklaces')
+      product_items = products.filter(p => p.category.name === 'Necklaces')
     } else if (activeTab === 'Earrings') {
-      product_items = products.data.filter(p => p.category.name === 'Earrings')
+      product_items = products.filter(p => p.category.name === 'Earrings')
     } else {
-      product_items = products.data;
+      product_items = products;
     }
     content = <>
       <div className="row align-items-end">

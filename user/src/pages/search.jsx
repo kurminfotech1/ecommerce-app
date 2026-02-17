@@ -7,14 +7,31 @@ import ShopTopLeft from "@/components/shop/shop-top-left";
 import Footer from "@/layout/footers/footer";
 import HeaderTwo from "@/layout/headers/header-2";
 import Wrapper from "@/layout/wrapper";
-import { useGetAllProductsQuery } from "@/redux/features/productApi";
+import { getAllProducts } from "@/redux/features/productApi";
 import NiceSelect from "@/ui/nice-select";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 // internal
 
 export default function SearchPage({ query }) {
   const { searchText, productType } = query;
-  const { data: products, isError, isLoading } = useGetAllProductsQuery();
+  const [products,setProducts] = useState([]);
+  const [isError,setIsError] = useState(false);
+  const [isLoading,setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      try {
+        const res = await getAllProducts();
+        setProducts(res);
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
   const [shortValue, setShortValue] = useState("");
   const perView = 8;
   const [next, setNext] = useState(perView);

@@ -1,14 +1,31 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useDispatch } from "react-redux";
 // internal
 import ErrorMsg from "@/components/common/error-msg";
-import { useGetAllProductsQuery } from "@/redux/features/productApi";
+import { getAllProducts } from "@/redux/features/productApi";
 import { handleFilterSidebarClose } from "@/redux/features/shop-filter-slice";
 import ShopColorLoader from "@/components/loader/shop/color-filter-loader";
 
 const ColorFilter = ({setCurrPage,shop_right=false}) => {
-  const { data: products, isError, isLoading } = useGetAllProductsQuery();
+  const [products,setProducts] = useState([]);
+  const [isError,setIsError] = useState(false);
+  const [isLoading,setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      try {
+        const res = await getAllProducts();
+        setProducts(res);
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
   const router = useRouter();
   const dispatch = useDispatch()
 

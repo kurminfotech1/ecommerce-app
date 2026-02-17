@@ -1,17 +1,36 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 // internal
 import SEO from '@/components/seo';
 import HeaderTwo from '@/layout/headers/header-2';
 import Footer from '@/layout/footers/footer';
 import Wrapper from '@/layout/wrapper';
 import ErrorMsg from '@/components/common/error-msg';
-import { useGetProductQuery } from '@/redux/features/productApi';
+import { getProduct } from '@/redux/features/productApi';
 import ProductDetailsBreadcrumb from '@/components/breadcrumb/product-details-breadcrumb';
 import ProductDetailsArea from '@/components/product-details/product-details-area';
 import PrdDetailsLoader from '@/components/loader/prd-details-loader';
 
 const ProductDetailsPageWithVideo = () => {
-  const { data: product, isLoading, isError } = useGetProductQuery("641e887d05f9ee1717e134b2");
+  // const { data: product, isLoading, isError } = useGetProductQuery("641e887d05f9ee1717e134b2");
+  const [product, setProduct] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  let id = "641e887d05f9ee1717e134b2";
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const data = await getProduct(id);
+        setProduct(data || null);
+        console.log("dfsdfsd", data);
+      } catch (err) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, []);
   // decide what to render
   let content = null;
   if (isLoading) {

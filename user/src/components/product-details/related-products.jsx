@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Scrollbar, Navigation,Autoplay } from "swiper";
 // internal
-import { useGetRelatedProductsQuery } from "@/redux/features/productApi";
+import { getRelatedProducts } from "@/redux/features/productApi";
 import ProductItem from "../products/beauty/product-item";
 import ErrorMsg from "../common/error-msg";
 import { HomeNewArrivalPrdLoader } from "../loader";
@@ -38,7 +38,24 @@ const slider_setting = {
 };
 
 const RelatedProducts = ({id}) => {
-  const { data: products, isError, isLoading } = useGetRelatedProductsQuery(id);
+  // const { data: products, isError, isLoading } = useGetRelatedProductsQuery(id);
+  const [products, setProducts] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await getRelatedProducts(id);
+        setProducts(data || null);
+      } catch (err) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
   // decide what to render
   let content = null;
 

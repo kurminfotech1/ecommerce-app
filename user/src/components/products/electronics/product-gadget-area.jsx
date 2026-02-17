@@ -10,12 +10,30 @@ import PrdCategoryList from './prd-category-list';
 import ErrorMsg from '@/components/common/error-msg';
 import b_bg_1 from '@assets/img/product/gadget/gadget-banner-1.jpg';
 import b_bg_2 from '@assets/img/product/gadget/gadget-banner-2.jpg';
-import { useGetProductTypeQuery } from '@/redux/features/productApi';
+import { getProductType } from '@/redux/features/productApi';
 import gadget_girl from '@assets/img/product/gadget/gadget-girl.png';
 import HomeGadgetPrdLoader from '@/components/loader/home/home-gadget-prd-loader';
 
 const ProductGadgetArea = () => {
-  const { data: products, isError, isLoading } = useGetProductTypeQuery({type:'electronics'});
+  // const { data: products, isError, isLoading } = useGetProductTypeQuery({type:'electronics'});
+  const [products, setProducts] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const result = await getProductType('electronics');
+        setProducts(result?.data || []);
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   // decide what to render
   let content = null;
@@ -28,11 +46,11 @@ const ProductGadgetArea = () => {
   if (!isLoading && isError) {
     content = <ErrorMsg msg="There was an error" />;
   }
-  if (!isLoading && !isError && products?.data?.length === 0) {
+  if (!isLoading && !isError && products?.length === 0) {
     content = <ErrorMsg msg="No Products found!" />;
   }
-  if (!isLoading && !isError && products?.data?.length > 0) {
-    const product_items = products.data.slice(0, 6);
+  if (!isLoading && !isError && products?.length > 0) {
+    const product_items = products.slice(0, 6);
     content = product_items.map((prd, i) => (
       <div key={i} className="col-xl-4 col-sm-6">
         <ProductItem product={prd} />

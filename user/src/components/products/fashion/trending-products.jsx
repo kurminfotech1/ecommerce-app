@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from 'swiper';
 // internal
 import { ArrowRightLong, TextShapeLine } from '@/svg';
-import { useGetProductTypeQuery } from '@/redux/features/productApi';
+import { getProductType } from '@/redux/features/productApi';
 import ProductItem from './product-item';
 import ErrorMsg from '@/components/common/error-msg';
 import trending_banner from '@assets/img/product/trending/banner/trending-banner.jpg';
@@ -35,8 +35,26 @@ const slider_setting = {
 }
 
 const TrendingProducts = () => {
-  const { data: products, isError, isLoading } =
-    useGetProductTypeQuery({ type: 'fashion', query: `new=true` });
+  // const { data: products, isError, isLoading } =
+  //   useGetProductTypeQuery({ type: 'fashion', query: `new=true` });
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const result = await getProductType({type:'fashion', query:{new:true}});
+        setProducts(result?.data || []);
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
   // decide what to render
   let content = null;
 

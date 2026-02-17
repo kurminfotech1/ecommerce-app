@@ -4,12 +4,31 @@ import Link from 'next/link';
 import { TextShapeLine } from '@/svg';
 import ProductItem from './product-item';
 import ErrorMsg from '@/components/common/error-msg';
-import { useGetProductTypeQuery } from '@/redux/features/productApi';
 import { HomeTwoBestSellPrdPrdLoader } from '@/components/loader';
+import { getProductType } from '@/redux/features/productApi';
 
 const BestSellerProducts = () => {
-  const { data: products, isError, isLoading } =
-    useGetProductTypeQuery({ type: 'fashion', query: `topSellers=true` });
+  // const { data: products, isError, isLoading } =
+  //   useGetProductTypeQuery({ type: 'fashion', query: `topSellers=true` });
+
+  const [products, setProducts] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const result = await getProductType({type:'fashion', query: `topSellers=true`});
+        setProducts(result?.data || []);
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
   // decide what to render
   let content = null;
 
@@ -21,11 +40,11 @@ const BestSellerProducts = () => {
   if (!isLoading && isError) {
     content = <ErrorMsg msg="There was an error" />;
   }
-  if (!isLoading && !isError && products?.data?.length === 0) {
+  if (!isLoading && !isError && products?.length === 0) {
     content = <ErrorMsg msg="No Products found!" />;
   }
-  if (!isLoading && !isError && products?.data?.length > 0) {
-    const product_items = products.data.slice(0, 4);
+  if (!isLoading && !isError && products?.length > 0) {
+    const product_items = products.slice(0, 4);
     content = product_items.map((prd) => (
       <div key={prd._id} className="col-xl-3 col-lg-4 col-md-6 col-sm-6">
         <ProductItem product={prd} />

@@ -4,21 +4,38 @@ import Wrapper from "@/layout/wrapper";
 import HeaderTwo from "@/layout/headers/header-2";
 import ShopBreadcrumb from "@/components/breadcrumb/shop-breadcrumb";
 import ShopArea from "@/components/shop/shop-area";
-import { useGetAllProductsQuery } from "@/redux/features/productApi";
+import { getAllProducts } from "@/redux/features/productApi";
 import ErrorMsg from "@/components/common/error-msg";
 import Footer from "@/layout/footers/footer";
 import ShopFilterOffCanvas from "@/components/common/shop-filter-offcanvas";
 import ShopLoader from "@/components/loader/shop/shop-loader";
 
 const ShopPage = ({ query }) => {
-  const { data: products, isError, isLoading } = useGetAllProductsQuery();
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await getAllProducts();
+        setProducts(data?.data || []);
+        console.log("data", data?.data);
+      } catch (err) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
   const [priceValue, setPriceValue] = useState([0, 0]);
   const [selectValue, setSelectValue] = useState("");
   const [currPage, setCurrPage] = useState(1);
   // Load the maximum price once the products have been loaded
   useEffect(() => {
-    if (!isLoading && !isError && products?.data?.length > 0) {
-      const maxPrice = products.data.reduce((max, product) => {
+    if (!isLoading && !isError && products?.length > 0) {
+      const maxPrice = products.reduce((max, product) => {
         return product.price > max ? product.price : max;
       }, 0);
       setPriceValue([0, maxPrice]);
@@ -55,32 +72,32 @@ const ShopPage = ({ query }) => {
   if (!isLoading && isError) {
     content = <div className="pb-80 text-center"><ErrorMsg msg="There was an error" /></div>;
   }
-  if (!isLoading && !isError && products?.data?.length === 0) {
+  if (!isLoading && !isError && products?.length === 0) {
     content = <ErrorMsg msg="No Products found!" />;
   }
-  if (!isLoading && !isError && products?.data?.length > 0) {
+  if (!isLoading && !isError && products?.length > 0) {
     // products
-    let product_items = products.data;
+    let product_items = products;
     // select short filtering
     if (selectValue) {
       if (selectValue === "Default Sorting") {
-        product_items = products.data;
+        product_items = products;
       } else if (selectValue === "Low to High") {
-        product_items = products.data
+        product_items = products
           .slice()
           .sort((a, b) => Number(a.price) - Number(b.price));
       } else if (selectValue === "High to Low") {
-        product_items = products.data
+        product_items = products
           .slice()
           .sort((a, b) => Number(b.price) - Number(a.price));
       } else if (selectValue === "New Added") {
-        product_items = products.data
+        product_items = products
           .slice()
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       } else if (selectValue === "On Sale") {
-        product_items = products.data.filter((p) => p.discount > 0);
+        product_items = products.filter((p) => p.discount > 0);
       } else {
-        product_items = products.data;
+        product_items = products;
       }
     }
     // price filter

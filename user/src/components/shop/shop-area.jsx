@@ -25,7 +25,7 @@ const ShopArea = ({ all_products, products, otherProps }) => {
   };
 
   // max price
-  const maxPrice = all_products.reduce((max, product) => {
+  const maxPrice = all_products?.reduce((max, product) => {
     return product.price > max ? product.price : max;
   }, 0);
   return (
@@ -68,7 +68,7 @@ const ShopArea = ({ all_products, products, otherProps }) => {
                                 pageStart + countOfPage
                               ).length
                         }
-                        total={all_products.length}
+                        total={all_products?.length}
                       />
                     </div>
                     <div className="col-xl-6">

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useGetProductTypeQuery } from "@/redux/features/productApi";
+import { getProductType } from "@/redux/features/productApi";
 import { ShapeLine, TabLine } from "@/svg";
 import ProductItem from "./product-item";
 import ErrorMsg from "@/components/common/error-msg";
@@ -9,8 +9,26 @@ const tabs = ["new", "featured", "topSellers"];
 
 const ProductArea = () => {
   const [activeTab, setActiveTab] = useState("new");
-  const {data:products,isError,isLoading,refetch} = 
-  useGetProductTypeQuery({type:'electronics',query:`${activeTab}=true`});
+  // const {data:products,isError,isLoading,refetch} = 
+  // useGetProductTypeQuery({type:'electronics',query:`${activeTab}=true`});
+  const [products, setProducts] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const result = await getProductType(type='electronics',query=`${activeTab}=true`)
+        setProducts(result?.data || []);
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
   // handleActiveTab
   const handleActiveTab = (tab) => {
     setActiveTab(tab);
@@ -31,11 +49,11 @@ const ProductArea = () => {
   if (!isLoading && isError) {
     content = <ErrorMsg msg="There was an error" />;
   }
-  if (!isLoading && !isError && products?.data?.length === 0) {
+  if (!isLoading && !isError && products?.length === 0) {
     content = <ErrorMsg msg="No Products found!" />;
   }
-  if (!isLoading && !isError && products?.data?.length > 0) {
-    const product_items = products.data;
+  if (!isLoading && !isError && products?.length > 0) {
+    const product_items = products;
     content = product_items.map((prd,i) => (
       <div key={i} className="col-xl-3 col-lg-3 col-sm-6">
         <ProductItem product={prd}/>  

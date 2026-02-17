@@ -1,18 +1,31 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 // internal
 import ErrorMsg from "../common/error-msg";
 import { ArrowRightLong } from "@/svg";
 import { HomeTwoCateLoader } from "../loader";
-import { useGetProductTypeCategoryQuery } from "@/redux/features/categoryApi";
+import { getProductTypeCategory } from "@/redux/features/categoryApi";
 
 const FashionCategory = () => {
-  const {
-    data: categories,
-    isLoading,
-    isError,
-  } = useGetProductTypeCategoryQuery("fashion");
-  const router = useRouter()
+  const [categories, setCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await getProductTypeCategory("fashion");
+        setCategories(data || []);
+      } catch (err) {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+  const router = useRouter();
 
   // handle category route
   const handleCategoryRoute = (title) => {
@@ -21,7 +34,7 @@ const FashionCategory = () => {
         .toLowerCase()
         .replace("&", "")
         .split(" ")
-        .join("-")}`
+        .join("-")}`,
     );
   };
   // decide what to render

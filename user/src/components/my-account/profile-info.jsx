@@ -1,199 +1,264 @@
-import React, { useEffect } from 'react';
-import Cookies from 'js-cookie';
-import { yupResolver } from '@hookform/resolvers/yup';
-import { useForm } from 'react-hook-form';
-import { useDispatch, useSelector } from 'react-redux';
-import * as Yup from 'yup';
+import React, { useEffect, useState } from "react";
+import Cookies from "js-cookie";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useForm } from "react-hook-form";
+import { useDispatch, useSelector } from "react-redux";
+import * as Yup from "yup";
 
-import ErrorMsg from '../common/error-msg';
-import { EmailTwo, LocationTwo, PhoneThree, UserThree } from '@/svg';
+import ErrorMsg from "../common/error-msg";
+import { EmailTwo, LocationTwo, PhoneThree, UserThree } from "@/svg";
 
-import { useUpdateProfileMutation } from '@/redux/features/auth/authApi';
+import { updateUserProfile } from "@/redux/features/auth/authApi";
 import {
-  useGetAddressesQuery,
-  useUpdateAddressMutation,
-  useCreateAddressMutation,
-} from '@/redux/features/address/addressApi';
+  getAddresses,
+  updateAddress,
+  createAddress,
+} from "@/redux/features/address/addressApi";
 
-import { notifyError, notifySuccess } from '@/utils/toast';
-import { userLoggedIn } from '@/redux/features/auth/authSlice';
+import { userLoggedIn } from "@/redux/features/auth/authSlice";
+import Spinner from "../common/Spinner";
 
-// ✅ validation schema
-const schema = Yup.object().shape({
-  name: Yup.string().required('Name is required'),
-  email: Yup.string().required('Email is required').email(),
-  phone: Yup.string().required('Phone is required'),
-  line1: Yup.string(),
-  city: Yup.string(),
-  state: Yup.string(),
-  pincode: Yup.string(),
-  country: Yup.string(),
+// ✅ validation schemas
+const personalSchema = Yup.object().shape({
+  name: Yup.string().required("Name is required"),
+  email: Yup.string().required("Email is required").email(),
+  phone: Yup.string().required("Phone is required"),
+});
+
+const addressSchema = Yup.object().shape({
+  line1: Yup.string().required("Address is required"),
+  city: Yup.string().required("City is required"),
+  state: Yup.string().required("State is required"),
+  pincode: Yup.string().required("Pincode is required"),
+  country: Yup.string().required("Country is required"),
 });
 
 const ProfileInfo = () => {
   const dispatch = useDispatch();
-
+  const [addresses, setAddresses] = useState([]);
+   const [isLoading, setIsLoading] = useState(false);
   // ✅ get redux user
   const { user, accessToken } = useSelector((state) => state.auth);
 
-  const [updateProfile] = useUpdateProfileMutation();
-  const [updateAddress] = useUpdateAddressMutation();
-  const [createAddress] = useCreateAddressMutation();
-
   // ✅ fetch address
-  const { data: addresses } = useGetAddressesQuery(user?.id, {
-    skip: !user?.id,
-  });
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const fetch = async () => {
+      try {
+        const data = await getAddresses(user.id);
+        setAddresses(data || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetch();
+  }, [user?.id]);
 
   const address = addresses?.[0];
 
+  // ✅ Form 1: Personal Info
   const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm({ resolver: yupResolver(schema) });
+    register: registerPersonal,
+    handleSubmit: handlePersonalSubmit,
+    formState: { errors: personalErrors },
+    reset: resetPersonal,
+  } = useForm({ resolver: yupResolver(personalSchema) });
 
-  // ✅ sync redux → form
+  // ✅ Form 2: Address Info
+  const {
+    register: registerAddress,
+    handleSubmit: handleAddressSubmit,
+    formState: { errors: addressErrors },
+    reset: resetAddress,
+  } = useForm({ resolver: yupResolver(addressSchema) });
+
+  // ✅ sync redux → form (Personal)
   useEffect(() => {
+    if (user) {
+      resetPersonal({
+        name: user.full_name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+      });
+    }
+  }, [user, resetPersonal]);
+
+  // ✅ sync address → form (Address)
+  useEffect(() => {
+    if (address) {
+      resetAddress({
+        line1: address.line1 || "",
+        city: address.city || "",
+        state: address.state || "",
+        pincode: address.pincode || "",
+        country: address.country || "",
+      });
+    }
+  }, [address, resetAddress]);
+
+  // ✅ handle personal update
+  const onPersonalSubmit = async (data) => {
     if (!user) return;
-
-    reset({
-      name: user.full_name || '',
-      email: user.email || '',
-      phone: user.phone || '',
-      line1: address?.line1 || '',
-      city: address?.city || '',
-      state: address?.state || '',
-      pincode: address?.pincode || '',
-      country: address?.country || '',
-    });
-  }, [user, address, reset]);
-
-  // ✅ submit
-  const onSubmit = async (data) => {
-    if (!user) return;
-
+    setIsLoading(true);
     try {
-      // 1️⃣ update profile
-      const res = await updateProfile({
+      const res = await updateUserProfile({
         id: user.id,
         name: data.name,
         email: data.email,
         phone: data.phone,
-      }).unwrap();
+      });
 
-      // ✅ update redux state
-
-      const payload = {
-        accessToken,
-        user: res.user,
-      };
-
-      // ✅ update redux
-      dispatch(userLoggedIn(payload));
-
-      // ✅ update cookie (VERY IMPORTANT)
-      Cookies.set('userInfo', JSON.stringify(payload), { expires: 0.5 });
-
-      // 2️⃣ address payload
-      const addressPayload = {
-        userId: user.id,
-        full_name: data.name,
-        phone: data.phone,
-        line1: data.line1,
-        city: data.city,
-        state: data.state,
-        pincode: data.pincode,
-        country: data.country,
-      };
-
-      // update or create address
-      if (address?.id) {
-        await updateAddress({ id: address.id, ...addressPayload }).unwrap();
-      } else {
-        await createAddress(addressPayload).unwrap();
+      if (res) {
+        const payload = { accessToken, user: res.user };
+        dispatch(userLoggedIn(payload));
+        Cookies.set("userInfo", JSON.stringify(payload), { expires: 0.5 });
       }
     } catch (err) {
       console.error(err);
+    }
+    finally{
+      setIsLoading(false);
+    }
+  };
+
+  // ✅ handle address update
+  const onAddressSubmit = async (data) => {
+    if (!user) return;
+      setIsLoading(true);
+    try {
+      const addressPayload = {
+        userId: user.id,
+        full_name: user.full_name, // Use current user info
+        phone: user.phone,
+        ...data,
+      };
+
+      if (address?.id) {
+        await updateAddress({ id: address.id, ...addressPayload });
+      } else {
+        await createAddress(addressPayload);
+      }
+
+      // Refresh addresses
+      const updatedAddresses = await getAddresses(user.id);
+      setAddresses(updatedAddresses || []);
+    } catch (err) {
+      console.error(err);
+       
+    }
+    finally{
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="account-wrapper">
-      <form onSubmit={handleSubmit(onSubmit)} className="account-form">
-        {/* PERSONAL INFO */}
+      {/* PERSONAL INFO FORM */}
+      <form
+        onSubmit={handlePersonalSubmit(onPersonalSubmit)}
+        className="account-form mb-30"
+      >
         <section className="account-card">
           <h2>Personal Information</h2>
-
           <div className="form-grid">
             <div className="form-field">
               <label>Full Name</label>
               <div className="input">
                 <UserThree />
-                <input {...register('name')} />
+                <input {...registerPersonal("name")} />
               </div>
-              <ErrorMsg msg={errors.name?.message} />
+              <ErrorMsg msg={personalErrors.name?.message} />
             </div>
 
             <div className="form-field">
               <label>Email</label>
               <div className="input">
                 <EmailTwo />
-                <input {...register('email')} />
+                <input {...registerPersonal("email")} />
               </div>
-              <ErrorMsg msg={errors.email?.message} />
+              <ErrorMsg msg={personalErrors.email?.message} />
             </div>
 
             <div className="form-field full">
               <label>Phone</label>
               <div className="input">
                 <PhoneThree />
-                <input {...register('phone')} />
+                <input {...registerPersonal("phone")} />
               </div>
-              <ErrorMsg msg={errors.phone?.message} />
+              <ErrorMsg msg={personalErrors.phone?.message} />
             </div>
           </div>
+          <div className="account-actions mt-20">
+            <button type="submit" className="tp-btn" disabled={isLoading}>
+                {isLoading ? (
+            <>
+              <Spinner size={20} color="white" className="me-2" />
+              Updating...
+            </>
+          ) : (
+            "Update Profile"
+          )}
+            </button>
+          </div>
         </section>
+      </form>
 
-        {/* ADDRESS */}
+      {/* ADDRESS FORM */}
+      <form
+        onSubmit={handleAddressSubmit(onAddressSubmit)}
+        className="account-form"
+      >
         <section className="account-card">
-          <h2>Address</h2>
-
+          <h2>Address Information</h2>
           <div className="form-grid">
             <div className="form-field full">
               <label>Address Line</label>
               <div className="input">
                 <LocationTwo />
-                <input {...register('line1')} />
+                <input {...registerAddress("line1")} />
               </div>
+              <ErrorMsg msg={addressErrors.line1?.message} />
             </div>
 
             <div className="form-field">
               <label>City</label>
-              <input {...register('city')} />
+              <input {...registerAddress("city")} />
+              <ErrorMsg msg={addressErrors.city?.message} />
             </div>
 
             <div className="form-field">
               <label>State</label>
-              <input {...register('state')} />
+              <input {...registerAddress("state")} />
+              <ErrorMsg msg={addressErrors.state?.message} />
             </div>
 
             <div className="form-field">
               <label>Pincode</label>
-              <input {...register('pincode')} />
+              <input {...registerAddress("pincode")} />
+              <ErrorMsg msg={addressErrors.pincode?.message} />
             </div>
 
             <div className="form-field">
               <label>Country</label>
-              <input {...register('country')} />
+              <input {...registerAddress("country")} />
+              <ErrorMsg msg={addressErrors.country?.message} />
             </div>
           </div>
+          <div className="account-actions mt-20">
+            <button type="submit" className="tp-btn" disabled={isLoading}>
+               {isLoading ? (
+            <>
+              <Spinner size={20} color="white" className="me-2" />
+              Updating...
+            </>
+          ) : (
+            "Update Address"
+          )}
+            </button>
+          </div>
         </section>
-
-        <div className="account-actions">
-          <button type="submit">Save Changes</button>
-        </div>
       </form>
     </div>
   );
