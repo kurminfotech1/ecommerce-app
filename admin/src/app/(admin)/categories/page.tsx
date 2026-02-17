@@ -157,7 +157,7 @@ export default function CategoriesPage() {
             </thead>
 
             <tbody>
-              {categories.map((cat) => (
+              {categories?.map((cat) => (
                 <tr key={cat.id} className="border-t hover:bg-gray-50">
 
                   <td className="p-3">
