@@ -1,8 +1,10 @@
+import { Role } from "@/generated/prisma";
+
 export interface Admin {
   id: string;
   email: string;
   full_name: string | null;
-  role: string;
+  role: Role;
   phone: string | null;
   country: string | null;
   state: string | null;

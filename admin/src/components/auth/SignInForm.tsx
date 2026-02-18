@@ -12,12 +12,14 @@ import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
+import Spinner from "../common/Spinner";
 
 export default function SignInForm() {
   const router = useRouter();
 
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error } = useSelector((state: RootState) => state.auth);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
@@ -33,11 +35,15 @@ export default function SignInForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
+  setIsSubmitting(true);
     const result = await dispatch(login(form));
 
     if (login.fulfilled.match(result)) {
     router.push("/");
   }
+  setIsSubmitting(false);
   };
 
   return (
@@ -115,8 +121,15 @@ export default function SignInForm() {
                   </Link>
                 </div>
                 <div>
-                  <Button className="w-full" size="sm">
-                    Sign in
+                  <Button type="submit" className="w-full" size="sm"  disabled={loading}>
+                     {loading ? (
+                                <>
+                                  <Spinner size={20} color="white" className="me-2" />
+                                  Logging in...
+                                </>
+                              ) : (
+                                "Login"
+                              )}
                   </Button>
                 </div>
               </div>
