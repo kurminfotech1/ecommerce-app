@@ -41,7 +41,7 @@ export default function SignInForm() {
     const result = await dispatch(login(form));
 
     if (login.fulfilled.match(result)) {
-    router.push("/");
+    router.push("/dashboard");
   }
   setIsSubmitting(false);
   };

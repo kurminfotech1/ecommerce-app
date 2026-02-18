@@ -6,40 +6,56 @@ import jwt from "jsonwebtoken";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+    const { email, password } = body;
 
-    if (!body.email || !body.password) {
+    // ✅ Required field validation
+    if (!email && !password) {
       return NextResponse.json(
-        { error: "Email and Password required" },
+        { error: "Email and password are required." },
+        { status: 400 }
+      );
+    }
+
+    if (!email) {
+      return NextResponse.json(
+        { error: "Email is required." },
+        { status: 400 }
+      );
+    }
+
+    if (!password) {
+      return NextResponse.json(
+        { error: "Password is required." },
         { status: 400 }
       );
     }
 
     // ✅ Check admin exists
     const admin = await prisma.admin.findUnique({
-      where: { email: body.email },
+      where: { email },
     });
 
     if (!admin) {
       return NextResponse.json(
-        { error: "Invalid email or password" },
+        { error: "Email is incorrect!" },
         { status: 401 }
       );
     }
 
     // ✅ Compare password
     const isPasswordValid = await bcrypt.compare(
-      body.password,
+      password,
       admin.password!
     );
 
     if (!isPasswordValid) {
       return NextResponse.json(
-        { error: "Invalid email or password" },
+        { error: "Password is incorrect!" },
         { status: 401 }
       );
     }
 
-    // ✅ Create Token
+    // ✅ Generate JWT
     const token = jwt.sign(
       {
         id: admin.id,
@@ -50,6 +66,7 @@ export async function POST(req: Request) {
       { expiresIn: "1d" }
     );
 
+    // ✅ Success response
     return NextResponse.json(
       {
         message: "Login successful",
@@ -64,9 +81,10 @@ export async function POST(req: Request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error(error);
+    console.error("Login error:", error);
+
     return NextResponse.json(
-      { error: "Login failed" },
+      { error: "Login Failed" },
       { status: 500 }
     );
   }

@@ -107,6 +107,11 @@ const othersItems: NavItem[] = [
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const renderMenuItems = (
     navItems: NavItem[],
@@ -183,7 +188,7 @@ const AppSidebar: React.FC = () => {
               style={{
                 height:
                   openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? `${subMenuHeight[`${menuType}-${index}`]}px`
+                    ? `${subMenuHeight[`${menuType}-${index}`] ?? 0}px`
                     : "0px",
               }}
             >
@@ -267,10 +272,10 @@ const AppSidebar: React.FC = () => {
     });
 
     // If no submenu item matches, close the open submenu
-    if (!submenuMatched) {
+    if (!submenuMatched && openSubmenu !== null) {
       setOpenSubmenu(null);
     }
-  }, [pathname,isActive]);
+  }, [pathname, isActive, openSubmenu]);
 
   useEffect(() => {
     // Set the height of the submenu items when the submenu is opened
@@ -279,7 +284,7 @@ const AppSidebar: React.FC = () => {
       if (subMenuRefs.current[key]) {
         setSubMenuHeight((prevHeights) => ({
           ...prevHeights,
-          [key]: subMenuRefs.current[key]?.scrollHeight || 0,
+          [key]: subMenuRefs.current[key]?.scrollHeight ?? 0,
         }));
       }
     }
@@ -297,6 +302,10 @@ const AppSidebar: React.FC = () => {
       return { type: menuType, index };
     });
   };
+
+  if (!mounted) {
+    return null; // Or a skeleton/placeholder that matches server-side HTML
+  }
 
   return (
     <aside

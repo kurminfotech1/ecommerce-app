@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "../../redux/store";
 import { fetchAdminById, updateAdmin } from "../../redux/auth/authApi";
@@ -11,22 +11,25 @@ import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import * as Yup from "yup";
 import { useFormik } from "formik";
+import Spinner from "../common/Spinner";
 
 export default function UserInfoCard() {
   const { isOpen, openModal, closeModal } = useModal();
   const dispatch = useDispatch<AppDispatch>();
   const userId = localStorage.getItem("userId");
+  const [isLoading,setLoading]=useState(false)
   const adminData = useSelector((state: RootState) => state.auth.user);
   
   useEffect(() => {
   if (!userId) return;
-    dispatch(fetchAdminById(userId));
+      dispatch(fetchAdminById(userId));
   }, [dispatch, userId]);
 
   const formik = useFormik({
   enableReinitialize: true,
   initialValues: {
-    full_name: adminData?.full_name || "",
+    first_name: adminData?.full_name?.split(" ")[0] || "",
+    last_name: adminData?.full_name?.split(" ").slice(1).join(" ") || "",
     email: adminData?.email || "",
     phone: adminData?.phone || "",
     country: adminData?.country || "",
@@ -35,7 +38,8 @@ export default function UserInfoCard() {
     postal_code: adminData?.postal_code || "",
   },
   validationSchema: Yup.object({
-  full_name: Yup.string().required("Full name is required"),
+  first_name: Yup.string().required("First name is required"),
+  last_name: Yup.string().required("Last name is required"),
   email: Yup.string().email("Invalid email").required("Email is required"),
   phone: Yup.string().nullable(),
   country: Yup.string().nullable(),
@@ -43,11 +47,22 @@ export default function UserInfoCard() {
   city: Yup.string().nullable(),
   postal_code: Yup.string().nullable(),
 }),
-  onSubmit: (values) => {
-    if (!userId) return;
 
-    dispatch(updateAdmin({ id: userId, data: values }));
-    closeModal();
+   onSubmit: async (values) => {
+    if (!userId) return;
+    setLoading(true);
+
+    try {
+      const { first_name, last_name, ...otherValues } = values;
+      const fullName = `${first_name} ${last_name}`.trim();
+
+      await dispatch(updateAdmin({ id: userId, data: { ...otherValues, full_name: fullName } })).unwrap();
+      closeModal();
+    } catch (error) {
+      console.error("Update failed:", error);
+    } finally {
+      setLoading(false);
+    }
   },
 });
 
@@ -181,17 +196,31 @@ export default function UserInfoCard() {
 
                 <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                   <div className="col-span-2 lg:col-span-1">
-                   <Label>Name</Label>
-              <Input
-                name="full_name"
-                type="text"
-                value={formik.values.full_name}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-              {formik.touched.full_name && formik.errors.full_name && (
-                <p className="text-red-500 text-xs">{formik.errors.full_name}</p>
-              )}
+                    <Label>First Name</Label>
+                    <Input
+                      name="first_name"
+                      type="text"
+                      value={formik.values.first_name}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                    />
+                    {formik.touched.first_name && formik.errors.first_name && (
+                      <p className="text-red-500 text-xs">{formik.errors.first_name}</p>
+                    )}
+                  </div>
+
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>Last Name</Label>
+                    <Input
+                      name="last_name"
+                      type="text"
+                      value={formik.values.last_name}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                    />
+                    {formik.touched.last_name && formik.errors.last_name && (
+                      <p className="text-red-500 text-xs">{formik.errors.last_name}</p>
+                    )}
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
@@ -249,8 +278,15 @@ export default function UserInfoCard() {
               <Button size="sm" variant="outline" onClick={closeModal}>
                 Close
               </Button>
-              <Button size="sm" type="submit">
-                Save Changes
+              <Button size="sm" type="submit" disabled={isLoading}>
+               {isLoading ? (
+                          <>
+                            <Spinner size={20} color="white" className="me-2" />
+                            Updating...
+                          </>
+                        ) : (
+                          "Update"
+                        )}
               </Button>
             </div>
           </form>

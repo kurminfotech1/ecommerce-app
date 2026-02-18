@@ -1,19 +1,19 @@
 import jwt from "jsonwebtoken";
+import { cookies } from "next/headers";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
-export function verifyToken(req: Request) {
-  const authHeader = req.headers.get("authorization");
+export async function verifyToken() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!token) {
     return null;
   }
 
-  const token = authHeader.split(" ")[1];
-
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    return decoded; // { id, email, role, etc }
+    return decoded;
   } catch (error) {
     return null;
   }
