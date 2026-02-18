@@ -11,18 +11,23 @@ datasource db {
 }
 
 
+enum Role {
+  ADMIN
+  SUPERADMIN
+}
+
 model Admin {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  full_name String?
-  password  String?
-  role      String   @default("admin")
-  phone     String?
-  country   String?
-  state     String?
-  city      String?
+  id          String   @id @default(uuid())
+  email       String   @unique
+  full_name   String?
+  password    String?
+  role        Role     @default(ADMIN)
+  phone       String?
+  country     String?
+  state       String?
+  city        String?
   postal_code String?
-  createdAt DateTime @default(now())
+  createdAt   DateTime @default(now())
 }
 
 
