@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
@@ -15,19 +15,22 @@ import { fetchAdminById } from "@/redux/auth/authApi";
 
 export default function UserMetaCard() {
   const { isOpen, openModal, closeModal } = useModal();
+  const [userId, setUserId] = useState<string | null>(null);
   const dispatch = useDispatch<AppDispatch>();
-  const userId = localStorage.getItem("userId");
   const adminData = useSelector((state: RootState) => state.auth.user);
   
-  useEffect(() => {
-  if (!userId) return;
-    dispatch(fetchAdminById(userId));
-  }, [dispatch, userId]);
-  const handleSave = () => {
-    // Handle save logic here
-    console.log("Saving changes...");
-    closeModal();
-  };
+useEffect(() => {
+  const id = localStorage.getItem("userId");
+
+  if (id) {
+    dispatch(fetchAdminById(id));
+  }
+}, [dispatch]);
+
+const handleSave = () => {
+  console.log("Saving changes...");
+  closeModal();
+};
   return (
     <>
       <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">

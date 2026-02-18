@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { fetchAdminById, fetchUsers, login, register, updateAdmin } from "./authApi";
 import { Admin } from "@/types/auth";
-
+import Cookies from "js-cookie";
 interface AdminState {
   loading: boolean;
   admins: Admin[];
@@ -25,11 +25,12 @@ const adminSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
-      localStorage.removeItem("token");
-      localStorage.removeItem("userId");
-      localStorage.removeItem("role");
+      Cookies.remove("token");
+      Cookies.remove("userId");
+      Cookies.remove("role");
       state.user = null;
       state.isAuthenticated = false;
+      
     },
   },
   extraReducers: (builder) => {

@@ -1,7 +1,8 @@
 import Axios from "@/lib/api/axios";
 import { Admin } from "@/types/auth";
 import { createAsyncThunk } from "@reduxjs/toolkit";
-
+import { toast } from "react-toastify";
+import Cookies from "js-cookie";
 
 // register
 export const register = createAsyncThunk<
@@ -42,17 +43,26 @@ export const fetchUsers = createAsyncThunk<
 // login
 export const login = createAsyncThunk(
   "auth/login",
-  async (data: { email: string; password: string }, { rejectWithValue }) => {
+  async (
+    data: { email: string; password: string },
+    { rejectWithValue }
+  ) => {
     try {
       const res = await Axios.post("auth/login", data);
-      // save token
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("userId", res.data.admin.id);
-      localStorage.setItem("role", res.data.admin.role);
+
+  Cookies.set("token", res.data.token, { expires: 7 });
+      Cookies.set("userId", res.data.admin.id, { expires: 7 });
+      Cookies.set("role", res.data.admin.role, { expires: 7 });
+
+      toast.success(res?.data?.message);
 
       return res.data;
-    } catch (error: any) {
-      return rejectWithValue(error);
+    } catch (error: any) {  
+      const message =
+        error;
+
+      toast.error(message);
+      return rejectWithValue(message);
     }
   }
 );
@@ -82,9 +92,16 @@ export const updateAdmin = createAsyncThunk<
   "admin/update",
   async ({ id, data }, { rejectWithValue }) => {
     try {      const res = await Axios.put(`auth/update/${id}`, data);
+     toast.success(
+        res?.data?.success
+      );
       return res.data.admin;
     } catch (error: any) {
-      return rejectWithValue(error);
+      const message =
+        error;
+
+      toast.error(message);
+      return rejectWithValue(message);
     }
   }
 )
