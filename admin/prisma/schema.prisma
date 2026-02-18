@@ -31,23 +31,27 @@ model Admin {
 }
 
 
-model categories {
-  id                 Int      @id @default(autoincrement())
-  category_name      String
-  slug               String   @unique
-  parent_category_id Int?
-  category_level     Int      @default(1)
-  is_active          Boolean  @default(true)
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
+model Category {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+
+  parentId  String?
+  parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Category[] @relation("CategoryTree")
+
+  is_active Boolean   @default(true)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   products products[]
 }
 
 
 model products {
-  id            Int     @id @default(autoincrement())
-  category_id   Int
+  id            String   @id @default(uuid())
+  category_id   String
 
   // basic
   product_name  String
@@ -76,14 +80,14 @@ model products {
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 
-  category categories @relation(fields: [category_id], references: [id])
+  category Category @relation(fields: [category_id], references: [id])
 
   images product_images[]
 }
 
 model product_images {
-  id         Int     @id @default(autoincrement())
-  product_id Int
+  id         String   @id @default(uuid())
+  product_id String
   image_url  String
   sort_order Int     @default(0)
 

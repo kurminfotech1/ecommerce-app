@@ -125,7 +125,7 @@ export async function POST(req: Request) {
           ? Number(body.compare_price)
           : null,
         stock: Number(body.stock ?? 0),
-        category_id: Number(body.category_id),
+        category_id: body.category_id,
         is_active: body.is_active ?? true,
         is_featured: body.is_featured ?? false,
         meta_title: body.meta_title ?? null,
@@ -136,7 +136,7 @@ export async function POST(req: Request) {
 
     // 2️⃣ generate SKU using DB id
     const categoryCode =
-      product.category.category_name
+      product.category.name
         .slice(0, 3)
         .toUpperCase();
 
@@ -190,7 +190,7 @@ export async function PUT(req: Request) {
     }
 
     const updated = await prisma.products.update({
-      where: { id: Number(id) },
+      where: { id: id },
       data: {
         product_name: body.product_name,
         slug: body.slug,
@@ -207,7 +207,7 @@ export async function PUT(req: Request) {
         stock: Number(body.stock),
         sku: body.sku,
 
-        category_id: Number(body.category_id),
+        category_id: body.category_id,
 
         is_active: body.is_active,
         is_featured: body.is_featured,
@@ -251,7 +251,7 @@ export async function DELETE(req: Request) {
       );
     }
 
-    const productId = Number(id);
+    const productId = id;
 
     // 1️⃣ fetch images from DB
     const images = await prisma.product_images.findMany({

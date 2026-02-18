@@ -1,114 +1,182 @@
-import { verifyToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { verifyToken } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
+/* ================= GET ================= */
 export async function GET(req: Request) {
   try {
-      const user = verifyToken(req);
-  
-      if (!user) {
-        return NextResponse.json(
-          { error: "Unauthorized" },
-          { status: 401 }
-        );
-      }
+    const user = verifyToken(req);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const id = new URL(req.url).searchParams.get("id");
-  
-    // GET single
+
+    /* ---------- SINGLE CATEGORY ---------- */
     if (id) {
-      const category = await prisma.categories.findUnique({
-        where: { id: Number(id) },
+      const category = await prisma.category.findUnique({
+        where: { id },
       });
-  
+
+      if (!category) {
+        return NextResponse.json({ error: "Category not found" }, { status: 404 });
+      }
+
       return NextResponse.json(category);
     }
-  
-    // GET all
-    const categories = await prisma.categories.findMany();
-    return NextResponse.json(categories);
+
+    /* ---------- ALL CATEGORIES ---------- */
+    const categories = await prisma.category.findMany({
+      orderBy: { created_at: "asc" },
+    });
+
+    // Convert flat list to tree
+    const map = new Map<string, any>();
+
+    categories.forEach(cat => {
+      map.set(cat.id, { ...cat, children: [] });
+    });
+
+    const tree: any[] = [];
+
+    categories.forEach(cat => {
+      if (cat.parentId) {
+        const parent = map.get(cat.parentId);
+        if (parent) {
+          parent.children.push(map.get(cat.id));
+        }
+      } else {
+        tree.push(map.get(cat.id));
+      }
+    });
+
+    return NextResponse.json(tree);
+
   } catch (error) {
-    console.error("GET ERROR:", error);
-    return NextResponse.json({ error: "Failed" }, { status: 500 });
+    console.error("GET CATEGORY ERROR:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch categories" },
+      { status: 500 }
+    );
   }
 }
 
+
+/* ================= POST ================= */
 export async function POST(req: Request) {
   try {
     const user = verifyToken(req);
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
     const body = await req.json();
-  
-     const category = await prisma.categories.create({
+
+    if (!body.name || !body.slug) {
+      return NextResponse.json({ error: "Name and slug required" }, { status: 400 });
+    }
+
+    const category = await prisma.category.create({
       data: {
-        category_name: body.category_name,
+        name: body.name,
         slug: body.slug,
+        parentId: body.parentId || null,
         is_active: body.is_active ?? true,
-        category_level: 1,
-        parent_category_id: null,
       },
     });
-  
-    return NextResponse.json( {category, message: "Category created successfully"}, { status: 201 });
-  } catch (error) {
-    console.error("POST ERROR:", error);
-    return NextResponse.json({ error: "Failed" }, { status: 500 });
+
+    return NextResponse.json(
+      { category, message: "Category created successfully" },
+      { status: 201 }
+    );
+  } catch (error: any) {
+    console.error("CREATE CATEGORY ERROR:", error);
+
+    if (error.code === "P2002") {
+      return NextResponse.json({ error: "Slug already exists" }, { status: 409 });
+    }
+
+    return NextResponse.json({ error: "Failed to create category" }, { status: 500 });
   }
 }
 
+/* ================= PUT ================= */
 export async function PUT(req: Request) {
   try {
     const user = verifyToken(req);
-
     if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const id = new URL(req.url).searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ error: "ID required" }, { status: 400 });
+    }
+
+    const body = await req.json();
+
+    // ❌ Prevent self as parent
+    if (body.parentId && body.parentId === id) {
       return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+        { error: "Category cannot be its own parent" },
+        { status: 400 }
       );
     }
-    const id = new URL(req.url).searchParams.get("id");
-    const body = await req.json();
-  
-    const updated = await prisma.categories.update({
-      where: { id: Number(id) },
-      data: body,
+
+    const updated = await prisma.category.update({
+      where: { id },
+      data: {
+        name: body.name,
+        slug: body.slug,
+        parentId: body.parentId ?? null,
+        is_active: body.is_active ?? true,
+      },
     });
-  
-    return NextResponse.json({ updated, message: "Category updated successfully" }, { status: 200 });
+
+    return NextResponse.json(
+      { updated, message: "Category updated successfully" },
+      { status: 200 }
+    );
   } catch (error) {
-    console.error("PUT ERROR:", error);
+    console.error("UPDATE CATEGORY ERROR:", error);
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }
 }
 
+
+/* ================= DELETE ================= */
 export async function DELETE(req: Request) {
- try {
+  try {
     const user = verifyToken(req);
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
     const id = new URL(req.url).searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
-    if (!id) {
-      return NextResponse.json({ error: "ID required" }, { status: 400 });
-    }
-  
-    await prisma.categories.delete({
-      where: { id: Number(id) },
+    const category = await prisma.category.findUnique({
+      where: { id },
     });
-  
-    return NextResponse.json({ message: "Deleted category successfully" });
- } catch (error) {
-    console.error("DELETE ERROR:", error);
+
+    if (!category) {
+      return NextResponse.json({ error: "Category not found" }, { status: 404 });
+    }
+
+    // 🔥 Soft delete parent
+    await prisma.category.update({
+      where: { id },
+      data: { is_active: false },
+    });
+
+    // 🔥 Soft delete its children
+    await prisma.category.updateMany({
+      where: { parentId: id },
+      data: { is_active: false },
+    });
+
+    return NextResponse.json({
+      message: "Category soft deleted successfully",
+    });
+  } catch (error) {
+    console.error("SOFT DELETE CATEGORY ERROR:", error);
     return NextResponse.json({ error: "Delete failed" }, { status: 500 });
- }
+  }
 }
+
