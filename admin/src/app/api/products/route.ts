@@ -1,9 +1,18 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseServer";
+import { verifyToken } from "@/lib/auth";
 
 export async function GET(req: Request) {
   try {
+      const user = verifyToken(req);
+  
+      if (!user) {
+        return NextResponse.json(
+          { error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
     const { searchParams } = new URL(req.url);
 
     const page = Number(searchParams.get("page") || 1);
@@ -92,6 +101,14 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const user = verifyToken(req);
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
     const body = await req.json();
 
     // 1️⃣ create product first
@@ -157,6 +174,14 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
+    const user = verifyToken(req);
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
     const id = new URL(req.url).searchParams.get("id");
     const body = await req.json();
 
@@ -209,6 +234,14 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
+    const user = verifyToken(req);
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
     const id = new URL(req.url).searchParams.get("id");
 
     if (!id) {

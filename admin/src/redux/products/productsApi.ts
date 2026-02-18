@@ -35,10 +35,14 @@ export interface Product {
 export const getProducts = createAsyncThunk(
   "products/get",
   async (params: any = {}) => {
-    const query = new URLSearchParams(params).toString();
+    try {const query = new URLSearchParams(params).toString();
 
-    const res = await fetch(`/api/products?${query}`);
-    return await res.json();
+    const res = await Axios.get(`/products?${query}`);
+    return res.data;
+    } catch (e: any) {
+      toast.error(e?.response?.data?.error || e);
+      throw e;
+    }
   }
 );
 
@@ -53,7 +57,7 @@ export const createProduct = createAsyncThunk(
       toast.success(res.data.message);
       return res.data.data;
     } catch (e: any) {
-      toast.error(e?.response?.data?.error || "Create failed");
+      toast.error(e?.response?.data?.error || e);
       return rejectWithValue(e.message);
     }
   }
@@ -70,7 +74,7 @@ export const updateProduct = createAsyncThunk(
       toast.success(res.data.message);
       return res.data.data;
     } catch (e: any) {
-      toast.error(e?.response?.data?.error || "Update failed");
+      toast.error(e?.response?.data?.error || e);
       return rejectWithValue(e.message);
     }
   }
@@ -87,7 +91,7 @@ export const deleteProduct = createAsyncThunk(
       toast.success(res.data.message);
       return id;
     } catch (e: any) {
-      toast.error(e?.response?.data?.error || "Delete failed");
+      toast.error(e?.response?.data?.error || e);
       return rejectWithValue(e.message);
     }
   }

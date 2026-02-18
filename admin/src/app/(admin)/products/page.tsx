@@ -259,7 +259,7 @@ export default function ProductsPage() {
 
       {loading ? (
           <SkeletonTable />
-      ) : products.length === 0 ? (
+      ) : products?.length === 0 ? (
         <div className="bg-white border rounded-xl shadow p-10 text-center text-gray-500">
           No products found
         </div>
@@ -285,7 +285,7 @@ export default function ProductsPage() {
               </thead>
 
               <tbody>
-                {products.map((p: any) => (
+                {products?.map((p: any) => (
                   <tr
                     key={p.id}
                     className="border-t hover:bg-gray-50"
@@ -422,7 +422,7 @@ export default function ProductsPage() {
         // </table>
       )}
 
-      {products.length > 0 && totalPages > 1 && (
+      {products?.length > 0 && totalPages > 1 && (
         <div className="flex justify-center gap-2 mt-6">
           <button
             disabled={page === 1}

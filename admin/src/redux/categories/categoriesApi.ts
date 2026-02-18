@@ -23,7 +23,7 @@ export const createCategory = createAsyncThunk<
       return res.data.category;
     } catch (error: any) {
       toast.error(
-        error?.response?.data?.message
+        error || error?.response?.data?.message
       );
       return rejectWithValue(error.message);
     }
@@ -41,7 +41,7 @@ export const updateCategory = createAsyncThunk(
       return res.data.updated;
     } catch (error: any) {
       toast.error(
-        error?.response?.data?.message
+         error || error?.response?.data?.message
       );
       return rejectWithValue(error.message);
     }
@@ -61,7 +61,7 @@ export const getCategories = createAsyncThunk<
       return res.data;
     } catch (error: any) {
       toast.error(
-        error?.response?.data?.message
+        error
       );
       return rejectWithValue(error.message);
     }
@@ -84,7 +84,7 @@ export const deleteCategory = createAsyncThunk<
       return id;
     } catch (error: any) {
       toast.error(
-        error?.response?.data?.message
+         error || error?.response?.data?.message
       );
 
       return rejectWithValue(
