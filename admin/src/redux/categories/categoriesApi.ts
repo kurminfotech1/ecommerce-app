@@ -3,10 +3,14 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 
 export interface Category {
-  id: number;
-  category_name: string;
+  id: string;
+  name: string;
   slug: string;
+  parentId: string | null;
   is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+  children?: Category[];
 }
 
 // create
@@ -36,12 +40,12 @@ export const updateCategory = createAsyncThunk(
   async (data: any, { rejectWithValue }) => {
     try {
       const res = await Axios.put(`categories?id=${data.id}`, data);
-      
+
       toast.success(res.data?.message);
       return res.data.updated;
     } catch (error: any) {
       toast.error(
-         error || error?.response?.data?.message
+        error || error?.response?.data?.message
       );
       return rejectWithValue(error.message);
     }
@@ -58,7 +62,7 @@ export const getCategories = createAsyncThunk<
   async (_, { rejectWithValue }) => {
     try {
       const res = await Axios.get("categories");
-      return res.data;
+      return res.data.data;
     } catch (error: any) {
       toast.error(
         error
@@ -84,7 +88,7 @@ export const deleteCategory = createAsyncThunk<
       return id;
     } catch (error: any) {
       toast.error(
-         error || error?.response?.data?.message
+        error || error?.response?.data?.message
       );
 
       return rejectWithValue(

@@ -11,9 +11,15 @@ Axios.interceptors.request.use(
 
       const isFormData = config.data instanceof FormData;
 
-      config.headers["Content-Type"] = isFormData
-        ? "multipart/form-data"
-        : "application/json";
+      if (isFormData) {
+        // ⚠️ Do NOT set Content-Type manually for FormData.
+        // Browser must set it automatically so it includes the
+        // correct multipart boundary. Without boundary, the server
+        // cannot parse the form fields/files.
+        delete config.headers["Content-Type"];
+      } else {
+        config.headers["Content-Type"] = "application/json";
+      }
 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -29,8 +35,8 @@ Axios.interceptors.response.use(
   (response) => response,
   (error) => {
     const message =
-      error.response?.data?.error || "Something went wrong";
-    return Promise.reject(message);
+      error.response?.data?.error || error.message || "Something went wrong";
+    return Promise.reject(new Error(message));
   }
 );
 
