@@ -876,3 +876,391 @@ span.flatpickr-weekday,
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   CATEGORIES PAGE
+═══════════════════════════════════════════════════════════ */
+
+/* ── top bar ─────────────────────────────────────────────── */
+.c-topbar {
+  @apply flex items-center justify-between mb-5 px-5 py-4
+          rounded-xl border border-gray-200
+         shadow-[0_1px_4px_rgba(0,0,0,.06)];
+     background:
+    radial-gradient(circle at 15% 20%, #e0f2fe 0%, transparent 40%),
+    radial-gradient(circle at 85% 30%, #ede9fe 0%, transparent 40%),
+    linear-gradient(90deg, #ffffff 0%, #f8fafc 100%);
+}
+.c-topbar-title {
+  @apply flex items-center gap-2 text-lg font-bold text-gray-900;
+}
+
+
+.c-btn-add {
+  @apply flex items-center gap-2 bg-[#155dfc] text-white
+         font-semibold text-sm rounded-lg px-4 py-2
+         cursor-pointer transition-all duration-150
+         shadow-[0_2px_10px_rgba(21,93,252,.28)];
+}
+.c-btn-add:hover {
+  @apply bg-[#1246cc] -translate-y-px
+         shadow-[0_4px_14px_rgba(21,93,252,.38)];
+}
+
+/* ── main card ───────────────────────────────────────────── */
+.c-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  overflow: visible; /* must NOT be clip/hidden — context menus are position:absolute and would get cut */
+  box-shadow: 0 2px 12px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.06);
+  transition: box-shadow .2s;
+}
+.c-card:hover {
+  box-shadow: 0 4px 20px rgba(21,93,252,.13), 0 1px 4px rgba(0,0,0,.07);
+}
+
+.c-card-header {
+  @apply flex items-center justify-between px-4 py-3 select-none
+         min-h-[52px] rounded-t-xl border-b border-gray-200;
+}
+.c-card-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;      /* largest — main category */
+  font-weight: 800;
+  letter-spacing: .08em;
+  color: #053880;          /* deep indigo */
+}
+
+
+.c-name-edit-btn {
+  @apply cursor-pointer text-[#053880]
+         flex items-center px-1  rounded 
+         transition-all duration-150;
+          border-radius: 6px;
+  border: 1px solid;
+  width: 26px;
+  height: 26px;
+}
+
+
+.c-three-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0;
+  transition: background .15s, border-color .15s, color .15s, transform .1s;
+}
+.c-three-dot:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #2563eb;
+  transform: translateY(-1px);
+}
+
+
+/* ── sub-category 3-column grid ──────────────────────────── */
+.c-sub-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  padding: 12px 14px 14px;
+ 
+  border-radius: 0 0 11px 11px;
+}
+@media (max-width: 767px) {
+  .c-sub-grid { grid-template-columns: 1fr !important; }
+}
+@media (min-width: 768px) {
+  .c-sub-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1024px) {
+  .c-sub-grid { grid-template-columns: repeat(3, 1fr); }
+}
+.c-sub-grid .c-sub-col {
+  background:  #f0f5ff;
+  border: 1px solid #d1e5f5;
+  border-radius: 10px;
+  padding: 15px 12px;
+  overflow: visible; /* keep context menus visible */
+}
+/* first sub-col rounded bottom-left to match the card */
+/* This rule is no longer needed as each sub-col is now a rounded card */
+
+.c-sub-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+.c-sub-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;      /* medium — sub-category */
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: #1d4ed8;          /* vivid blue */
+}
+.c-sub-title svg { color: #053880; }
+.c-sub-ctx { position: relative; }  
+
+/* accent line — ALWAYS visible, rendered outside the collapse wrapper */
+.c-sub-accent {
+  height: 1.5px;
+  background: #155dfc;
+  opacity: 0.4;
+  border-radius: 2px;
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+/* ── smooth collapse ─────────────────────────────────────── */
+.c-collapse-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows .28s ease;
+  overflow: hidden;
+}
+.c-collapse-wrap.is-open {
+  grid-template-rows: 1fr;
+}
+.c-collapse-inner { min-height: 0; }
+
+/* ── child list ──────────────────────────────────────────── */
+.c-child-list { @apply flex flex-col pt-1.5; }
+.c-child-item {
+  @apply flex items-center justify-between py-1 px-0.5
+         border-b border-gray-50 gap-1.5 last:border-b-0;
+}
+.c-child-left  { @apply flex items-center gap-1.5 min-w-0 flex-1; }
+.c-child-dot   { @apply w-1.5 h-1.5 rounded-full bg-[#155dfc] shrink-0 opacity-60; }
+.c-child-name {
+  font-size: 0.95rem;      /* smallest — child category */
+  font-weight: 500;
+  color: #475569;          /* slate blue-gray */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.c-child-actions { @apply flex items-center gap-1 shrink-0; }
+
+
+.ib {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1.5px solid;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .15s, transform .1s;
+  background: transparent;
+  padding: 0;
+}
+.ib:hover  { transform: translateY(-1px); }
+.ib:active { transform: scale(.93); }
+
+/* blue — edit */
+.ib-blue {
+  color: #2563eb;
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+.ib-blue:hover { background: #dbeafe; border-color: #93c5fd; }
+
+/* red — delete */
+.ib-red {
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+.ib-red:hover { background: #fee2e2; border-color: #fca5a5; }
+
+/* green — add */
+.ib-green {
+  color: #16a34a;
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+.ib-green:hover { background: #dcfce7; border-color: #86efac; }
+
+/* backward-compat aliases — written as plain CSS (can't @apply custom classes) */
+.c-icon-btn-edit {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 6px; border: 1.5px solid #bfdbfe;
+  cursor: pointer; flex-shrink: 0; padding: 0;
+  color: #2563eb; background: #eff6ff;
+  transition: background .15s, transform .1s;
+}
+.c-icon-btn-edit:hover { background: #dbeafe; border-color: #93c5fd; transform: translateY(-1px); }
+
+.c-icon-btn-del {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 6px; border: 1.5px solid #fecaca;
+  cursor: pointer; flex-shrink: 0; padding: 0;
+  color: #dc2626; background: #fef2f2;
+  transition: background .15s, transform .1s;
+}
+.c-icon-btn-del:hover { background: #fee2e2; border-color: #fca5a5; transform: translateY(-1px); }
+
+/* ── empty state ─────────────────────────────────────────── */
+.c-card-empty {
+  @apply text-center p-5 text-[.8rem] text-gray-400 italic;
+}
+
+/* ── context menu ────────────────────────────────────────── */
+.c-ctx-menu {
+  @apply absolute right-0 top-[calc(100%+4px)] bg-white
+         border border-gray-200 rounded-xl
+         shadow-[0_8px_28px_rgba(0,0,0,.12)]
+         z-[9999] min-w-[200px] overflow-hidden;
+  animation: ctxFadeIn .12s ease;
+}
+@keyframes ctxFadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.c-ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 14px;
+  background: transparent;
+  border: 0;
+  font-size: .83rem;
+  font-weight: 500;
+  color: #2563eb;           /* default = blue (Edit) */
+  cursor: pointer;
+  text-align: left;
+  transition: background .1s;
+}
+
+/* bordered icon box — inherits currentColor for border + icon tint */
+.c-ctx-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid currentColor;
+  opacity: 0.85;
+  flex-shrink: 0;
+  background: transparent;
+}
+
+.c-ctx-item:hover    { background: #eff6ff; }
+.c-ctx-item.danger   { color: #ef4444; }
+.c-ctx-item.danger:hover { background: #fef2f2; }
+.c-ctx-item.success  { color: #16a34a; }
+.c-ctx-item.success:hover { background: #f0fdf4; }
+.c-ctx-divider { height: 1px; background: #f1f5f9; margin: 2px 0; }
+
+/* ── modal ───────────────────────────────────────────────── */
+.c-backdrop {
+  @apply fixed inset-0 bg-black/40 flex items-center justify-center z-[1000];
+  animation: fadeIn .15s ease;
+}
+@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+
+.c-modal {
+  @apply bg-white rounded-2xl p-7 w-[90%] max-w-[420px]
+         shadow-[0_20px_60px_rgba(0,0,0,.18)];
+  animation: scaleIn .16s ease;
+}
+@keyframes scaleIn {
+  from { transform: scale(.94); opacity:0 }
+  to   { transform: scale(1);   opacity:1 }
+}
+.c-modal-head {
+  @apply flex items-center justify-between mb-4;
+}
+.c-modal-head h3 { @apply text-[.98rem] font-bold text-gray-900; }
+.c-modal-x {
+  @apply bg-transparent border-0 cursor-pointer text-gray-400
+         p-1 rounded flex items-center transition-colors duration-150;
+}
+.c-modal-x:hover { @apply bg-gray-100 text-gray-700; }
+
+.c-input {
+  @apply w-full border border-gray-200 rounded-lg px-3.5 py-2.5
+         text-[.9rem] outline-none text-gray-900
+         transition-all duration-150 font-[inherit];
+  box-sizing: border-box;
+}
+.c-input:focus {
+  @apply border-[#155dfc] shadow-[0_0_0_3px_rgba(21,93,252,.08)];
+}
+
+.c-modal-foot { @apply flex justify-end gap-2.5 mt-4; }
+
+.c-btn-ghost {
+  @apply px-4 py-2 rounded-lg border border-gray-200
+         bg-transparent text-[.84rem] cursor-pointer
+         text-gray-700 font-medium transition-colors duration-150;
+}
+.c-btn-ghost:hover { @apply bg-gray-50; }
+
+.c-btn-primary {
+  @apply flex items-center gap-1.5 px-5 py-2 rounded-lg border-0
+         bg-[#155dfc] text-white text-[.84rem] font-semibold
+         cursor-pointer transition-colors duration-150;
+}
+.c-btn-primary:hover:not(:disabled) { @apply bg-[#1246cc]; }
+.c-btn-primary:disabled { @apply opacity-40 cursor-not-allowed; }
+
+.c-btn-danger {
+  @apply px-4 py-2 rounded-lg border-0
+         bg-red-500 text-white text-[.84rem] font-semibold
+         cursor-pointer transition-colors duration-150;
+}
+.c-btn-danger:hover { @apply bg-red-600; }
+
+/* ── skeleton shimmer ────────────────────────────────────── */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.c-skel-card {
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #edf2f7;
+}
+.c-skel-line, .c-skel-box {
+  background: #f1f5f9;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+.c-skel-box { border-radius: 6px; }
+
+/* Shimmer overlay */
+.c-skel-line::after, .c-skel-box::after {
+  content: "";
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}

@@ -3,6 +3,7 @@ import { Admin } from "@/types/auth";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
+import { encryptData } from "@/lib/crypto";
 
 // register
 export const register = createAsyncThunk<
@@ -50,9 +51,14 @@ export const login = createAsyncThunk(
     try {
       const res = await Axios.post("auth/login", data);
 
-  Cookies.set("token", res.data.token, { expires: 7 });
-      Cookies.set("userId", res.data.admin.id, { expires: 7 });
-      Cookies.set("role", res.data.admin.role, { expires: 7 });
+  // Cookies.set("token", res.data.token, { expires: 1 });
+  //     Cookies.set("userId", res.data.admin.id, { expires: 1 });
+  //     Cookies.set("role", res.data.admin.role, { expires: 1 });
+  Cookies.set("token", encryptData(res.data.token));
+  Cookies.set("userId", encryptData(res.data.admin.id));
+  console.log("sdasd",res.data.admin.id);
+  
+  Cookies.set("role", encryptData(res.data.admin.role));
 
       toast.success(res?.data?.message);
 

@@ -1,4 +1,5 @@
 import axios from "axios";
+import Cookies from "js-cookie";
 
 const Axios = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -7,7 +8,7 @@ const Axios = axios.create({
 Axios.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
+      const token = Cookies.get("token");
 
       const isFormData = config.data instanceof FormData;
 

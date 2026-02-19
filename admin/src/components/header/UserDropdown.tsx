@@ -12,6 +12,7 @@ import { RootState } from "@/redux/rootReducer";
 import { fetchAdminById } from "@/redux/auth/authApi";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
+import { decryptData } from "@/lib/crypto";
 export default function UserDropdown() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
@@ -21,10 +22,14 @@ export default function UserDropdown() {
 
   const admins = useSelector((state: RootState) => state.auth.user);
 
-  useEffect(() => {
-    const id = Cookies.get("userId");
+useEffect(() => {
+  const cookieValue = Cookies.get("userId");
+  if (cookieValue) {
+    const id = decryptData(cookieValue);
     setUserId(id);
-  }, []);
+  }
+}, []);
+
 
   useEffect(() => {
     if (userId) {
