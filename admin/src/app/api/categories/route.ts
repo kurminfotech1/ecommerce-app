@@ -159,20 +159,18 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }
 
-    // 🔥 Soft delete parent
-    await prisma.category.update({
-      where: { id },
-      data: { is_active: false },
-    });
-
-    // 🔥 Soft delete its children
-    await prisma.category.updateMany({
-      where: { parentId: id },
-      data: { is_active: false },
-    });
+    // 🔥 Delete children first, then parent (permanent)
+    await prisma.$transaction([
+      prisma.category.deleteMany({
+        where: { parentId: id },
+      }),
+      prisma.category.delete({
+        where: { id },
+      }),
+    ]);
 
     return NextResponse.json({
-      message: "Category soft deleted successfully",
+      message: "Category permanently deleted successfully",
     });
   } catch (error) {
     console.error("SOFT DELETE CATEGORY ERROR:", error);
