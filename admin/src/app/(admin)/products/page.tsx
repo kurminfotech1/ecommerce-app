@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { RootState } from "@/redux/rootReducer";
@@ -10,83 +10,187 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  uploadImages,
+  Product,
 } from "@/redux/products/productsApi";
+import { getCategories, Category } from "@/redux/categories/categoriesApi";
 
-import { getCategories } from "@/redux/categories/categoriesApi";
-
-import { Eye, Pencil, Trash2, X } from "lucide-react";
+import {
+  Search, Plus, Eye, Pencil, Trash2, X, Upload,
+  ChevronLeft, ChevronRight, Star, Package,
+  LayoutGrid, List, ImageOff, Tag, Layers,
+  CheckCircle2, XCircle, ChevronDown, ChevronUp,
+  Loader2,
+} from "lucide-react";
 import { DeleteModal } from "@/components/common/DeleteModal";
 
-const SkeletonTable = () => (
-  <div className="bg-white rounded-xl shadow border overflow-hidden">
-    <div className="divide-y">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-4 p-4 animate-pulse"
-        >
-          <div className="w-12 h-12 bg-gray-200 rounded-lg" />
-
-          <div className="flex-1 space-y-2">
-            <div className="h-4 bg-gray-200 rounded w-1/3" />
-            <div className="h-3 bg-gray-200 rounded w-1/4" />
-          </div>
-
-          <div className="w-20 h-4 bg-gray-200 rounded" />
-          <div className="w-16 h-4 bg-gray-200 rounded" />
-          <div className="w-24 h-4 bg-gray-200 rounded" />
+// ── Skeleton ────────────────────────────────────────────────────
+const Skeleton = () => (
+  <div className="space-y-3">
+    {Array.from({ length: 6 }).map((_, i) => (
+      <div key={i} className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-100 animate-pulse">
+        <div className="w-14 h-14 bg-gray-200 rounded-xl shrink-0" />
+        <div className="flex-1 space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-2/5" />
+          <div className="h-3 bg-gray-100 rounded w-1/4" />
         </div>
-      ))}
-    </div>
+        <div className="w-20 h-5 bg-gray-200 rounded-full" />
+        <div className="w-16 h-4 bg-gray-200 rounded" />
+        <div className="w-24 h-4 bg-gray-200 rounded" />
+        <div className="w-20 h-8 bg-gray-200 rounded-lg" />
+      </div>
+    ))}
   </div>
 );
 
+// ── Badge ────────────────────────────────────────────────────────
+const Badge = ({ children, color = "gray" }: { children: React.ReactNode; color?: string }) => {
+  const colors: Record<string, string> = {
+    green: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    red: "bg-red-50 text-red-600 border-red-200",
+    blue: "bg-blue-50 text-blue-700 border-blue-200",
+    amber: "bg-amber-50 text-amber-700 border-amber-200",
+    gray: "bg-gray-50 text-gray-600 border-gray-200",
+    purple: "bg-purple-50 text-purple-700 border-purple-200",
+  };
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${colors[color]}`}>
+      {children}
+    </span>
+  );
+};
+
+// ── Image Preview Modal ──────────────────────────────────────────
+const ImagePreview = ({ url, onClose }: { url: string; onClose: () => void }) => (
+  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100]" onClick={onClose}>
+    <button className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition" onClick={onClose}>
+      <X size={20} />
+    </button>
+    <img src={url} className="max-w-[90vw] max-h-[90vh] rounded-2xl shadow-2xl object-contain" onClick={(e) => e.stopPropagation()} />
+  </div>
+);
+
+// ── Form Field ───────────────────────────────────────────────────
+const Field = ({ label, children, span = 1 }: { label: string; children: React.ReactNode; span?: number }) => (
+  <div className={span === 2 ? "col-span-2" : ""}>
+    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{label}</label>
+    {children}
+  </div>
+);
+
+const inputCls = "w-full border border-gray-200 bg-gray-50 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:bg-white transition placeholder:text-gray-400";
+const selectCls = `${inputCls} cursor-pointer`;
+
+// ── Utility: find category node anywhere in the tree ─────────────
+function findCatNode(nodes: Category[], id: string): Category | null {
+  for (const n of nodes) {
+    if (n.id === id) return n;
+    const found = findCatNode(n.children ?? [], id);
+    if (found) return found;
+  }
+  return null;
+}
+
+// ── Resolve L1/L2/L3 from a leaf category_id (bottom-up) ─────────
+function resolveCatSelections(categories: Category[], id: string) {
+  if (!id) return { l1: "", l2: "", l3: "" };
+  const node = findCatNode(categories, id);
+  if (!node) return { l1: id, l2: "", l3: "" };
+  if (!node.parentId) return { l1: id, l2: "", l3: "" };
+  const parent = findCatNode(categories, node.parentId);
+  if (!parent) return { l1: id, l2: "", l3: "" };
+  if (!parent.parentId) return { l1: parent.id, l2: id, l3: "" };
+  const grand = findCatNode(categories, parent.parentId);
+  if (!grand || grand.parentId) return { l1: parent.id, l2: id, l3: "" };
+  return { l1: grand.id, l2: parent.id, l3: id };
+}
+
+// ── Empty state ──────────────────────────────────────────────────
+const EmptyState = ({ onAdd }: { onAdd: () => void }) => (
+  <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl border border-dashed border-gray-200">
+    <div className="w-16 h-16 bg-violet-50 rounded-2xl flex items-center justify-center mb-4">
+      <Package size={28} className="text-violet-400" />
+    </div>
+    <p className="text-lg font-semibold text-gray-700 mb-1">No products yet</p>
+    <p className="text-sm text-gray-400 mb-6">Start adding products to your inventory.</p>
+    <button onClick={onAdd} className="bg-violet-600 hover:bg-violet-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm">
+      + Add First Product
+    </button>
+  </div>
+);
+
+// ────────────────────────────────────────────────────────────────
+// Main Page
+// ────────────────────────────────────────────────────────────────
 export default function ProductsPage() {
   const dispatch = useDispatch<AppDispatch>();
-
-  const { products, totalPages, loading } = useSelector((s: RootState) => s.products);
+  const { products, totalPages, total, loading, submitting, uploading } =
+    useSelector((s: RootState) => s.products);
   const { categories } = useSelector((s: RootState) => s.categories);
-
+  console.log(categories);
+  // ── List state ─────────────────────────────────────────────────
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [page, setPage] = useState(1);
-  
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [detailProduct, setDetailProduct] = useState<any>(null);
 
+  // ── Modal state ────────────────────────────────────────────────
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+
+  // ── Detail modal ───────────────────────────────────────────────
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
+  const [expandedVariants, setExpandedVariants] = useState(false);
+
+  // ── Preview ────────────────────────────────────────────────────
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  // ── Form ───────────────────────────────────────────────────────
   const emptyForm = {
-    product_name: "",
-    slug: "",
-    short_desc: "",
-    size: "",
-    color: "",
-    description: "",
-    price: "",
-    compare_price: "",
-    stock: "",
-    category_id: "",
-    meta_title: "",
-    meta_desc: "",
-    is_featured: false,
+    product_name: "", slug: "", short_desc: "", description: "",
+    size: "", color: "", price: "", compare_price: "", stock: "0",
+    category_id: "", parentId: "",
+    meta_title: "", meta_desc: "",
+    is_active: true, is_featured: false,
   };
 
   const [form, setForm] = useState<any>(emptyForm);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editId, setEditId] = useState<number | null>(null);
-  const [skuPreview, setSkuPreview] = useState("");
-  const [images, setImages] = useState<string[]>([]);
-  const [uploading, setUploading] = useState(false);
+  const [images, setImages] = useState<string[]>([]); // confirmed URLs
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]); // awaiting upload
 
-  useEffect(() => {
-    dispatch(getProducts({
-      page,
-      limit: 10,
-      search,
-      category: categoryFilter,
-    }));
-    dispatch(getCategories());
-  }, [page, search, categoryFilter]);
+  // ── Cascading category state (L1 = main, L2 = child, L3 = sub) ─
+  const [catL1, setCatL1] = useState("");
+  const [catL2, setCatL2] = useState("");
+  const [catL3, setCatL3] = useState("");
 
+  const catMainList = (categories as Category[]).filter((c) => !c.parentId);
+  const catL2List   = catL1 ? (findCatNode(categories as Category[], catL1)?.children ?? []) : [];
+  const catL3List   = catL2 ? (findCatNode(categories as Category[], catL2)?.children ?? []) : [];
+
+  // Effective category_id = deepest selected level
+  const effectiveCatId = catL3 || catL2 || catL1;
+
+  const handleCatL1 = (id: string) => {
+    setCatL1(id); setCatL2(""); setCatL3("");
+    setForm((f: any) => ({ ...f, category_id: id }));
+  };
+  const handleCatL2 = (id: string) => {
+    setCatL2(id); setCatL3("");
+    setForm((f: any) => ({ ...f, category_id: id || catL1 }));
+  };
+  const handleCatL3 = (id: string) => {
+    setCatL3(id);
+    setForm((f: any) => ({ ...f, category_id: id || catL2 || catL1 }));
+  };
+
+  // ── Fetch ──────────────────────────────────────────────────────
+  const fetchProducts = useCallback(() => {
+    dispatch(getProducts({ page, limit: 10, search, category: categoryFilter }));
+  }, [page, search, categoryFilter, dispatch]);
+
+  useEffect(() => { fetchProducts(); }, [fetchProducts]);
+  useEffect(() => { dispatch(getCategories()); }, [dispatch]);
+
+  // ── Keyboard / scroll lock ─────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -95,41 +199,49 @@ export default function ProductsPage() {
         setModalOpen(false);
       }
     };
-
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-
   useEffect(() => {
-    document.body.style.overflow =
-      previewImage || detailProduct || modalOpen
-        ? "hidden"
-        : "auto";
+    document.body.style.overflow = previewImage || detailProduct || modalOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
   }, [previewImage, detailProduct, modalOpen]);
 
-
+  // ── Helpers ────────────────────────────────────────────────────
   const openCreate = () => {
     setForm(emptyForm);
     setImages([]);
-    setSkuPreview("");
+    setPendingFiles([]);
+    setCatL1(""); setCatL2(""); setCatL3("");
     setEditId(null);
     setModalOpen(true);
   };
 
-  const openEdit = (p: any) => {
+  const openEdit = (p: Product) => {
     setEditId(p.id);
-    setSkuPreview(p.sku);
-    setImages(p.images?.map((i: any) => i.image_url) || []);
-
+    setImages(p.images?.map((i) => i.image_url) || []);
+    setPendingFiles([]);
+    // Resolve L1/L2/L3 from existing category_id
+    const resolved = resolveCatSelections(categories as Category[], p.category_id);
+    setCatL1(resolved.l1); setCatL2(resolved.l2); setCatL3(resolved.l3);
     setForm({
-      ...p,
+      product_name: p.product_name,
+      slug: p.slug ?? "",
+      short_desc: p.short_desc ?? "",
+      description: p.description ?? "",
+      size: p.size ?? "",
+      color: p.color ?? "",
       price: String(p.price),
-      compare_price: p.compare_price ?? "",
+      compare_price: p.compare_price ? String(p.compare_price) : "",
       stock: String(p.stock),
-      category_id: String(p.category_id),
+      category_id: p.category_id,
+      parentId: p.parentId ?? "",
+      meta_title: p.meta_title ?? "",
+      meta_desc: p.meta_desc ?? "",
+      is_active: p.is_active,
+      is_featured: p.is_featured,
     });
-
     setModalOpen(true);
   };
 
@@ -139,637 +251,803 @@ export default function ProductsPage() {
   };
 
   const handleName = (name: string) => {
-    setForm({
-      ...form,
+    setForm((f: any) => ({
+      ...f,
       product_name: name,
-      slug: name.toLowerCase().replace(/\s+/g, "-"),
-    });
+      slug: name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+    }));
   };
 
-  const handleImageUpload = async (files: FileList | null) => {
+  // ── File selection (local preview) ────────────────────────────
+  const handleFileSelect = (files: FileList | null) => {
     if (!files) return;
+    setPendingFiles((prev) => [...prev, ...Array.from(files)]);
+  };
 
-    setUploading(true);
+  const removePending = (idx: number) =>
+    setPendingFiles((prev) => prev.filter((_, i) => i !== idx));
 
-    const urls: string[] = [];
+  const removeUploaded = (idx: number) =>
+    setImages((prev) => prev.filter((_, i) => i !== idx));
 
-    for (const file of Array.from(files)) {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      urls.push(data.url);
+  // ── Submit ─────────────────────────────────────────────────────
+  const handleSubmit = async () => {
+    if (!form.product_name || !form.category_id || !form.price) {
+      alert("Product name, category and price are required.");
+      return;
     }
 
-    setImages((prev) => [...prev, ...urls]);
-    setUploading(false);
-  };
+    // 1. Upload pending files first
+    let newUrls: string[] = [];
+    if (pendingFiles.length > 0) {
+      const result = await dispatch(uploadImages(pendingFiles));
+      if (uploadImages.fulfilled.match(result)) {
+        newUrls = result.payload;
+      } else {
+        return; // abort — toast already shown
+      }
+    }
 
-  const handleSubmit = async () => {
+    const allImageUrls = [...images, ...newUrls];
+
     const payload = {
-      ...form,
+      product_name: form.product_name,
+      slug: form.slug || null,
+      description: form.description || null,
+      short_desc: form.short_desc || null,
+      size: form.size || null,
+      color: form.color || null,
       price: Number(form.price),
-      compare_price: form.compare_price
-        ? Number(form.compare_price)
-        : null,
-      stock: Number(form.stock),
-      category_id: Number(form.category_id),
+      compare_price: form.compare_price ? Number(form.compare_price) : null,
+      stock: Number(form.stock || 0),
+      category_id: form.category_id,
+      parentId: form.parentId || null,
+      is_active: form.is_active,
+      is_featured: form.is_featured,
+      meta_title: form.meta_title || null,
+      meta_desc: form.meta_desc || null,
+      images: allImageUrls.map((url, idx) => ({ image_url: url, sort_order: idx })),
     };
 
-    let res: any;
-
+    // 2. Create or update
+    let result: any;
     if (editId) {
-      res = await dispatch(updateProduct({ id: editId, ...payload }));
+      result = await dispatch(updateProduct({ id: editId, ...payload }));
     } else {
-      res = await dispatch(createProduct(payload));
+      result = await dispatch(createProduct(payload));
     }
 
-    const productId = res.payload.id;
-
-    if (images.length) {
-      await fetch("/api/product-images", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          images: images.map((url) => ({
-            product_id: productId,
-            image_url: url,
-          })),
-        }),
-      });
+    if (createProduct.fulfilled.match(result) || updateProduct.fulfilled.match(result)) {
+      closeModal();
+      fetchProducts();
     }
-
-    dispatch(getProducts({
-      page,
-      limit: 10,
-      search,
-      category: categoryFilter,
-    }));
-    closeModal();
   };
 
+  // ── Stock badge ────────────────────────────────────────────────
+  const stockBadge = (stock: number) => {
+    if (stock === 0) return <Badge color="red">Out of stock</Badge>;
+    if (stock < 10) return <Badge color="amber">{stock} left</Badge>;
+    return <Badge color="green">{stock} in stock</Badge>;
+  };
+
+  // ────────────────────────────────────────────────────────────────
+  // RENDER
+  // ────────────────────────────────────────────────────────────────
   return (
-    <>
-      <div className="flex flex-wrap gap-3 justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Products</h1>
+    <div className="min-h-screen bg-gray-50/60">
+      <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
 
-        <div className="flex gap-3 items-center">
+        {/* ── Header ── */}
+        <div className="flex flex-wrap gap-3 justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Products</h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {total} product{total !== 1 ? "s" : ""} total
+            </p>
+          </div>
 
-          <input
-            placeholder="Search product..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="border px-4 py-2 rounded-lg w-64 focus:ring-2 focus:ring-blue-500"
-          />
+          <div className="flex gap-2 flex-wrap items-center">
+            {/* Search */}
+            <div className="relative">
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                placeholder="Search products..."
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                className="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-violet-400 w-56 transition"
+              />
+            </div>
 
-          <select
-            value={categoryFilter}
-            onChange={(e) => {
-              setCategoryFilter(e.target.value);
-              setPage(1);
-            }}
-            className="border px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All categories</option>
-            {categories.map((c: any) => (
-              <option key={c.id} value={c.id}>
-                {c.category_name}
-              </option>
-            ))}
-          </select>
+            {/* Category filter */}
+            <select
+              value={categoryFilter}
+              onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
+              className="border border-gray-200 bg-white text-sm px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
+            >
+              <option value="">All categories</option>
+              {categories.map((c: any) => (
+                <option key={c.id} value={c.id}>{c.name || c.category_name}</option>
+              ))}
+            </select>
 
-          <button
-            onClick={openCreate}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg shadow disabled:opacity-50"
-            disabled={loading}
-          >
-            + Add Product
-          </button>
-
+            {/* Add button */}
+            <button
+              onClick={openCreate}
+              className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 active:scale-95 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition"
+            >
+              <Plus size={16} /> Add Product
+            </button>
+          </div>
         </div>
+
+        {/* ── Table ── */}
+        {loading ? (
+          <Skeleton />
+        ) : products?.length === 0 ? (
+          <EmptyState onAdd={openCreate} />
+        ) : (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <th className="px-4 py-3 text-left">Product</th>
+                    <th className="px-4 py-3 text-left">Category</th>
+                    <th className="px-4 py-3 text-left">Price</th>
+                    <th className="px-4 py-3 text-left">Stock</th>
+                    <th className="px-4 py-3 text-left">Variants</th>
+                    <th className="px-4 py-3 text-left">SKU</th>
+                    <th className="px-4 py-3 text-left">Status</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {products.map((p: Product) => (
+                    <tr key={p.id} className="hover:bg-violet-50/30 transition group">
+                      {/* Product name + image */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-12 h-12 rounded-xl border border-gray-200 overflow-hidden bg-gray-100 shrink-0 cursor-pointer"
+                            onClick={() => p.images?.[0] && setPreviewImage(p.images[0].image_url)}
+                          >
+                            {p.images?.[0] ? (
+                              <img src={p.images[0].image_url} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <ImageOff size={14} className="text-gray-300" />
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-800 leading-tight">{p.product_name}</p>
+                            {p.short_desc && (
+                              <p className="text-xs text-gray-400 mt-0.5 max-w-[200px] truncate">{p.short_desc}</p>
+                            )}
+                            {p.is_featured && (
+                              <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 font-medium mt-0.5">
+                                <Star size={9} fill="currentColor" /> Featured
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Category */}
+                      <td className="px-4 py-3">
+                        <Badge color="purple">
+                          <Tag size={10} />
+                          {p.category?.name || "—"}
+                        </Badge>
+                      </td>
+
+                      {/* Price */}
+                      <td className="px-4 py-3">
+                        <p className="font-semibold text-gray-800">₹{p.price.toLocaleString()}</p>
+                        {p.compare_price && (
+                          <p className="text-xs text-gray-400 line-through">₹{p.compare_price.toLocaleString()}</p>
+                        )}
+                      </td>
+
+                      {/* Stock */}
+                      <td className="px-4 py-3">{stockBadge(p.stock)}</td>
+
+                      {/* Variants */}
+                      <td className="px-4 py-3">
+                        {p.children && p.children.length > 0 ? (
+                          <Badge color="blue">
+                            <Layers size={10} />
+                            {p.children.length} variant{p.children.length > 1 ? "s" : ""}
+                          </Badge>
+                        ) : p.parentId ? (
+                          <Badge color="gray">Variant</Badge>
+                        ) : (
+                          <span className="text-gray-300">—</span>
+                        )}
+                      </td>
+
+                      {/* SKU */}
+                      <td className="px-4 py-3">
+                        <code className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-mono">
+                          {p.sku || "—"}
+                        </code>
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-4 py-3">
+                        {p.is_active ? (
+                          <Badge color="green"><CheckCircle2 size={10} /> Active</Badge>
+                        ) : (
+                          <Badge color="red"><XCircle size={10} /> Inactive</Badge>
+                        )}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1 opacity-70 group-hover:opacity-100 transition">
+                          <button
+                            onClick={() => setDetailProduct(p)}
+                            title="View"
+                            className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition"
+                          >
+                            <Eye size={15} />
+                          </button>
+                          <button
+                            onClick={() => openEdit(p)}
+                            title="Edit"
+                            className="p-2 rounded-lg hover:bg-violet-100 text-violet-600 transition"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          <DeleteModal
+                            onConfirm={() => dispatch(deleteProduct(p.id))}
+                            parentTitle="Delete product?"
+                            childTitle="This will permanently delete this product and all its variants."
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ── Pagination ── */}
+        {!loading && totalPages > 1 && (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-500">
+              Page {page} of {totalPages}
+            </p>
+            <div className="flex gap-2">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage((p) => p - 1)}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40 transition"
+              >
+                <ChevronLeft size={14} /> Prev
+              </button>
+              <button
+                disabled={page === totalPages}
+                onClick={() => setPage((p) => p + 1)}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40 transition"
+              >
+                Next <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {loading ? (
-          <SkeletonTable />
-      ) : products?.length === 0 ? (
-        <div className="bg-white border rounded-xl shadow p-10 text-center text-gray-500">
-          No products found
-        </div>
-      ) : (
-        <div className="bg-white rounded-xl shadow border overflow-hidden">
-
-          <div className="max-h-[520px] overflow-y-auto">
-
-            <table className="w-full">
-
-              {/* Sticky header */}
-              <thead className="top-0 bg-gray-100 text-left text-sm shadow">
-                <tr>
-                  <th className="p-3">Product</th>
-                  <th className="p-3">Category</th>
-                  <th className="p-3">Price</th>
-                  <th className="p-3">Stock</th>
-                  <th className="p-3">Size</th>
-                  <th className="p-3">Color</th>
-                  <th className="p-3">SKU</th>
-                  <th className="p-3 text-right">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {products?.map((p: any) => (
-                  <tr
-                    key={p.id}
-                    className="border-t hover:bg-gray-50"
-                    // onClick={() => setDetailProduct(p)}
-                  >
-                    <td className="p-3">
-                      <div className="flex gap-3 items-center">
-                        {p.images?.[0] && (
-                          <img
-                            src={p.images[0].image_url}
-                            className="w-12 h-12 object-cover rounded-lg border cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPreviewImage(p.images[0].image_url);
-                            }}
-                          />
-                        )}
-                        <div>
-                          <p className="font-medium">
-                            {p.product_name}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {p.short_desc}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="p-3">
-                      {p.category?.category_name}
-                    </td>
-
-                    <td className="p-3">₹{p.price}</td>
-                    <td className="p-3">{p.stock}</td>
-                    <td className="p-3">{p.size || "-"}</td>
-                    <td className="p-3">{p.color || "-"}</td>
-                    <td className="p-3 text-xs">{p.sku}</td>
-
-                    <td
-                      className="p-3 text-right flex gap-2 justify-end"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <button
-                        onClick={() => setDetailProduct(p)}
-                        className="p-2 hover:bg-gray-100 rounded-lg text-gray-700"
-                      >
-                        <Eye size={18} />
-                      </button>
-
-                      <button
-                        onClick={() => openEdit(p)}
-                        className="p-2 hover:bg-blue-100 rounded-lg text-blue-600"
-                      >
-                        <Pencil size={18} />
-                      </button>
-
-                      <DeleteModal
-                          onConfirm={() => dispatch(deleteProduct(p.id))}
-                          parentTitle="Delete product?"
-                          childTitle="This will permanently delete this product."
-                        />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-
-            </table>
-          </div>
-        </div>
-        // <table className="w-full bg-white rounded-xl shadow border overflow-hidden">
-        //   <thead className="bg-gray-100 text-left text-sm">
-        //     <tr>
-        //       <th className="p-3">Product</th>
-        //       <th className="p-3">Category</th>
-        //       <th className="p-3">Price</th>
-        //       <th className="p-3">Stock</th>
-        //       <th className="p-3">SKU</th>
-        //       <th className="p-3 text-right">Actions</th>
-        //     </tr>
-        //   </thead>
-
-        //   <tbody>
-        //     {products.map((p: any) => (
-        //       <tr key={p.id} className="border-t hover:bg-gray-50">
-        //         <td className="p-3">
-        //           <div className="flex gap-3 items-center">
-        //             {p.images?.[0] && (
-        //               <img
-        //                 src={p.images[0].image_url}
-        //                 className="w-12 h-12 object-cover rounded-lg border"
-        //                 onClick={(e) => {
-        //                   e.stopPropagation();
-        //                   setPreviewImage(p.images[0].image_url);
-        //                 }}
-        //               />
-        //             )}
-        //             <div>
-        //               <p className="font-medium">
-        //                 {p.product_name}
-        //               </p>
-        //               <p className="text-xs text-gray-500">
-        //                 {p.short_desc}
-        //               </p>
-        //             </div>
-        //           </div>
-        //         </td>
-
-        //         <td className="p-3">
-        //           {p.category?.category_name}
-        //         </td>
-
-        //         <td className="p-3">₹{p.price}</td>
-        //         <td className="p-3">{p.stock}</td>
-        //         <td className="p-3 text-xs">{p.sku}</td>
-
-        //         <td className="p-3 text-right flex gap-2 justify-end">
-        //           <button
-        //             onClick={() => openEdit(p)}
-        //             className="p-2 hover:bg-blue-100 rounded-lg text-blue-600"
-        //           >
-        //             <Pencil size={18} />
-        //           </button>
-
-        //           <button
-        //             onClick={() => dispatch(deleteProduct(p.id))}
-        //             className="p-2 hover:bg-red-100 rounded-lg text-red-600"
-        //           >
-        //             <Trash2 size={18} />
-        //           </button>
-        //         </td>
-        //       </tr>
-        //     ))}
-        //   </tbody>
-        // </table>
-      )}
-
-      {products?.length > 0 && totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-6">
-          <button
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-            className="px-3 py-1 border rounded disabled:opacity-40"
-          >
-            Prev
-          </button>
-
-          <span className="px-4 py-1">
-            Page {page}
-          </span>
-
-          <button
-            disabled={page === totalPages}
-            onClick={() => setPage(page + 1)}
-            className="px-3 py-1 border rounded disabled:opacity-40"
-          >
-            Next
-          </button>
-        </div>
-      )}
-
-      {/* Product Detail Modal */}
-
+      {/* ══════════════════════════════════════════════════════════
+          Detail Modal
+      ══════════════════════════════════════════════════════════ */}
       {detailProduct && (
-        <div
-          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
-          onClick={() => setDetailProduct(null)}
-        >
-          <div
-            className="bg-white rounded-xl w-[900px] max-h-[90vh] overflow-y-auto p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setDetailProduct(null)}>
+          <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+
             {/* Header */}
-            <div className="flex justify-between mb-6">
-              <h2 className="text-2xl font-bold">
-                {detailProduct.product_name}
-              </h2>
-              <button onClick={() => setDetailProduct(null)}>
-                <X />
+            <div className="flex items-start justify-between p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">{detailProduct.product_name}</h2>
+                <div className="flex gap-2 mt-1.5 flex-wrap">
+                  {detailProduct.is_active ? <Badge color="green"><CheckCircle2 size={10} /> Active</Badge> : <Badge color="red"><XCircle size={10} /> Inactive</Badge>}
+                  {detailProduct.is_featured && <Badge color="amber"><Star size={10} fill="currentColor" /> Featured</Badge>}
+                  {detailProduct.sku && <Badge color="gray"><code className="font-mono">{detailProduct.sku}</code></Badge>}
+                </div>
+              </div>
+              <button onClick={() => setDetailProduct(null)} className="p-2 rounded-lg hover:bg-gray-100 transition">
+                <X size={18} />
               </button>
             </div>
 
-            {detailProduct.images?.length > 0 && (
-              <div className="grid grid-cols-4 gap-3 mb-6">
-                {detailProduct.images.map((img: any, i: number) => (
-                  <img
-                    key={i}
-                    src={img.image_url}
-                    className="rounded-lg cursor-pointer border hover:scale-105 transition"
-                    onClick={() => setPreviewImage(img.image_url)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Basic Info */}
-            <div className="grid grid-cols-2 gap-6 mb-6">
-
-              <div>
-                <h3 className="font-semibold mb-2">Basic</h3>
-                <p><b>Slug:</b> {detailProduct.slug || "-"}</p>
-                <p><b>Category:</b> {detailProduct.category?.category_name}</p>
-                <p><b>SKU:</b> {detailProduct.sku}</p>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-2">Pricing</h3>
-                <p><b>Price:</b> ₹{detailProduct.price}</p>
-                <p>
-                  <b>Compare:</b>{" "}
-                  {detailProduct.compare_price
-                    ? `₹${detailProduct.compare_price}`
-                    : "-"}
-                </p>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-2">Inventory</h3>
-                <p><b>Stock:</b> {detailProduct.stock}</p>
-                <p>
-                  <b>Status:</b>{" "}
-                  {detailProduct.is_active ? "Active" : "Inactive"}
-                </p>
-                <p>
-                  <b>Featured:</b>{" "}
-                  {detailProduct.is_featured ? "Yes" : "No"}
-                </p>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-2">SEO</h3>
-                <p><b>Meta title:</b> {detailProduct.meta_title || "-"}</p>
-                <p><b>Meta desc:</b> {detailProduct.meta_desc || "-"}</p>
-              </div>
-
-            </div>
-
-            {/* Descriptions */}
-            <div className="mb-4">
-              <h3 className="font-semibold mb-2">Short description</h3>
-              <p className="text-gray-700">
-                {detailProduct.short_desc || "-"}
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-2">Full description</h3>
-              <p className="text-gray-700 whitespace-pre-wrap">
-                {detailProduct.description || "-"}
-              </p>
-            </div>
-
-          </div>
-        </div>
-      )}
-
-
-      {/* Image Preview Modal */}
-
-      {previewImage && (
-        <div
-          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
-          onClick={() => setPreviewImage(null)}
-        >
-          <div className="relative">
-
-            <img
-              src={previewImage}
-              className="max-w-[90vw] max-h-[90vh] rounded-xl shadow-lg"
-            />
-
-            <button
-              className="absolute top-2 right-2 bg-white p-2 rounded-full shadow"
-              onClick={() => setPreviewImage(null)}
-            >
-              <X size={20} />
-            </button>
-
-          </div>
-        </div>
-      )}
-
-      {/* MODAL */}
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-
-          <div className="bg-white w-[800px] max-h-[90vh] overflow-y-auto rounded-xl p-6">
-
-            <div className="flex justify-between mb-4">
-              <h2 className="text-xl font-bold">
-                {editId ? "Edit Product" : "Create Product"}
-              </h2>
-
-              <button onClick={closeModal}>
-                <X />
-              </button>
-            </div>
-
-            {skuPreview && (
-              <p className="mb-4 text-sm text-gray-500">
-                SKU: <b>{skuPreview}</b>
-              </p>
-            )}
-
-            <div className="grid grid-cols-2 gap-4">
-
-              <input
-                placeholder="Product name"
-                value={form.product_name}
-                onChange={(e) => handleName(e.target.value)}
-                className="border px-4 py-2 rounded-lg"
-              />
-
-              <input
-                placeholder="Slug"
-                value={form.slug}
-                onChange={(e) =>
-                  setForm({ ...form, slug: e.target.value })
-                }
-                className="border px-4 py-2 rounded-lg"
-              />
-
-              <select
-                value={form.category_id}
-                onChange={(e) =>
-                  setForm({ ...form, category_id: e.target.value })
-                }
-                className="border px-4 py-2 rounded-lg"
-              >
-                <option value="">Category</option>
-                {categories.map((c: any) => (
-                  <option key={c.id} value={c.id}>
-                    {c.category_name}
-                  </option>
-                ))}
-              </select>
-
-              <input
-                placeholder="Price"
-                value={form.price}
-                onChange={(e) =>
-                  setForm({ ...form, price: e.target.value })
-                }
-                className="border px-4 py-2 rounded-lg"
-              />
-
-              <input
-                placeholder="Compare price"
-                value={form.compare_price}
-                onChange={(e) =>
-                  setForm({ ...form, compare_price: e.target.value })
-                }
-                className="border px-4 py-2 rounded-lg"
-              />
-
-              <input
-                placeholder="Stock"
-                value={form.stock}
-                onChange={(e) =>
-                  setForm({ ...form, stock: e.target.value })
-                }
-                className="border px-4 py-2 rounded-lg"
-              />
-
-              <input
-                placeholder="size"
-                value={form.size}
-                onChange={(e) =>
-                  setForm({ ...form, size: e.target.value })
-                }
-                className="border px-4 py-2 rounded-lg"
-              />
-
-              <input
-                placeholder="color"
-                value={form.color}
-                onChange={(e) =>
-                  setForm({ ...form, color: e.target.value })
-                }
-                className="border px-4 py-2 rounded-lg"
-              />
-
-              <input
-                placeholder="Short description"
-                value={form.short_desc}
-                onChange={(e) =>
-                  setForm({ ...form, short_desc: e.target.value })
-                }
-                className="border px-4 py-2 rounded-lg col-span-2"
-              />
-
-              <textarea
-                placeholder="Full description"
-                value={form.description}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
-                }
-                className="border px-4 py-2 rounded-lg col-span-2"
-              />
-
-              <input
-                placeholder="Meta title"
-                value={form.meta_title}
-                onChange={(e) =>
-                  setForm({ ...form, meta_title: e.target.value })
-                }
-                className="border px-4 py-2 rounded-lg col-span-2"
-              />
-
-              <input
-                placeholder="Meta description"
-                value={form.meta_desc}
-                onChange={(e) =>
-                  setForm({ ...form, meta_desc: e.target.value })
-                }
-                className="border px-4 py-2 rounded-lg col-span-2"
-              />
-
-              <label className="flex gap-2 items-center col-span-2">
-                <input
-                  type="checkbox"
-                  checked={form.is_featured}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      is_featured: e.target.checked,
-                    })
-                  }
-                />
-                Featured product
-              </label>
-
-              {/* IMAGE UPLOAD */}
-              <div className="col-span-2">
-                <label className="font-medium">Product Images</label>
-
-                <input
-                  type="file"
-                  multiple
-                  onChange={(e) => handleImageUpload(e.target.files)}
-                  className="border px-4 py-2 rounded-lg w-full mt-2"
-                />
-
-                {uploading && (
-                  <p className="text-sm text-gray-500">
-                    Uploading...
-                  </p>
-                )}
-
-                <div className="flex gap-3 mt-3 flex-wrap">
-                  {images.map((img, i) => (
-                    <div key={i} className="relative">
-                      <img
-                        src={img}
-                        className="w-20 h-20 object-cover rounded-lg border"
-                      />
-
-                      <button
-                        onClick={() =>
-                          setImages(
-                            images.filter(
-                              (_, idx) => idx !== i
-                            )
-                          )
-                        }
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
+            <div className="p-6 space-y-6">
+              {/* Images */}
+              {detailProduct.images && detailProduct.images.length > 0 && (
+                <div className="grid grid-cols-4 gap-3">
+                  {detailProduct.images.map((img, i) => (
+                    <img
+                      key={i}
+                      src={img.image_url}
+                      className="aspect-square rounded-xl object-cover cursor-pointer border border-gray-100 hover:scale-105 transition"
+                      onClick={() => setPreviewImage(img.image_url)}
+                    />
                   ))}
+                </div>
+              )}
+
+              {/* Info grid */}
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { label: "Category", value: detailProduct.category?.name },
+                  { label: "Slug", value: detailProduct.slug || "—" },
+                  { label: "Price", value: `₹${detailProduct.price.toLocaleString()}` },
+                  { label: "Compare Price", value: detailProduct.compare_price ? `₹${detailProduct.compare_price.toLocaleString()}` : "—" },
+                  { label: "Stock", value: detailProduct.stock },
+                  { label: "SKU", value: detailProduct.sku || "—" },
+                  { label: "Size", value: detailProduct.size || "—" },
+                  { label: "Color", value: detailProduct.color || "—" },
+                  { label: "Meta Title", value: detailProduct.meta_title || "—" },
+                  { label: "Meta Description", value: detailProduct.meta_desc || "—" },
+                ].map(({ label, value }) => (
+                  <div key={label} className="bg-gray-50 rounded-xl p-3">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">{label}</p>
+                    <p className="text-sm text-gray-800 font-medium">{String(value)}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Descriptions */}
+              {detailProduct.short_desc && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Short Description</p>
+                  <p className="text-sm text-gray-700">{detailProduct.short_desc}</p>
+                </div>
+              )}
+              {detailProduct.description && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Description</p>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{detailProduct.description}</p>
+                </div>
+              )}
+
+              {/* Variants */}
+              {detailProduct.children && detailProduct.children.length > 0 && (
+                <div>
+                  <button
+                    onClick={() => setExpandedVariants((v) => !v)}
+                    className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3"
+                  >
+                    <Layers size={15} />
+                    {detailProduct.children.length} Variants
+                    {expandedVariants ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </button>
+
+                  {expandedVariants && (
+                    <div className="space-y-2">
+                      {detailProduct.children.map((child) => (
+                        <div key={child.id} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
+                          {child.images?.[0] && (
+                            <img src={child.images[0].image_url} className="w-10 h-10 rounded-lg object-cover border border-gray-200" />
+                          )}
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-800">{child.product_name}</p>
+                            <div className="flex gap-2 mt-0.5">
+                              {child.size && <Badge color="gray">Size: {child.size}</Badge>}
+                              {child.color && <Badge color="gray">Color: {child.color}</Badge>}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-semibold text-gray-800">₹{child.price.toLocaleString()}</p>
+                            {stockBadge(child.stock)}
+                          </div>
+                          <button
+                            onClick={() => { setDetailProduct(null); openEdit(child); }}
+                            className="p-1.5 rounded-lg hover:bg-violet-100 text-violet-600 transition"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
+              <button
+                onClick={() => { setDetailProduct(null); openEdit(detailProduct); }}
+                className="flex-1 bg-violet-600 hover:bg-violet-700 text-white py-2.5 rounded-xl text-sm font-semibold transition"
+              >
+                Edit Product
+              </button>
+              <button
+                onClick={() => setDetailProduct(null)}
+                className="px-6 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-sm font-semibold transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════
+          Image Preview
+      ══════════════════════════════════════════════════════════ */}
+      {previewImage && <ImagePreview url={previewImage} onClose={() => setPreviewImage(null)} />}
+
+      {/* ══════════════════════════════════════════════════════════
+          Create / Edit Modal
+      ══════════════════════════════════════════════════════════ */}
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl">
+
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">
+                  {editId ? "Edit Product" : "Add New Product"}
+                </h2>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {editId ? "Update product details" : "Fill in the details to create a new product"}
+                </p>
+              </div>
+              <button onClick={closeModal} className="p-2 rounded-lg hover:bg-gray-100 transition">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="px-6 py-5 space-y-6">
+
+              {/* ── Section: Basic ── */}
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <Package size={12} /> Basic Info
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Product Name *" span={2}>
+                    <input
+                      placeholder="e.g. Nike Air Max 270"
+                      value={form.product_name}
+                      onChange={(e) => handleName(e.target.value)}
+                      className={inputCls}
+                    />
+                  </Field>
+
+                  <Field label="Slug">
+                    <input
+                      placeholder="e.g. nike-air-max-270"
+                      value={form.slug}
+                      onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                      className={inputCls}
+                    />
+                  </Field>
+
+                  {/* ── Cascading Category: Level 1 (Main) ── */}
+                  <Field label="Category *">
+                    <select
+                      value={catL1}
+                      onChange={(e) => handleCatL1(e.target.value)}
+                      className={selectCls}
+                    >
+                      <option value="">Select category</option>
+                      {catMainList.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </Field>
+
+                  {/* ── Cascading Category: Level 2 (Child) — only if L1 has children ── */}
+                  {catL2List.length > 0 ? (
+                    <Field label="Sub-Category">
+                      <select
+                        value={catL2}
+                        onChange={(e) => handleCatL2(e.target.value)}
+                        className={selectCls}
+                      >
+                        <option value="">Select sub-category</option>
+                        {catL2List.map((c) => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                    </Field>
+                  ) : <div />}
+
+                  {/* ── Cascading Category: Level 3 (Sub-child) — only if L2 has children ── */}
+                  {catL2 && catL3List.length > 0 && (
+                    <Field label="Sub-Sub-Category">
+                      <select
+                        value={catL3}
+                        onChange={(e) => handleCatL3(e.target.value)}
+                        className={selectCls}
+                      >
+                        <option value="">Select sub-sub-category</option>
+                        {catL3List.map((c) => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                    </Field>
+                  )}
+
+                  {/* Breadcrumb path */}
+                  {effectiveCatId && (
+                    <div className="col-span-2 -mt-1">
+                      <p className="text-[11px] text-gray-400">
+                        Selected:{" "}
+                        <span className="font-semibold text-violet-600">
+                          {[catL1, catL2, catL3]
+                            .filter(Boolean)
+                            .map((id) => findCatNode(categories as Category[], id)?.name)
+                            .join(" › ")}
+                        </span>
+                      </p>
+                    </div>
+                  )}
+
+                  <Field label="Short Description" span={2}>
+                    <input
+                      placeholder="One-line description"
+                      value={form.short_desc}
+                      onChange={(e) => setForm({ ...form, short_desc: e.target.value })}
+                      className={inputCls}
+                    />
+                  </Field>
+
+                  <Field label="Full Description" span={2}>
+                    <textarea
+                      rows={3}
+                      placeholder="Detailed product description..."
+                      value={form.description}
+                      onChange={(e) => setForm({ ...form, description: e.target.value })}
+                      className={inputCls}
+                    />
+                  </Field>
                 </div>
               </div>
 
+              {/* ── Section: Pricing & Inventory ── */}
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <Tag size={12} /> Pricing & Inventory
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Price (₹) *">
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={form.price}
+                      onChange={(e) => setForm({ ...form, price: e.target.value })}
+                      className={inputCls}
+                    />
+                  </Field>
+
+                  <Field label="Compare Price (₹)">
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={form.compare_price}
+                      onChange={(e) => setForm({ ...form, compare_price: e.target.value })}
+                      className={inputCls}
+                    />
+                  </Field>
+
+                  <Field label="Stock">
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={form.stock}
+                      onChange={(e) => setForm({ ...form, stock: e.target.value })}
+                      className={inputCls}
+                    />
+                  </Field>
+
+                  {/* <Field label="Parent Product (for variants)">
+                    <select
+                      value={form.parentId}
+                      onChange={(e) => setForm({ ...form, parentId: e.target.value })}
+                      className={inputCls}
+                    >
+                      <option value="">None (this is a parent)</option>
+                      {products
+                        .filter((p) => !p.parentId && p.id !== editId)
+                        .map((p) => (
+                          <option key={p.id} value={p.id}>{p.product_name}</option>
+                        ))}
+                    </select>
+                  </Field> */}
+                </div>
+              </div>
+
+              {/* ── Section: Variant Attributes ── */}
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <Layers size={12} /> Variant Attributes
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Size">
+                    <input
+                      placeholder="e.g. M, L, XL, 10"
+                      value={form.size}
+                      onChange={(e) => setForm({ ...form, size: e.target.value })}
+                      className={inputCls}
+                    />
+                  </Field>
+                  <Field label="Color">
+                    <div className="flex items-center gap-2">
+                      {/* Native color wheel */}
+                      <input
+                        type="color"
+                        value={form.color?.startsWith("#") ? form.color : "#000000"}
+                        onChange={(e) => setForm({ ...form, color: e.target.value })}
+                        className="w-10 h-10 rounded-xl border border-gray-200 cursor-pointer p-0.5 bg-gray-50 shrink-0"
+                        title="Pick a color"
+                      />
+                      {/* Hex / name text field */}
+                      <input
+                        type="text"
+                        placeholder="#000000 or Red"
+                        value={form.color}
+                        onChange={(e) => setForm({ ...form, color: e.target.value })}
+                        className={inputCls}
+                      />
+                    </div>
+                  </Field>
+                </div>
+              </div>
+
+              {/* ── Section: SEO ── */}
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">SEO</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Meta Title" span={2}>
+                    <input
+                      placeholder="SEO title"
+                      value={form.meta_title}
+                      onChange={(e) => setForm({ ...form, meta_title: e.target.value })}
+                      className={inputCls}
+                    />
+                  </Field>
+                  <Field label="Meta Description" span={2}>
+                    <input
+                      placeholder="SEO description"
+                      value={form.meta_desc}
+                      onChange={(e) => setForm({ ...form, meta_desc: e.target.value })}
+                      className={inputCls}
+                    />
+                  </Field>
+                </div>
+              </div>
+
+              {/* ── Section: Status ── */}
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <div
+                    onClick={() => setForm({ ...form, is_active: !form.is_active })}
+                    className={`w-10 h-5 rounded-full transition-colors relative ${form.is_active ? "bg-violet-500" : "bg-gray-200"}`}
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_active ? "translate-x-5" : "translate-x-0.5"}`} />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">Active</span>
+                </label>
+
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <div
+                    onClick={() => setForm({ ...form, is_featured: !form.is_featured })}
+                    className={`w-10 h-5 rounded-full transition-colors relative ${form.is_featured ? "bg-amber-400" : "bg-gray-200"}`}
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_featured ? "translate-x-5" : "translate-x-0.5"}`} />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">Featured</span>
+                </label>
+              </div>
+
+              {/* ── Section: Images ── */}
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <Upload size={12} /> Product Images
+                </p>
+
+                {/* Upload zone */}
+                <label className="block border-2 border-dashed border-gray-200 hover:border-violet-300 rounded-xl p-5 text-center cursor-pointer transition bg-gray-50 hover:bg-violet-50/30">
+                  <Upload size={20} className="mx-auto text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-500">Click to upload images</p>
+                  <p className="text-xs text-gray-400 mt-0.5">PNG, JPG, WEBP up to 5 MB each</p>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleFileSelect(e.target.files)}
+                  />
+                </label>
+
+                {/* Pending (not yet uploaded) */}
+                {pendingFiles.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-xs text-gray-400 mb-2">Pending upload ({pendingFiles.length})</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {pendingFiles.map((file, i) => (
+                        <div key={i} className="relative group">
+                          <img
+                            src={URL.createObjectURL(file)}
+                            className="w-20 h-20 object-cover rounded-xl border-2 border-dashed border-amber-300"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removePending(i)}
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs shadow"
+                          >
+                            <X size={10} />
+                          </button>
+                          <div className="absolute bottom-1 left-0 right-0 text-center">
+                            <span className="text-[9px] bg-amber-400 text-white px-1 rounded">pending</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Uploaded images */}
+                {images.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-xs text-gray-400 mb-2">Uploaded ({images.length})</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {images.map((url, i) => (
+                        <div key={i} className="relative group">
+                          <img
+                            src={url}
+                            className="w-20 h-20 object-cover rounded-xl border border-gray-200 cursor-pointer"
+                            onClick={() => setPreviewImage(url)}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeUploaded(i)}
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs shadow opacity-0 group-hover:opacity-100 transition"
+                          >
+                            <X size={10} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl sticky bottom-0">
               <button
                 onClick={handleSubmit}
-                className="col-span-2 bg-blue-600 text-white py-2 rounded-lg"
+                disabled={submitting || uploading}
+                className="flex-1 flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white py-2.5 rounded-xl text-sm font-semibold transition"
               >
-                {editId ? "Update Product" : "Create Product"}
+                {(submitting || uploading) && <Loader2 size={15} className="animate-spin" />}
+                {uploading ? "Uploading images..." : submitting ? "Saving..." : editId ? "Update Product" : "Create Product"}
               </button>
-
+              <button
+                onClick={closeModal}
+                disabled={submitting || uploading}
+                className="px-6 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-sm font-semibold transition"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
+}
+
+// Helper (referenced inside JSX)
+function stockBadge(stock: number) {
+  if (stock === 0) return <Badge color="red">Out of stock</Badge>;
+  if (stock < 10) return <Badge color="amber">{stock} left</Badge>;
+  return <Badge color="green">{stock} in stock</Badge>;
 }

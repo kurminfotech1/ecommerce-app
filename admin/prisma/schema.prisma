@@ -5,8 +5,7 @@ generator client {
 }
 
 datasource db {
-  
-  provider  = "postgresql"
+  provider = "postgresql"
 }
 
 
@@ -44,42 +43,48 @@ model Category {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  products products[]
+  products Product[]
 }
 
 
-model products {
-  id            String   @id @default(uuid())
-  category_id   String
+model Product {
+  id          String   @id @default(uuid())
+
+  category_id String
+  category    Category @relation(fields: [category_id], references: [id])
+
+  parentId    String?
+  parent      Product?   @relation("ProductHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Product[]  @relation("ProductHierarchy")
 
   // basic
-  product_name  String
-  slug          String?   @unique
-  description   String?
-  short_desc    String?
-  size          String?
-  color         String?
+  product_name String
+  slug         String?  @unique
+  description  String?
+  short_desc   String?
+
+  // variant attributes (ONLY for children)
+  size         String?
+  color        String?
 
   // pricing
   price         Float
   compare_price Float?
 
   // inventory
-  stock         Int     @default(0)
-  sku           String? @unique
+  stock Int @default(0)
+  sku   String? @unique
 
   // status
-  is_active     Boolean @default(true)
-  is_featured   Boolean @default(false)
+  is_active   Boolean @default(true)
+  is_featured Boolean @default(false)
 
   // seo
-  meta_title    String?
-  meta_desc     String?
+  meta_title String?
+  meta_desc  String?
 
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-
-  category Category @relation(fields: [category_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   images product_images[]
 }
@@ -90,7 +95,7 @@ model product_images {
   image_url  String
   sort_order Int     @default(0)
 
-  product products @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
 }
 
 

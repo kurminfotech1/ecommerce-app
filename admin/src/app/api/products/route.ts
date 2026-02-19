@@ -3,116 +3,154 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseServer";
 import { verifyToken } from "@/lib/auth";
 
+const BUCKET = "products";
+
+/** Extract Supabase storage path from a public URL */
+function extractStoragePath(url: string): string | null {
+  try {
+    const parsed = new URL(url);
+    const parts = parsed.pathname.split(`/object/public/${BUCKET}/`);
+    return parts[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Standard product include — used across all APIs */
+const productInclude = {
+  category: true,
+  images: {
+    orderBy: { sort_order: "asc" as const },
+  },
+  children: {
+    include: {
+      images: {
+        orderBy: { sort_order: "asc" as const },
+      },
+    },
+    orderBy: { created_at: "asc" as const },
+  },
+  parent: {
+    select: { id: true, product_name: true, slug: true },
+  },
+} as const;
+
+// ─────────────────────────────────────────────────────────────────
+// GET  /api/products
+//   ?id=<uuid>              → single product with children & images
+//   ?page=1&limit=10        → paginated list (parents only)
+//   ?search=keyword         → search by product_name
+//   ?category=<uuid>        → filter by category
+//   ?includeVariants=true   → include child/variant products too
+//   ?featured=true          → only featured products
+// ─────────────────────────────────────────────────────────────────
 export async function GET(req: Request) {
   try {
-      const user = verifyToken(req);
-  
-      if (!user) {
+    const user = await verifyToken();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    // ── Single product ──────────────────────────────────────────
+    if (id) {
+      const product = await prisma.product.findUnique({
+        where: { id },
+        include: productInclude,
+      });
+
+      if (!product) {
         return NextResponse.json(
-          { error: "Unauthorized" },
-          { status: 401 }
+          { error: "Product not found" },
+          { status: 404 }
         );
       }
-    const { searchParams } = new URL(req.url);
 
-    const page = Number(searchParams.get("page") || 1);
-    const limit = Number(searchParams.get("limit") || 10);
-    const search = searchParams.get("search") || "";
+      return NextResponse.json({ data: product });
+    }
+
+    // ── List / search ───────────────────────────────────────────
+    const page = Math.max(1, Number(searchParams.get("page") || 1));
+    const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") || 10)));
+    const search = searchParams.get("search")?.trim() || "";
     const category = searchParams.get("category");
+    const includeVariants = searchParams.get("includeVariants") === "true";
+    const featured = searchParams.get("featured") === "true";
 
     const skip = (page - 1) * limit;
 
     const where: any = {
+      ...(includeVariants ? {} : { parentId: null }),
+      ...(featured ? { is_featured: true } : {}),
       AND: [
         search
-          ? {
-              product_name: {
-                contains: search,
-                mode: "insensitive",
-              },
-            }
+          ? { product_name: { contains: search, mode: "insensitive" } }
           : {},
-        category
-          ? { category_id: Number(category) }
-          : {},
+        category ? { category_id: category } : {},
       ],
     };
 
     const [products, total] = await Promise.all([
-      prisma.products.findMany({
+      prisma.product.findMany({
         where,
-        include: {
-          category: true,
-          images: true,
-        },
+        include: productInclude,
         orderBy: { created_at: "desc" },
         skip,
         take: limit,
       }),
-      prisma.products.count({ where }),
+      prisma.product.count({ where }),
     ]);
 
     return NextResponse.json({
       data: products,
       total,
       page,
+      limit,
       totalPages: Math.ceil(total / limit),
     });
-
   } catch (error) {
     console.error("GET PRODUCTS ERROR:", error);
-    return NextResponse.json({ error: "Failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
-// export async function GET(req: Request) {
-//   try {
-//     const id = new URL(req.url).searchParams.get("id");
-
-//     // GET single
-//     if (id) {
-//       const product = await prisma.products.findUnique({
-//         where: { id: Number(id) },
-//         include: {
-//           category: true,
-//           images: true, // 🔥 include images
-//         },
-//       });
-
-//       return NextResponse.json(product);
-//     }
-
-//     // GET all
-//     const products = await prisma.products.findMany({
-//       include: {
-//         category: true,
-//         images: true,
-//       },
-//       orderBy: { created_at: "desc" },
-//     });
-
-//     return NextResponse.json(products);
-
-//   } catch (error) {
-//     console.error("GET PRODUCTS ERROR:", error);
-//     return NextResponse.json({ error: "Failed" }, { status: 500 });
-//   }
+// ─────────────────────────────────────────────────────────────────
+// POST  /api/products
+// Body JSON:
+// {
+//   product_name, category_id, price,      ← required
+//   parentId?,              ← pass to create a variant/child
+//   slug?, description?, short_desc?,
+//   size?, color?,          ← variant attributes
+//   compare_price?, stock?, sku?,
+//   is_active?, is_featured?,
+//   meta_title?, meta_desc?,
+//   images?: [{ image_url, sort_order? }]  ← image URLs (from /api/upload)
 // }
-
+// ─────────────────────────────────────────────────────────────────
 export async function POST(req: Request) {
   try {
-    const user = verifyToken(req);
-
+    const user = await verifyToken();
     if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
     const body = await req.json();
 
-    // 1️⃣ create product first
-    const product = await prisma.products.create({
+    if (!body.product_name || !body.category_id || body.price == null) {
+      return NextResponse.json(
+        { error: "product_name, category_id, and price are required" },
+        { status: 400 }
+      );
+    }
+
+    // 1️⃣ Create product
+    const product = await prisma.product.create({
       data: {
         product_name: body.product_name,
         slug: body.slug ?? null,
@@ -121,11 +159,11 @@ export async function POST(req: Request) {
         size: body.size ?? null,
         color: body.color ?? null,
         price: Number(body.price),
-        compare_price: body.compare_price
-          ? Number(body.compare_price)
-          : null,
+        compare_price: body.compare_price ? Number(body.compare_price) : null,
         stock: Number(body.stock ?? 0),
+        sku: body.sku ?? null,
         category_id: body.category_id,
+        parentId: body.parentId ?? null,
         is_active: body.is_active ?? true,
         is_featured: body.is_featured ?? false,
         meta_title: body.meta_title ?? null,
@@ -134,183 +172,218 @@ export async function POST(req: Request) {
       include: { category: true },
     });
 
-    // 2️⃣ generate SKU using DB id
-    const categoryCode =
-      product.category.name
-        .slice(0, 3)
-        .toUpperCase();
-
-    const productCode =
-      product.product_name
+    // 2️⃣ Auto-generate SKU for parent products (if not provided manually)
+    if (!body.parentId && !body.sku) {
+      const categoryCode = product.category.name.slice(0, 3).toUpperCase();
+      const productCode = product.product_name
         .replace(/\s+/g, "")
         .slice(0, 4)
         .toUpperCase();
+      const sku = `${categoryCode}-${productCode}-${product.id.slice(-6).toUpperCase()}`;
 
-    const sku =
-      `${categoryCode}-${productCode}-${String(product.id).padStart(6, "0")}`;
+      await prisma.product.update({
+        where: { id: product.id },
+        data: { sku },
+      });
+    }
 
-    // 3️⃣ update product with SKU
-    const updated = await prisma.products.update({
+    // 3️⃣ Save images to product_images table (if provided)
+    const imagePayload: { image_url: string; sort_order?: number }[] =
+      body.images ?? [];
+
+    if (imagePayload.length > 0) {
+      await prisma.product_images.createMany({
+        data: imagePayload.map((img, idx) => ({
+          product_id: product.id,
+          image_url: img.image_url,
+          sort_order: img.sort_order ?? idx,
+        })),
+      });
+    }
+
+    // 4️⃣ Return full product with all relations
+    const created = await prisma.product.findUnique({
       where: { id: product.id },
-      data: { sku },
-      include: {
-        category: true,
-        images: true,
-      },
+      include: productInclude,
     });
 
-    return NextResponse.json({
-  message: "Product created successfully",
-  data: updated,
-}, { status: 201 });
-
-
+    return NextResponse.json(
+      { message: "Product created successfully", data: created },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("POST PRODUCT ERROR:", error);
-    return NextResponse.json({ error: "Failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
-
+// ─────────────────────────────────────────────────────────────────
+// PUT  /api/products?id=<uuid>
+// Body JSON: same fields as POST
+// For images: pass `images` array to REPLACE all existing images,
+//             or omit `images` key to leave images unchanged.
+// ─────────────────────────────────────────────────────────────────
 export async function PUT(req: Request) {
   try {
-    const user = verifyToken(req);
-
+    const user = await verifyToken();
     if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const id = new URL(req.url).searchParams.get("id");
-    const body = await req.json();
 
+    const id = new URL(req.url).searchParams.get("id");
     if (!id) {
       return NextResponse.json({ error: "ID required" }, { status: 400 });
     }
 
-    const updated = await prisma.products.update({
-      where: { id: id },
+    const body = await req.json();
+
+    // ── Update product fields ──────────────────────────────────
+    await prisma.product.update({
+      where: { id },
       data: {
-        product_name: body.product_name,
-        slug: body.slug,
-        description: body.description,
-        short_desc: body.short_desc,
-        size: body.size,
-        color: body.color,
-
-        price: Number(body.price),
-        compare_price: body.compare_price
-          ? Number(body.compare_price)
-          : null,
-
-        stock: Number(body.stock),
-        sku: body.sku,
-
-        category_id: body.category_id,
-
-        is_active: body.is_active,
-        is_featured: body.is_featured,
-
-        meta_title: body.meta_title,
-        meta_desc: body.meta_desc,
-      },
-      include: {
-        category: true,
-        images: true,
+        ...(body.product_name !== undefined && { product_name: body.product_name }),
+        ...(body.slug !== undefined && { slug: body.slug }),
+        ...(body.description !== undefined && { description: body.description }),
+        ...(body.short_desc !== undefined && { short_desc: body.short_desc }),
+        ...(body.size !== undefined && { size: body.size }),
+        ...(body.color !== undefined && { color: body.color }),
+        ...(body.price !== undefined && { price: Number(body.price) }),
+        ...(body.compare_price !== undefined && {
+          compare_price: body.compare_price ? Number(body.compare_price) : null,
+        }),
+        ...(body.stock !== undefined && { stock: Number(body.stock) }),
+        ...(body.sku !== undefined && { sku: body.sku }),
+        ...(body.category_id !== undefined && { category_id: body.category_id }),
+        ...(body.parentId !== undefined && { parentId: body.parentId ?? null }),
+        ...(body.is_active !== undefined && { is_active: body.is_active }),
+        ...(body.is_featured !== undefined && { is_featured: body.is_featured }),
+        ...(body.meta_title !== undefined && { meta_title: body.meta_title }),
+        ...(body.meta_desc !== undefined && { meta_desc: body.meta_desc }),
       },
     });
 
-    return NextResponse.json({
-  message: "Product updated successfully",
-  data: updated,
-});
+    // ── Replace images if `images` key is present in body ─────
+    if (body.images !== undefined) {
+      const newImages: { image_url: string; sort_order?: number }[] =
+        body.images ?? [];
 
-  } catch (error) {
-    console.error("PUT PRODUCT ERROR:", error);
-    return NextResponse.json({ error: "Update failed" }, { status: 500 });
-  }
-}
+      const newUrls = new Set(newImages.map((img) => img.image_url));
 
-export async function DELETE(req: Request) {
-  try {
-    const user = verifyToken(req);
+      // Fetch old images from DB
+      const oldImages = await prisma.product_images.findMany({
+        where: { product_id: id },
+      });
 
-    if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-    const id = new URL(req.url).searchParams.get("id");
+      // Only delete from Supabase the images that are NOT in the new list
+      // (i.e., images the user actually removed — don't delete kept images!)
+      const removedPaths = oldImages
+        .filter((img) => !newUrls.has(img.image_url))
+        .map((img) => extractStoragePath(img.image_url))
+        .filter(Boolean) as string[];
 
-    if (!id) {
-      return NextResponse.json(
-        { error: "ID required" },
-        { status: 400 }
-      );
-    }
+      if (removedPaths.length > 0) {
+        const { error: storageError } = await supabaseAdmin.storage
+          .from(BUCKET)
+          .remove(removedPaths);
 
-    const productId = id;
+        if (storageError) {
+          console.error("Storage delete error during PUT:", storageError.message);
+        }
+      }
 
-    // 1️⃣ fetch images from DB
-    const images = await prisma.product_images.findMany({
-      where: { product_id: productId },
-    });
+      // Replace DB records
+      await prisma.product_images.deleteMany({ where: { product_id: id } });
 
-    // 2️⃣ extract filenames from Supabase URLs
-    const files = images
-      .map((img) => img.image_url.split("/").pop())
-      .filter(Boolean) as string[];
-
-    // 3️⃣ delete files from Supabase storage
-    if (files.length > 0) {
-      const { error: storageError } =
-        await supabaseAdmin.storage
-          .from("products")
-          .remove(files);
-
-      if (storageError) {
-        console.error("Storage delete error:", storageError);
+      if (newImages.length > 0) {
+        await prisma.product_images.createMany({
+          data: newImages.map((img, idx) => ({
+            product_id: id,
+            image_url: img.image_url,
+            sort_order: img.sort_order ?? idx,
+          })),
+        });
       }
     }
 
-    // 4️⃣ delete product
-    // cascade auto deletes product_images rows
-    await prisma.products.delete({
-      where: { id: productId },
+    // ── Return updated product ─────────────────────────────────
+    const updated = await prisma.product.findUnique({
+      where: { id },
+      include: productInclude,
     });
+
+    return NextResponse.json({
+      message: "Product updated successfully",
+      data: updated,
+    });
+  } catch (error) {
+    console.error("PUT PRODUCT ERROR:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// DELETE  /api/products?id=<uuid>
+// Deletes the product (parent + all children via DB cascade)
+// and removes ALL related images from Supabase storage.
+// ─────────────────────────────────────────────────────────────────
+export async function DELETE(req: Request) {
+  try {
+    const user = await verifyToken();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const id = new URL(req.url).searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ error: "ID required" }, { status: 400 });
+    }
+
+    // 1️⃣ Collect this product + all descendant IDs
+    const children = await prisma.product.findMany({
+      where: { parentId: id },
+      select: { id: true },
+    });
+    const allIds = [id, ...children.map((c) => c.id)];
+
+    // 2️⃣ Fetch all images across parent + children
+    const images = await prisma.product_images.findMany({
+      where: { product_id: { in: allIds } },
+    });
+
+    // 3️⃣ Delete from Supabase storage (using proper path extraction)
+    const storagePaths = images
+      .map((img) => extractStoragePath(img.image_url))
+      .filter(Boolean) as string[];
+
+    if (storagePaths.length > 0) {
+      const { error: storageError } = await supabaseAdmin.storage
+        .from(BUCKET)
+        .remove(storagePaths);
+
+      if (storageError) {
+        // Non-fatal — log and continue so DB record is still cleaned up
+        console.error("Storage delete error:", storageError.message);
+      }
+    }
+
+    // 4️⃣ Delete product from DB (cascade removes children + images rows)
+    await prisma.product.delete({ where: { id } });
 
     return NextResponse.json({
       success: true,
       message: "Product deleted successfully",
     });
-
   } catch (error) {
     console.error("DELETE PRODUCT ERROR:", error);
-
     return NextResponse.json(
-      { error: "Delete failed" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
 }
-// export async function DELETE(req: Request) {
-//   try {
-//     const id = new URL(req.url).searchParams.get("id");
-
-//     if (!id) {
-//       return NextResponse.json({ error: "ID required" }, { status: 400 });
-//     }
-
-//     await prisma.products.delete({
-//       where: { id: Number(id) },
-//     });
-
-//     return NextResponse.json({ message: "Deleted product successfully" });
-
-//   } catch (error) {
-//     console.error("DELETE PRODUCT ERROR:", error);
-//     return NextResponse.json({ error: "Delete failed" }, { status: 500 });
-//   }
-// }

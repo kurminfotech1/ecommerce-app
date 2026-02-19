@@ -30,7 +30,7 @@ export const getCategories = createAsyncThunk<
   async (_, { rejectWithValue }) => {
     try {
       const res = await Axios.get("categories");
-      return res.data; // already tree from backend
+      return res.data.data; // already tree from backend
     } catch (error: any) {
       toast.error(error?.response?.data?.error || "Failed to fetch categories");
       return rejectWithValue(error.message);
