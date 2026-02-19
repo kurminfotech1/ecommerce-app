@@ -5,27 +5,11 @@ import { NextResponse } from "next/server";
 /* ================= GET ================= */
 export async function GET(req: Request) {
   try {
-    const user = verifyToken(req);
+    const user = await verifyToken();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const id = new URL(req.url).searchParams.get("id");
-
-    /* ---------- SINGLE CATEGORY ---------- */
-    if (id) {
-      const category = await prisma.category.findUnique({
-        where: { id },
-      });
-
-      if (!category) {
-        return NextResponse.json({ error: "Category not found" }, { status: 404 });
-      }
-
-      return NextResponse.json(category);
-    }
-
-    /* ---------- ALL CATEGORIES ---------- */
     const categories = await prisma.category.findMany({
       orderBy: { created_at: "asc" },
     });
@@ -65,7 +49,7 @@ export async function GET(req: Request) {
 /* ================= POST ================= */
 export async function POST(req: Request) {
   try {
-    const user = verifyToken(req);
+    const user = await verifyToken();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
@@ -101,7 +85,7 @@ export async function POST(req: Request) {
 /* ================= PUT ================= */
 export async function PUT(req: Request) {
   try {
-    const user = verifyToken(req);
+    const user = await verifyToken();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -145,7 +129,7 @@ export async function PUT(req: Request) {
 /* ================= DELETE ================= */
 export async function DELETE(req: Request) {
   try {
-    const user = verifyToken(req);
+    const user = await verifyToken();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const id = new URL(req.url).searchParams.get("id");
@@ -170,7 +154,7 @@ export async function DELETE(req: Request) {
     ]);
 
     return NextResponse.json({
-      message: "Category permanently deleted successfully",
+      message: "Category deleted successfully",
     });
   } catch (error) {
     console.error("SOFT DELETE CATEGORY ERROR:", error);
