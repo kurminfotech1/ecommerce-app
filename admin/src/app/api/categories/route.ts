@@ -3,6 +3,39 @@ import { verifyToken } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 /* ================= GET ================= */
+
+
+type CategoryNode = {
+  id: string;
+  name: string;
+  parentId: string | null;
+  children: CategoryNode[];
+};
+
+function filterTree(nodes: CategoryNode[], search: string): CategoryNode[] {
+  if (!search) return nodes;
+
+  const lowerSearch = search.toLowerCase();
+
+  return nodes
+    .map(node => {
+      const matched =
+        node.name.toLowerCase().includes(lowerSearch);
+
+      const filteredChildren = filterTree(node.children, search);
+
+      if (matched || filteredChildren.length > 0) {
+        return {
+          ...node,
+          children: filteredChildren,
+        };
+      }
+
+      return null;
+    })
+    .filter(Boolean) as CategoryNode[];
+}
+
 export async function GET(req: Request) {
   try {
     const user = await verifyToken();
@@ -10,31 +43,52 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const search = searchParams.get("search") || "";
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+
+    const skip = (page - 1) * limit;
+
+    // get all categories
     const categories = await prisma.category.findMany({
       orderBy: { created_at: "asc" },
     });
 
-    // Convert flat list to tree
-    const map = new Map<string, any>();
+    // tree
+    const map = new Map<string, CategoryNode>();
 
     categories.forEach(cat => {
       map.set(cat.id, { ...cat, children: [] });
     });
 
-    const tree: any[] = [];
+    const tree: CategoryNode[] = [];
 
     categories.forEach(cat => {
       if (cat.parentId) {
         const parent = map.get(cat.parentId);
         if (parent) {
-          parent.children.push(map.get(cat.id));
+          parent.children.push(map.get(cat.id)!);
         }
       } else {
-        tree.push(map.get(cat.id));
+        tree.push(map.get(cat.id)!);
       }
     });
 
-    return NextResponse.json(tree);
+    // search
+    const filteredTree = filterTree(tree, search);
+
+    // pagination
+    const paginatedData = filteredTree.slice(skip, skip + limit);
+    const totalRecords = paginatedData.length;
+
+    return NextResponse.json({
+      totalRecords: totalRecords,
+      currentPage: page,
+      totalPages: Math.ceil(paginatedData?.length / limit),
+      pageSize: limit,
+      data: paginatedData,
+    });
 
   } catch (error) {
     console.error("GET CATEGORY ERROR:", error);
