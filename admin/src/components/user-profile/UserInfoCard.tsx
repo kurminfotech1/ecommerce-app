@@ -12,11 +12,14 @@ import Label from "../form/Label";
 import * as Yup from "yup";
 import { useFormik } from "formik";
 import Spinner from "../common/Spinner";
+import Cookies from "js-cookie";
+import { decryptData } from "@/lib/crypto";
 
 export default function UserInfoCard() {
   const { isOpen, openModal, closeModal } = useModal();
   const dispatch = useDispatch<AppDispatch>();
-  const userId = localStorage.getItem("userId");
+const userId = decryptData(Cookies.get("userId") as string);
+
   const [isLoading,setLoading]=useState(false)
   const adminData = useSelector((state: RootState) => state.auth.user);
   

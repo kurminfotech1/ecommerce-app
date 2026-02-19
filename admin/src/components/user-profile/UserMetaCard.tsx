@@ -11,6 +11,8 @@ import { AppDispatch } from "@/redux/store";
 import { RootState } from "@/redux/rootReducer";
 import { useSelector } from "react-redux";
 import { fetchAdminById } from "@/redux/auth/authApi";
+import { decryptData } from "@/lib/crypto";
+import Cookies from "js-cookie";
 
 
 export default function UserMetaCard() {
@@ -18,14 +20,22 @@ export default function UserMetaCard() {
   const [userId, setUserId] = useState<string | null>(null);
   const dispatch = useDispatch<AppDispatch>();
   const adminData = useSelector((state: RootState) => state.auth.user);
+
+  useEffect(() => {
+    const cookieValue = Cookies.get("userId");
+    if (cookieValue) {
+      const id = decryptData(cookieValue);
+      setUserId(id);
+    }
+  }, []);
   
 useEffect(() => {
-  const id = localStorage.getItem("userId");
 
-  if (id) {
-    dispatch(fetchAdminById(id));
+
+  if (userId) {
+    dispatch(fetchAdminById(userId));
   }
-}, [dispatch]);
+}, [dispatch, userId]);
 
 const handleSave = () => {
   console.log("Saving changes...");
