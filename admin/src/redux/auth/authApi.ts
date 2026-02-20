@@ -51,21 +51,22 @@ export const login = createAsyncThunk(
     try {
       const res = await Axios.post("auth/login", data);
 
-  // Cookies.set("token", res.data.token, { expires: 1 });
-  //     Cookies.set("userId", res.data.admin.id, { expires: 1 });
-  //     Cookies.set("role", res.data.admin.role, { expires: 1 });
-  Cookies.set("token", encryptData(res.data.token));
-  Cookies.set("userId", encryptData(res.data.admin.id));
-  console.log("sdasd",res.data.admin.id);
-  
-  Cookies.set("role", encryptData(res.data.admin.role));
+      // Cookies.set("token", res.data.token, { expires: 1 });
+      //     Cookies.set("userId", res.data.admin.id, { expires: 1 });
+      //     Cookies.set("role", res.data.admin.role, { expires: 1 });
+      Cookies.set("token", encryptData(res.data.token));
+      Cookies.set("userId", encryptData(res.data.admin.id));
+
+      Cookies.set("role", encryptData(res.data.admin.role));
 
       toast.success(res?.data?.message);
 
       return res.data;
-    } catch (error: any) {  
+    } catch (error: any) {
       const message =
-        error;
+        error?.response?.data?.message ||
+        error?.message ||
+        "Something went wrong";
 
       toast.error(message);
       return rejectWithValue(message);
@@ -97,8 +98,9 @@ export const updateAdmin = createAsyncThunk<
 >(
   "admin/update",
   async ({ id, data }, { rejectWithValue }) => {
-    try {      const res = await Axios.put(`auth/update/${id}`, data);
-     toast.success(
+    try {
+      const res = await Axios.put(`auth/update/${id}`, data);
+      toast.success(
         res?.data?.success
       );
       return res.data.admin;
