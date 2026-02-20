@@ -20,17 +20,40 @@ export interface CreateCategoryPayload {
   is_active?: boolean;
 }
 
+export interface CategoriesResponse {
+  data: Category[];
+  totalRecords: number;
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+}
+
+export interface CategoriesQueryParams {
+  search?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  status?: string;
+}
+
 /* ── GET (tree) ──────────────────────────────────── */
 export const getCategories = createAsyncThunk<
-  Category[],
-  void,
+  CategoriesResponse,
+  CategoriesQueryParams | void,
   { rejectValue: string }
 >(
   "categories/fetchAll",
-  async (_, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
-      const res = await Axios.get("categories");
-      return res.data.data; // already tree from backend
+      const query = new URLSearchParams();
+      if (params?.search) query.set("search", params.search);
+      if (params?.page)   query.set("page", String(params.page));
+      if (params?.limit)  query.set("limit", String(params.limit));
+      if (params?.sortBy) query.set("sortBy", params.sortBy);
+      if (params?.status && params.status !== "all") query.set("status", params.status);
+
+      const res = await Axios.get(`categories?${query.toString()}`);
+      return res.data;
     } catch (error: any) {
       toast.error(error?.response?.data?.error || "Failed to fetch categories");
       return rejectWithValue(error.message);
@@ -51,11 +74,13 @@ export const createCategory = createAsyncThunk<
       toast.success(res.data?.message || "Category created");
       return res.data.category;
     } catch (error: any) {
-      toast.error(error?.response?.data?.error || "Create failed");
-      return rejectWithValue(error.message);
+      const errorMessage = error.response?.data?.error || error.message;
+      toast.error(errorMessage);
+      return rejectWithValue(errorMessage);
     }
   }
 );
+
 
 /* ── PUT ────────────────────────────────────────── */
 export const updateCategory = createAsyncThunk<
@@ -70,8 +95,27 @@ export const updateCategory = createAsyncThunk<
       toast.success(res.data?.message || "Category updated");
       return res.data.updated;
     } catch (error: any) {
-      toast.error(error?.response?.data?.error || "Update failed");
+      toast.error(error?.response?.data?.error );
       return rejectWithValue(error.message);
+    }
+  }
+);
+
+/* ── PATCH (toggle active/inactive) ─────────────── */
+export const toggleCategoryStatus = createAsyncThunk<
+  Category,
+  string,
+  { rejectValue: string }
+>(
+  "categories/toggleStatus",
+  async (id, { rejectWithValue }) => {
+    try {
+      const res = await Axios.patch(`categories?id=${id}`);
+      toast.success(res.data?.message || "Category status updated");
+      return res.data.updated;
+    } catch (error: any) {
+      toast.error(error?.response?.data?.error || "Failed to toggle category status");
+      return rejectWithValue(error?.response?.data?.error || error.message);
     }
   }
 );
