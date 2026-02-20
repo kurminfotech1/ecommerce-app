@@ -28,7 +28,6 @@ model Admin {
   createdAt   DateTime @default(now())
 }
 
-
 model Category {
   id        String   @id @default(uuid())
   name      String
@@ -46,50 +45,57 @@ model Category {
   products Product[]
 }
 
-
 model Product {
-  id          String   @id @default(uuid())
+  id           String   @id @default(uuid())
+  category_id  String
+  category     Category @relation(fields: [category_id], references: [id])
 
-  category_id String
-  category    Category @relation(fields: [category_id], references: [id])
-
-  parentId    String?
-  parent      Product?   @relation("ProductHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
-  children    Product[]  @relation("ProductHierarchy")
-
-  // basic
   product_name String
-  slug         String?  @unique
-  description  String?
+  slug         String   @unique
   short_desc   String?
+  description  String?
 
-  // variant attributes (ONLY for children)
-  size         String?
-  color        String?
+  sold_count   Int     @default(0)
+  rating_avg   Float   @default(0)
+  rating_count Int     @default(0)
 
-  // pricing
+  is_active    Boolean  @default(true)
+  is_featured  Boolean  @default(false)
+
+  meta_title   String?
+  meta_desc    String?
+
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  images       ProductImage[]
+  variants     ProductVariant[]
+  reviews      Review[]
+  wishlist     Wishlist[]
+}
+
+model ProductVariant {
+  id            String   @id @default(uuid())
+  product_id    String
+  product       Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  size          String?
+  color         String?
+
   price         Float
   compare_price Float?
 
-  // inventory
-  stock Int @default(0)
-  sku   String? @unique
+  stock         Int      @default(0)
+  sku           String   @unique
 
-  // status
-  is_active   Boolean @default(true)
-  is_featured Boolean @default(false)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 
-  // seo
-  meta_title String?
-  meta_desc  String?
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  images product_images[]
+  cartItems     Cart[]
+  orderItems    OrderItem[]
 }
 
-model product_images {
+model ProductImage {
   id         String   @id @default(uuid())
   product_id String
   image_url  String
@@ -97,10 +103,6 @@ model product_images {
 
   product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
 }
-
-
-
-
 
 model User {
   id          String   @id @default(uuid())
@@ -113,6 +115,10 @@ model User {
   updatedAt   DateTime @updatedAt
 
   addresses   Address[]
+  cart        Cart[]
+  orders      Order[]
+  reviews     Review[]
+  wishlist    Wishlist[]
 }
 
 model Address {
@@ -130,4 +136,73 @@ model Address {
   country   String
 
   createdAt DateTime @default(now())
+}
+
+model Cart {
+  id         String   @id @default(uuid())
+  user_id    String
+  variant_id String
+  quantity   Int
+  price      Float
+  created_at DateTime @default(now())
+
+  user    User           @relation(fields: [user_id], references: [id])
+  variant ProductVariant @relation(fields: [variant_id], references: [id])
+}
+
+model Order {
+  id           String   @id @default(uuid())
+  order_number String   @unique
+  user_id      String
+  total_amount Float
+  order_status String
+  created_at   DateTime @default(now())
+
+  user   User        @relation(fields: [user_id], references: [id])
+  items  OrderItem[]
+  payment Payment?
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  order_id   String
+  variant_id String
+  quantity   Int
+  price      Float
+
+  order   Order          @relation(fields: [order_id], references: [id])
+  variant ProductVariant @relation(fields: [variant_id], references: [id])
+}
+
+model Payment {
+  id             String   @id @default(uuid())
+  order_id       String   @unique
+  payment_method String
+  transaction_id String
+  amount         Float
+  status         String
+  created_at     DateTime @default(now())
+
+  order Order @relation(fields: [order_id], references: [id])
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  user_id    String
+  product_id String
+  rating     Int
+  comment    String?
+  created_at DateTime @default(now())
+
+  user    User    @relation(fields: [user_id], references: [id])
+  product Product @relation(fields: [product_id], references: [id])
+}
+
+model Wishlist {
+  id         String   @id @default(uuid())
+  user_id    String
+  product_id String
+
+  user    User    @relation(fields: [user_id], references: [id])
+  product Product @relation(fields: [product_id], references: [id])
 }

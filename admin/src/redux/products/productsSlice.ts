@@ -13,9 +13,10 @@ interface ProductState {
   submitting: boolean;
   uploading: boolean;
   products: Product[];
-  total: number;
-  page: number;
+  totalRecords: number;
+  currentPage: number;
   totalPages: number;
+  pageSize: number;
   error: string | null;
 }
 
@@ -24,9 +25,10 @@ const initialState: ProductState = {
   submitting: false,
   uploading: false,
   products: [],
-  total: 0,
-  page: 1,
+  totalRecords: 0,
+  currentPage: 1,
   totalPages: 1,
+  pageSize: 10,
   error: null,
 };
 
@@ -45,9 +47,10 @@ const productsSlice = createSlice({
       .addCase(getProducts.fulfilled, (state, action) => {
         state.loading = false;
         state.products = action.payload.data;
-        state.total = action.payload.total;
-        state.page = action.payload.page;
+        state.totalRecords = action.payload.totalRecords;
+        state.currentPage = action.payload.currentPage;
         state.totalPages = action.payload.totalPages;
+        state.pageSize = action.payload.pageSize;
       })
       .addCase(getProducts.rejected, (state, action) => {
         state.loading = false;
@@ -61,7 +64,7 @@ const productsSlice = createSlice({
       .addCase(createProduct.fulfilled, (state, action) => {
         state.submitting = false;
         state.products.unshift(action.payload);
-        state.total += 1;
+        state.totalRecords += 1;
       })
       .addCase(createProduct.rejected, (state) => {
         state.submitting = false;
@@ -83,7 +86,7 @@ const productsSlice = createSlice({
       // ── DELETE ─────────────────────────────────────────────────
       .addCase(deleteProduct.fulfilled, (state, action) => {
         state.products = state.products.filter((p) => p.id !== action.payload);
-        state.total -= 1;
+        state.totalRecords -= 1;
       })
 
       // ── UPLOAD ─────────────────────────────────────────────────

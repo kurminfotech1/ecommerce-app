@@ -38,11 +38,11 @@ export async function verifyToken(): Promise<AuthUser | null> {
   const authHeader = headerList.get("authorization");
   const headerToken = authHeader?.split(" ")[1];
 
-  const token = cookieToken || headerToken;
+  const token = decryptData(cookieToken as string) || headerToken;
   if (!token) return null;
 
   try {
-    return jwt.verify(decryptData(token) as string, JWT_SECRET) as AuthUser;
+    return jwt.verify(token, JWT_SECRET) as AuthUser;
   } catch {
     return null;
   }

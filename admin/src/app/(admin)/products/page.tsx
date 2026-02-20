@@ -12,6 +12,8 @@ import {
   deleteProduct,
   uploadImages,
   Product,
+  ProductImageInput,
+  ProductVariantInput,
 } from "@/redux/products/productsApi";
 import { getCategories, Category } from "@/redux/categories/categoriesApi";
 
@@ -124,7 +126,7 @@ const EmptyState = ({ onAdd }: { onAdd: () => void }) => (
 // ────────────────────────────────────────────────────────────────
 export default function ProductsPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { products, totalPages, total, loading, submitting, uploading } =
+  const { products, totalPages, totalRecords, loading, submitting, uploading } =
     useSelector((s: RootState) => s.products);
   const { categories } = useSelector((s: RootState) => s.categories);
   console.log(categories);
@@ -147,13 +149,16 @@ export default function ProductsPage() {
   // ── Form ───────────────────────────────────────────────────────
   const emptyForm = {
     product_name: "", slug: "", short_desc: "", description: "",
-    size: "", color: "", price: "", compare_price: "", stock: "0",
-    category_id: "", parentId: "",
+    category_id: "",
     meta_title: "", meta_desc: "",
     is_active: true, is_featured: false,
   };
 
+  type VariantRow = { size: string; color: string; price: string; compare_price: string; stock: string; sku: string; };
+  const emptyVariantRow = (): VariantRow => ({ size: "", color: "", price: "", compare_price: "", stock: "0", sku: "" });
+
   const [form, setForm] = useState<any>(emptyForm);
+  const [variants, setVariants] = useState<VariantRow[]>([emptyVariantRow()]); // multi-variant rows
   const [images, setImages] = useState<string[]>([]); // confirmed URLs
   const [pendingFiles, setPendingFiles] = useState<File[]>([]); // awaiting upload
 
@@ -163,8 +168,8 @@ export default function ProductsPage() {
   const [catL3, setCatL3] = useState("");
 
   const catMainList = (categories as Category[]).filter((c) => !c.parentId);
-  const catL2List   = catL1 ? (findCatNode(categories as Category[], catL1)?.children ?? []) : [];
-  const catL3List   = catL2 ? (findCatNode(categories as Category[], catL2)?.children ?? []) : [];
+  const catL2List = catL1 ? (findCatNode(categories as Category[], catL1)?.children ?? []) : [];
+  const catL3List = catL2 ? (findCatNode(categories as Category[], catL2)?.children ?? []) : [];
 
   // Effective category_id = deepest selected level
   const effectiveCatId = catL3 || catL2 || catL1;
@@ -211,6 +216,7 @@ export default function ProductsPage() {
   // ── Helpers ────────────────────────────────────────────────────
   const openCreate = () => {
     setForm(emptyForm);
+    setVariants([emptyVariantRow()]);
     setImages([]);
     setPendingFiles([]);
     setCatL1(""); setCatL2(""); setCatL3("");
@@ -222,7 +228,6 @@ export default function ProductsPage() {
     setEditId(p.id);
     setImages(p.images?.map((i) => i.image_url) || []);
     setPendingFiles([]);
-    // Resolve L1/L2/L3 from existing category_id
     const resolved = resolveCatSelections(categories as Category[], p.category_id);
     setCatL1(resolved.l1); setCatL2(resolved.l2); setCatL3(resolved.l3);
     setForm({
@@ -230,18 +235,25 @@ export default function ProductsPage() {
       slug: p.slug ?? "",
       short_desc: p.short_desc ?? "",
       description: p.description ?? "",
-      size: p.size ?? "",
-      color: p.color ?? "",
-      price: String(p.price),
-      compare_price: p.compare_price ? String(p.compare_price) : "",
-      stock: String(p.stock),
       category_id: p.category_id,
-      parentId: p.parentId ?? "",
       meta_title: p.meta_title ?? "",
       meta_desc: p.meta_desc ?? "",
       is_active: p.is_active,
       is_featured: p.is_featured,
     });
+    // Pre-fill variants from existing data
+    if (p.variants && p.variants.length > 0) {
+      setVariants(p.variants.map((v) => ({
+        size: v.size ?? "",
+        color: v.color ?? "",
+        price: String(v.price),
+        compare_price: v.compare_price ? String(v.compare_price) : "",
+        stock: String(v.stock),
+        sku: v.sku ?? "",
+      })));
+    } else {
+      setVariants([emptyVariantRow()]);
+    }
     setModalOpen(true);
   };
 
@@ -270,10 +282,24 @@ export default function ProductsPage() {
   const removeUploaded = (idx: number) =>
     setImages((prev) => prev.filter((_, i) => i !== idx));
 
+  // ── Variant helpers ──────────────────────────────────────────
+  const updateVariant = (idx: number, field: string, value: string) =>
+    setVariants((prev) => prev.map((v, i) => i === idx ? { ...v, [field]: value } : v));
+
+  const addVariant = () => setVariants((prev) => [...prev, emptyVariantRow()]);
+
+  const removeVariant = (idx: number) =>
+    setVariants((prev) => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev);
+
   // ── Submit ─────────────────────────────────────────────────────
   const handleSubmit = async () => {
-    if (!form.product_name || !form.category_id || !form.price) {
-      alert("Product name, category and price are required.");
+    if (!form.product_name || !form.category_id) {
+      alert("Product name and category are required.");
+      return;
+    }
+    const validVariants = variants.filter((v) => v.price);
+    if (validVariants.length === 0) {
+      alert("At least one variant with a price is required.");
       return;
     }
 
@@ -284,29 +310,33 @@ export default function ProductsPage() {
       if (uploadImages.fulfilled.match(result)) {
         newUrls = result.payload;
       } else {
-        return; // abort — toast already shown
+        return;
       }
     }
 
     const allImageUrls = [...images, ...newUrls];
+
+    const variantsPayload: ProductVariantInput[] = validVariants.map((v) => ({
+      size: v.size || undefined,
+      color: v.color || undefined,
+      price: Number(v.price),
+      compare_price: v.compare_price ? Number(v.compare_price) : undefined,
+      stock: Number(v.stock || 0),
+      sku: v.sku || undefined,
+    }));
 
     const payload = {
       product_name: form.product_name,
       slug: form.slug || null,
       description: form.description || null,
       short_desc: form.short_desc || null,
-      size: form.size || null,
-      color: form.color || null,
-      price: Number(form.price),
-      compare_price: form.compare_price ? Number(form.compare_price) : null,
-      stock: Number(form.stock || 0),
       category_id: form.category_id,
-      parentId: form.parentId || null,
       is_active: form.is_active,
       is_featured: form.is_featured,
       meta_title: form.meta_title || null,
       meta_desc: form.meta_desc || null,
       images: allImageUrls.map((url, idx) => ({ image_url: url, sort_order: idx })),
+      variants: variantsPayload,
     };
 
     // 2. Create or update
@@ -342,7 +372,7 @@ export default function ProductsPage() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Products</h1>
             <p className="text-sm text-gray-500 mt-0.5">
-              {total} product{total !== 1 ? "s" : ""} total
+              {totalRecords} product{totalRecords !== 1 ? "s" : ""} total
             </p>
           </div>
 
@@ -441,35 +471,39 @@ export default function ProductsPage() {
                         </Badge>
                       </td>
 
-                      {/* Price */}
+                      {/* Price — from first variant */}
                       <td className="px-4 py-3">
-                        <p className="font-semibold text-gray-800">₹{p.price.toLocaleString()}</p>
-                        {p.compare_price && (
-                          <p className="text-xs text-gray-400 line-through">₹{p.compare_price.toLocaleString()}</p>
-                        )}
+                        {p.variants?.[0] ? (
+                          <>
+                            <p className="font-semibold text-gray-800">₹{p.variants[0].price.toLocaleString()}</p>
+                            {p.variants[0].compare_price && (
+                              <p className="text-xs text-gray-400 line-through">₹{p.variants[0].compare_price.toLocaleString()}</p>
+                            )}
+                          </>
+                        ) : <span className="text-gray-300">—</span>}
                       </td>
 
-                      {/* Stock */}
-                      <td className="px-4 py-3">{stockBadge(p.stock)}</td>
-
-                      {/* Variants */}
+                      {/* Stock — from first variant */}
                       <td className="px-4 py-3">
-                        {p.children && p.children.length > 0 ? (
+                        {p.variants?.[0] ? stockBadge(p.variants[0].stock) : <span className="text-gray-300">—</span>}
+                      </td>
+
+                      {/* Variants count */}
+                      <td className="px-4 py-3">
+                        {p.variants && p.variants.length > 0 ? (
                           <Badge color="blue">
                             <Layers size={10} />
-                            {p.children.length} variant{p.children.length > 1 ? "s" : ""}
+                            {p.variants.length} variant{p.variants.length > 1 ? "s" : ""}
                           </Badge>
-                        ) : p.parentId ? (
-                          <Badge color="gray">Variant</Badge>
                         ) : (
                           <span className="text-gray-300">—</span>
                         )}
                       </td>
 
-                      {/* SKU */}
+                      {/* SKU — from first variant */}
                       <td className="px-4 py-3">
                         <code className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-mono">
-                          {p.sku || "—"}
+                          {p.variants?.[0]?.sku || "—"}
                         </code>
                       </td>
 
@@ -554,7 +588,7 @@ export default function ProductsPage() {
                 <div className="flex gap-2 mt-1.5 flex-wrap">
                   {detailProduct.is_active ? <Badge color="green"><CheckCircle2 size={10} /> Active</Badge> : <Badge color="red"><XCircle size={10} /> Inactive</Badge>}
                   {detailProduct.is_featured && <Badge color="amber"><Star size={10} fill="currentColor" /> Featured</Badge>}
-                  {detailProduct.sku && <Badge color="gray"><code className="font-mono">{detailProduct.sku}</code></Badge>}
+                  {detailProduct.variants?.[0]?.sku && <Badge color="gray"><code className="font-mono">{detailProduct.variants[0].sku}</code></Badge>}
                 </div>
               </div>
               <button onClick={() => setDetailProduct(null)} className="p-2 rounded-lg hover:bg-gray-100 transition">
@@ -582,12 +616,6 @@ export default function ProductsPage() {
                 {[
                   { label: "Category", value: detailProduct.category?.name },
                   { label: "Slug", value: detailProduct.slug || "—" },
-                  { label: "Price", value: `₹${detailProduct.price.toLocaleString()}` },
-                  { label: "Compare Price", value: detailProduct.compare_price ? `₹${detailProduct.compare_price.toLocaleString()}` : "—" },
-                  { label: "Stock", value: detailProduct.stock },
-                  { label: "SKU", value: detailProduct.sku || "—" },
-                  { label: "Size", value: detailProduct.size || "—" },
-                  { label: "Color", value: detailProduct.color || "—" },
                   { label: "Meta Title", value: detailProduct.meta_title || "—" },
                   { label: "Meta Description", value: detailProduct.meta_desc || "—" },
                 ].map(({ label, value }) => (
@@ -613,41 +641,33 @@ export default function ProductsPage() {
               )}
 
               {/* Variants */}
-              {detailProduct.children && detailProduct.children.length > 0 && (
+              {detailProduct.variants && detailProduct.variants.length > 0 && (
                 <div>
                   <button
                     onClick={() => setExpandedVariants((v) => !v)}
                     className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3"
                   >
                     <Layers size={15} />
-                    {detailProduct.children.length} Variants
+                    {detailProduct.variants.length} Variant{detailProduct.variants.length > 1 ? "s" : ""}
                     {expandedVariants ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </button>
 
                   {expandedVariants && (
                     <div className="space-y-2">
-                      {detailProduct.children.map((child) => (
-                        <div key={child.id} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
-                          {child.images?.[0] && (
-                            <img src={child.images[0].image_url} className="w-10 h-10 rounded-lg object-cover border border-gray-200" />
-                          )}
+                      {detailProduct.variants.map((v) => (
+                        <div key={v.id} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-800">{child.product_name}</p>
-                            <div className="flex gap-2 mt-0.5">
-                              {child.size && <Badge color="gray">Size: {child.size}</Badge>}
-                              {child.color && <Badge color="gray">Color: {child.color}</Badge>}
+                            <div className="flex gap-2 flex-wrap">
+                              {v.sku && <Badge color="gray"><code className="font-mono">{v.sku}</code></Badge>}
+                              {v.size && <Badge color="gray">Size: {v.size}</Badge>}
+                              {v.color && <Badge color="gray">Color: {v.color}</Badge>}
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm font-semibold text-gray-800">₹{child.price.toLocaleString()}</p>
-                            {stockBadge(child.stock)}
+                            <p className="text-sm font-semibold text-gray-800">₹{v.price.toLocaleString()}</p>
+                            {v.compare_price && <p className="text-xs text-gray-400 line-through">₹{v.compare_price.toLocaleString()}</p>}
+                            {stockBadge(v.stock)}
                           </div>
-                          <button
-                            onClick={() => { setDetailProduct(null); openEdit(child); }}
-                            className="p-1.5 rounded-lg hover:bg-violet-100 text-violet-600 transition"
-                          >
-                            <Pencil size={14} />
-                          </button>
                         </div>
                       ))}
                     </div>
@@ -712,7 +732,7 @@ export default function ProductsPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Product Name *" span={2}>
                     <input
-                      placeholder="e.g. Nike Air Max 270"
+                      placeholder="Enter product name"
                       value={form.product_name}
                       onChange={(e) => handleName(e.target.value)}
                       className={inputCls}
@@ -721,7 +741,7 @@ export default function ProductsPage() {
 
                   <Field label="Slug">
                     <input
-                      placeholder="e.g. nike-air-max-270"
+                      placeholder="Enter slug"
                       value={form.slug}
                       onChange={(e) => setForm({ ...form, slug: e.target.value })}
                       className={inputCls}
@@ -791,7 +811,7 @@ export default function ProductsPage() {
 
                   <Field label="Short Description" span={2}>
                     <input
-                      placeholder="One-line description"
+                      placeholder="Enter short description"
                       value={form.short_desc}
                       onChange={(e) => setForm({ ...form, short_desc: e.target.value })}
                       className={inputCls}
@@ -801,7 +821,7 @@ export default function ProductsPage() {
                   <Field label="Full Description" span={2}>
                     <textarea
                       rows={3}
-                      placeholder="Detailed product description..."
+                      placeholder="Enter full description"
                       value={form.description}
                       onChange={(e) => setForm({ ...form, description: e.target.value })}
                       className={inputCls}
@@ -810,94 +830,152 @@ export default function ProductsPage() {
                 </div>
               </div>
 
-              {/* ── Section: Pricing & Inventory ── */}
+              {/* ── Section: Variants ── */}
               <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                  <Tag size={12} /> Pricing & Inventory
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Price (₹) *">
-                    <input
-                      type="number"
-                      placeholder="0"
-                      value={form.price}
-                      onChange={(e) => setForm({ ...form, price: e.target.value })}
-                      className={inputCls}
-                    />
-                  </Field>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                    <Layers size={12} /> Variants
+                    <span className="ml-1 px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded-full text-[10px] font-bold">
+                      {variants.length}
+                    </span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={addVariant}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-violet-600 hover:text-violet-700 bg-violet-50 hover:bg-violet-100 px-3 py-1.5 rounded-lg transition"
+                  >
+                    <Plus size={12} /> Add Variant
+                  </button>
+                </div>
 
-                  <Field label="Compare Price (₹)">
-                    <input
-                      type="number"
-                      placeholder="0"
-                      value={form.compare_price}
-                      onChange={(e) => setForm({ ...form, compare_price: e.target.value })}
-                      className={inputCls}
-                    />
-                  </Field>
-
-                  <Field label="Stock">
-                    <input
-                      type="number"
-                      placeholder="0"
-                      value={form.stock}
-                      onChange={(e) => setForm({ ...form, stock: e.target.value })}
-                      className={inputCls}
-                    />
-                  </Field>
-
-                  {/* <Field label="Parent Product (for variants)">
-                    <select
-                      value={form.parentId}
-                      onChange={(e) => setForm({ ...form, parentId: e.target.value })}
-                      className={inputCls}
+                <div className="space-y-3">
+                  {variants.map((v, idx) => (
+                    <div
+                      key={idx}
+                      className="border border-gray-100 rounded-xl p-4 bg-gray-50/60 relative group"
                     >
-                      <option value="">None (this is a parent)</option>
-                      {products
-                        .filter((p) => !p.parentId && p.id !== editId)
-                        .map((p) => (
-                          <option key={p.id} value={p.id}>{p.product_name}</option>
-                        ))}
-                    </select>
-                  </Field> */}
-                </div>
-              </div>
+                      {/* Row header */}
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+                          Variant #{idx + 1}
+                        </span>
+                        {variants.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeVariant(idx)}
+                            className="w-6 h-6 flex items-center justify-center rounded-full bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 transition"
+                            title="Remove variant"
+                          >
+                            <X size={12} />
+                          </button>
+                        )}
+                      </div>
 
-              {/* ── Section: Variant Attributes ── */}
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                  <Layers size={12} /> Variant Attributes
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Size">
-                    <input
-                      placeholder="e.g. M, L, XL, 10"
-                      value={form.size}
-                      onChange={(e) => setForm({ ...form, size: e.target.value })}
-                      className={inputCls}
-                    />
-                  </Field>
-                  <Field label="Color">
-                    <div className="flex items-center gap-2">
-                      {/* Native color wheel */}
-                      <input
-                        type="color"
-                        value={form.color?.startsWith("#") ? form.color : "#000000"}
-                        onChange={(e) => setForm({ ...form, color: e.target.value })}
-                        className="w-10 h-10 rounded-xl border border-gray-200 cursor-pointer p-0.5 bg-gray-50 shrink-0"
-                        title="Pick a color"
-                      />
-                      {/* Hex / name text field */}
-                      <input
-                        type="text"
-                        placeholder="#000000 or Red"
-                        value={form.color}
-                        onChange={(e) => setForm({ ...form, color: e.target.value })}
-                        className={inputCls}
-                      />
+                      {/* Fields grid */}
+                      <div className="grid grid-cols-2 gap-3">
+                        {/* Price */}
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                            Price (₹) *
+                          </label>
+                          <input
+                            type="number"
+                            placeholder="0"
+                            value={v.price}
+                            onChange={(e) => updateVariant(idx, "price", e.target.value)}
+                            className={inputCls}
+                          />
+                        </div>
+
+                        {/* Compare Price */}
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                            Compare Price (₹)
+                          </label>
+                          <input
+                            type="number"
+                            placeholder="0"
+                            value={v.compare_price}
+                            onChange={(e) => updateVariant(idx, "compare_price", e.target.value)}
+                            className={inputCls}
+                          />
+                        </div>
+
+                        {/* Stock */}
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                            Stock
+                          </label>
+                          <input
+                            type="number"
+                            placeholder="0"
+                            value={v.stock}
+                            onChange={(e) => updateVariant(idx, "stock", e.target.value)}
+                            className={inputCls}
+                          />
+                        </div>
+
+                        {/* SKU */}
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                            SKU
+                          </label>
+                          <input
+                            placeholder="Auto-generated if blank"
+                            value={v.sku}
+                            onChange={(e) => updateVariant(idx, "sku", e.target.value)}
+                            className={inputCls}
+                          />
+                        </div>
+
+                        {/* Size */}
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                            Size
+                          </label>
+                          <input
+                            placeholder="e.g. S, M, L, XL"
+                            value={v.size}
+                            onChange={(e) => updateVariant(idx, "size", e.target.value)}
+                            className={inputCls}
+                          />
+                        </div>
+
+                        {/* Color */}
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                            Color
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={v.color?.startsWith("#") ? v.color : "#000000"}
+                              onChange={(e) => updateVariant(idx, "color", e.target.value)}
+                              className="w-10 h-10 rounded-xl border border-gray-200 cursor-pointer p-0.5 bg-gray-50 shrink-0"
+                              title="Pick a color"
+                            />
+                            <input
+                              type="text"
+                              placeholder="e.g. Red, #FF0000"
+                              value={v.color}
+                              onChange={(e) => updateVariant(idx, "color", e.target.value)}
+                              className={inputCls}
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </Field>
+                  ))}
                 </div>
+
+                {/* Bottom Add button */}
+                <button
+                  type="button"
+                  onClick={addVariant}
+                  className="mt-3 w-full border-2 border-dashed border-gray-200 hover:border-violet-300 hover:bg-violet-50/30 text-gray-400 hover:text-violet-500 py-2.5 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2"
+                >
+                  <Plus size={14} /> Add Another Variant
+                </button>
               </div>
 
               {/* ── Section: SEO ── */}
@@ -906,7 +984,7 @@ export default function ProductsPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Meta Title" span={2}>
                     <input
-                      placeholder="SEO title"
+                      placeholder="Enter meta title"
                       value={form.meta_title}
                       onChange={(e) => setForm({ ...form, meta_title: e.target.value })}
                       className={inputCls}
@@ -914,7 +992,7 @@ export default function ProductsPage() {
                   </Field>
                   <Field label="Meta Description" span={2}>
                     <input
-                      placeholder="SEO description"
+                      placeholder="Enter meta description"
                       value={form.meta_desc}
                       onChange={(e) => setForm({ ...form, meta_desc: e.target.value })}
                       className={inputCls}

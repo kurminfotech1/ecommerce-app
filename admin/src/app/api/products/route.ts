@@ -22,27 +22,19 @@ const productInclude = {
   images: {
     orderBy: { sort_order: "asc" as const },
   },
-  children: {
-    include: {
-      images: {
-        orderBy: { sort_order: "asc" as const },
-      },
-    },
+  variants: {
     orderBy: { created_at: "asc" as const },
-  },
-  parent: {
-    select: { id: true, product_name: true, slug: true },
   },
 } as const;
 
 // ─────────────────────────────────────────────────────────────────
 // GET  /api/products
-//   ?id=<uuid>              → single product with children & images
-//   ?page=1&limit=10        → paginated list (parents only)
+//   ?id=<uuid>              → single product with variants & images
+//   ?page=1&limit=10        → paginated list
 //   ?search=keyword         → search by product_name
-//   ?category=<uuid>        → filter by category
-//   ?includeVariants=true   → include child/variant products too
-//   ?featured=true          → only featured products
+//   ?category=<uuid>        → filter by category_id
+//   ?active=true|false      → filter by is_active
+//   ?featured=true          → filter only featured products
 // ─────────────────────────────────────────────────────────────────
 export async function GET(req: Request) {
   try {
@@ -76,39 +68,44 @@ export async function GET(req: Request) {
     const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") || 10)));
     const search = searchParams.get("search")?.trim() || "";
     const category = searchParams.get("category");
-    const includeVariants = searchParams.get("includeVariants") === "true";
-    const featured = searchParams.get("featured") === "true";
+    const activeParam = searchParams.get("active");    // "true" | "false" | null
+    const featuredParam = searchParams.get("featured"); // "true" | null
 
     const skip = (page - 1) * limit;
 
     const where: any = {
-      ...(includeVariants ? {} : { parentId: null }),
-      ...(featured ? { is_featured: true } : {}),
+      // is_active filter (omit entirely when param not provided → show all)
+      ...(activeParam !== null ? { is_active: activeParam === "true" } : {}),
+
+      // is_featured filter
+      ...(featuredParam === "true" ? { is_featured: true } : {}),
+
       AND: [
-        search
-          ? { product_name: { contains: search, mode: "insensitive" } }
-          : {},
+        // Full-text search on product name
+        search ? { product_name: { contains: search, mode: "insensitive" } } : {},
+
+        // Category filter
         category ? { category_id: category } : {},
       ],
     };
 
-    const [products, total] = await Promise.all([
-      prisma.product.findMany({
-        where,
-        include: productInclude,
-        orderBy: { created_at: "desc" },
-        skip,
-        take: limit,
-      }),
-      prisma.product.count({ where }),
-    ]);
+    // Fetch all matched products (in-memory pagination for flexibility)
+    const allProducts = await prisma.product.findMany({
+      where,
+      include: productInclude,
+      orderBy: { created_at: "desc" },
+    });
+
+    const totalRecords = allProducts.length;
+    const totalPages = Math.ceil(totalRecords / limit);
+    const paginatedData = allProducts.slice(skip, skip + limit);
 
     return NextResponse.json({
-      data: products,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      totalRecords,
+      currentPage: page,
+      totalPages,
+      pageSize: limit,
+      data: paginatedData,
     });
   } catch (error) {
     console.error("GET PRODUCTS ERROR:", error);
@@ -123,14 +120,16 @@ export async function GET(req: Request) {
 // POST  /api/products
 // Body JSON:
 // {
-//   product_name, category_id, price,      ← required
-//   parentId?,              ← pass to create a variant/child
+//   product_name, category_id,       ← required
 //   slug?, description?, short_desc?,
-//   size?, color?,          ← variant attributes
-//   compare_price?, stock?, sku?,
 //   is_active?, is_featured?,
 //   meta_title?, meta_desc?,
-//   images?: [{ image_url, sort_order? }]  ← image URLs (from /api/upload)
+//   images?:   [{ image_url, sort_order? }]   ← from /api/upload
+//   variants?: [{
+//     size?, color?,
+//     price,                          ← required per variant
+//     compare_price?, stock?, sku?
+//   }]
 // }
 // ─────────────────────────────────────────────────────────────────
 export async function POST(req: Request) {
@@ -142,9 +141,9 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
-    if (!body.product_name || !body.category_id || body.price == null) {
+    if (!body.product_name || !body.category_id) {
       return NextResponse.json(
-        { error: "product_name, category_id, and price are required" },
+        { error: "product_name and category_id are required" },
         { status: 400 }
       );
     }
@@ -156,14 +155,7 @@ export async function POST(req: Request) {
         slug: body.slug ?? null,
         description: body.description ?? null,
         short_desc: body.short_desc ?? null,
-        size: body.size ?? null,
-        color: body.color ?? null,
-        price: Number(body.price),
-        compare_price: body.compare_price ? Number(body.compare_price) : null,
-        stock: Number(body.stock ?? 0),
-        sku: body.sku ?? null,
         category_id: body.category_id,
-        parentId: body.parentId ?? null,
         is_active: body.is_active ?? true,
         is_featured: body.is_featured ?? false,
         meta_title: body.meta_title ?? null,
@@ -172,33 +164,57 @@ export async function POST(req: Request) {
       include: { category: true },
     });
 
-    // 2️⃣ Auto-generate SKU for parent products (if not provided manually)
-    if (!body.parentId && !body.sku) {
-      const categoryCode = product.category.name.slice(0, 3).toUpperCase();
-      const productCode = product.product_name
-        .replace(/\s+/g, "")
-        .slice(0, 4)
-        .toUpperCase();
-      const sku = `${categoryCode}-${productCode}-${product.id.slice(-6).toUpperCase()}`;
-
-      await prisma.product.update({
-        where: { id: product.id },
-        data: { sku },
-      });
-    }
-
-    // 3️⃣ Save images to product_images table (if provided)
+    // 2️⃣ Save images (if provided)
     const imagePayload: { image_url: string; sort_order?: number }[] =
       body.images ?? [];
 
     if (imagePayload.length > 0) {
-      await prisma.product_images.createMany({
+      await prisma.productImage.createMany({
         data: imagePayload.map((img, idx) => ({
           product_id: product.id,
           image_url: img.image_url,
           sort_order: img.sort_order ?? idx,
         })),
       });
+    }
+
+    // 3️⃣ Save variants (if provided)
+    const variantPayload: {
+      size?: string;
+      color?: string;
+      price: number;
+      compare_price?: number;
+      stock?: number;
+      sku?: string;
+    }[] = body.variants ?? [];
+
+    if (variantPayload.length > 0) {
+      for (const [idx, v] of variantPayload.entries()) {
+        if (v.price == null) continue; // price is required per variant
+
+        // Auto-generate SKU if not supplied
+        let sku = v.sku;
+        if (!sku) {
+          const categoryCode = product.category.name.slice(0, 3).toUpperCase();
+          const productCode = product.product_name
+            .replace(/\s+/g, "")
+            .slice(0, 4)
+            .toUpperCase();
+          sku = `${categoryCode}-${productCode}-${product.id.slice(-4).toUpperCase()}-${idx + 1}`;
+        }
+
+        await prisma.productVariant.create({
+          data: {
+            product_id: product.id,
+            size: v.size ?? null,
+            color: v.color ?? null,
+            price: Number(v.price),
+            compare_price: v.compare_price ? Number(v.compare_price) : null,
+            stock: Number(v.stock ?? 0),
+            sku,
+          },
+        });
+      }
     }
 
     // 4️⃣ Return full product with all relations
@@ -223,8 +239,10 @@ export async function POST(req: Request) {
 // ─────────────────────────────────────────────────────────────────
 // PUT  /api/products?id=<uuid>
 // Body JSON: same fields as POST
-// For images: pass `images` array to REPLACE all existing images,
-//             or omit `images` key to leave images unchanged.
+// For images:   pass `images`   array to REPLACE all existing images,
+//               or omit `images` key to leave images unchanged.
+// For variants: pass `variants` array to REPLACE all existing variants,
+//               or omit `variants` key to leave variants unchanged.
 // ─────────────────────────────────────────────────────────────────
 export async function PUT(req: Request) {
   try {
@@ -248,16 +266,7 @@ export async function PUT(req: Request) {
         ...(body.slug !== undefined && { slug: body.slug }),
         ...(body.description !== undefined && { description: body.description }),
         ...(body.short_desc !== undefined && { short_desc: body.short_desc }),
-        ...(body.size !== undefined && { size: body.size }),
-        ...(body.color !== undefined && { color: body.color }),
-        ...(body.price !== undefined && { price: Number(body.price) }),
-        ...(body.compare_price !== undefined && {
-          compare_price: body.compare_price ? Number(body.compare_price) : null,
-        }),
-        ...(body.stock !== undefined && { stock: Number(body.stock) }),
-        ...(body.sku !== undefined && { sku: body.sku }),
         ...(body.category_id !== undefined && { category_id: body.category_id }),
-        ...(body.parentId !== undefined && { parentId: body.parentId ?? null }),
         ...(body.is_active !== undefined && { is_active: body.is_active }),
         ...(body.is_featured !== undefined && { is_featured: body.is_featured }),
         ...(body.meta_title !== undefined && { meta_title: body.meta_title }),
@@ -273,12 +282,11 @@ export async function PUT(req: Request) {
       const newUrls = new Set(newImages.map((img) => img.image_url));
 
       // Fetch old images from DB
-      const oldImages = await prisma.product_images.findMany({
+      const oldImages = await prisma.productImage.findMany({
         where: { product_id: id },
       });
 
-      // Only delete from Supabase the images that are NOT in the new list
-      // (i.e., images the user actually removed — don't delete kept images!)
+      // Only delete from Supabase the images removed by the user
       const removedPaths = oldImages
         .filter((img) => !newUrls.has(img.image_url))
         .map((img) => extractStoragePath(img.image_url))
@@ -295,15 +303,62 @@ export async function PUT(req: Request) {
       }
 
       // Replace DB records
-      await prisma.product_images.deleteMany({ where: { product_id: id } });
+      await prisma.productImage.deleteMany({ where: { product_id: id } });
 
       if (newImages.length > 0) {
-        await prisma.product_images.createMany({
+        await prisma.productImage.createMany({
           data: newImages.map((img, idx) => ({
             product_id: id,
             image_url: img.image_url,
             sort_order: img.sort_order ?? idx,
           })),
+        });
+      }
+    }
+
+    // ── Replace variants if `variants` key is present in body ─
+    if (body.variants !== undefined) {
+      const newVariants: {
+        size?: string;
+        color?: string;
+        price: number;
+        compare_price?: number;
+        stock?: number;
+        sku?: string;
+      }[] = body.variants ?? [];
+
+      // Get the product's category for auto-SKU
+      const productWithCat = await prisma.product.findUnique({
+        where: { id },
+        include: { category: true },
+      });
+
+      // Delete all existing variants first
+      await prisma.productVariant.deleteMany({ where: { product_id: id } });
+
+      for (const [idx, v] of newVariants.entries()) {
+        if (v.price == null) continue;
+
+        let sku = v.sku;
+        if (!sku && productWithCat) {
+          const categoryCode = productWithCat.category.name.slice(0, 3).toUpperCase();
+          const productCode = productWithCat.product_name
+            .replace(/\s+/g, "")
+            .slice(0, 4)
+            .toUpperCase();
+          sku = `${categoryCode}-${productCode}-${id.slice(-4).toUpperCase()}-${idx + 1}`;
+        }
+
+        await prisma.productVariant.create({
+          data: {
+            product_id: id,
+            size: v.size ?? null,
+            color: v.color ?? null,
+            price: Number(v.price),
+            compare_price: v.compare_price ? Number(v.compare_price) : null,
+            stock: Number(v.stock ?? 0),
+            sku: sku ?? `VAR-${id.slice(-4)}-${idx + 1}`,
+          },
         });
       }
     }
@@ -329,8 +384,7 @@ export async function PUT(req: Request) {
 
 // ─────────────────────────────────────────────────────────────────
 // DELETE  /api/products?id=<uuid>
-// Deletes the product (parent + all children via DB cascade)
-// and removes ALL related images from Supabase storage.
+// Deletes the product and removes ALL related images from Supabase.
 // ─────────────────────────────────────────────────────────────────
 export async function DELETE(req: Request) {
   try {
@@ -344,19 +398,12 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "ID required" }, { status: 400 });
     }
 
-    // 1️⃣ Collect this product + all descendant IDs
-    const children = await prisma.product.findMany({
-      where: { parentId: id },
-      select: { id: true },
-    });
-    const allIds = [id, ...children.map((c) => c.id)];
-
-    // 2️⃣ Fetch all images across parent + children
-    const images = await prisma.product_images.findMany({
-      where: { product_id: { in: allIds } },
+    // 1️⃣ Fetch all images for this product
+    const images = await prisma.productImage.findMany({
+      where: { product_id: id },
     });
 
-    // 3️⃣ Delete from Supabase storage (using proper path extraction)
+    // 2️⃣ Delete from Supabase storage
     const storagePaths = images
       .map((img) => extractStoragePath(img.image_url))
       .filter(Boolean) as string[];
@@ -372,7 +419,7 @@ export async function DELETE(req: Request) {
       }
     }
 
-    // 4️⃣ Delete product from DB (cascade removes children + images rows)
+    // 3️⃣ Delete product from DB (cascade removes variants + images rows)
     await prisma.product.delete({ where: { id } });
 
     return NextResponse.json({

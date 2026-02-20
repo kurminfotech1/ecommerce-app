@@ -10,29 +10,54 @@ export interface ProductImage {
   sort_order: number;
 }
 
+// Lightweight shape used when sending images to create/update endpoints
+export type ProductImageInput = {
+  image_url: string;
+  sort_order?: number;
+};
+
+export interface ProductVariant {
+  id: string;
+  product_id: string;
+  size?: string | null;
+  color?: string | null;
+  price: number;
+  compare_price?: number | null;
+  stock: number;
+  sku: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Input shape when sending variants to create/update endpoints
+export type ProductVariantInput = {
+  size?: string;
+  color?: string;
+  price: number;
+  compare_price?: number;
+  stock?: number;
+  sku?: string;
+};
+
 export interface Product {
   id: string;
   product_name: string;
   slug?: string | null;
   description?: string | null;
   short_desc?: string | null;
-  size?: string | null;
-  color?: string | null;
-  price: number;
-  compare_price?: number | null;
-  stock: number;
-  sku?: string | null;
   is_active: boolean;
   is_featured: boolean;
   meta_title?: string | null;
   meta_desc?: string | null;
   category_id: string;
-  parentId?: string | null;
 
   category?: { id: string; name: string };
   images?: ProductImage[];
-  children?: Product[];
-  parent?: Pick<Product, "id" | "product_name" | "slug"> | null;
+  variants?: ProductVariant[];
+
+  sold_count?: number;
+  rating_avg?: number;
+  rating_count?: number;
 
   created_at?: string;
   updated_at?: string;
@@ -43,8 +68,8 @@ export interface GetProductsParams {
   limit?: number;
   search?: string;
   category?: string;
+  active?: boolean;
   featured?: boolean;
-  includeVariants?: boolean;
 }
 
 // ── GET all (paginated) ──────────────────────────────────────────
@@ -67,14 +92,14 @@ export const getProducts = createAsyncThunk(
 );
 
 // ── CREATE ───────────────────────────────────────────────────────
+type CreateProductInput = Omit<Partial<Product>, "images" | "variants"> & {
+  images?: ProductImageInput[];
+  variants?: ProductVariantInput[];
+};
+
 export const createProduct = createAsyncThunk(
   "products/create",
-  async (
-    data: Partial<Product> & {
-      images?: { image_url: string; sort_order?: number }[];
-    },
-    { rejectWithValue }
-  ) => {
+  async (data: CreateProductInput, { rejectWithValue }) => {
     try {
       const res = await Axios.post("products", data);
       toast.success(res.data.message || "Product created!");
@@ -87,15 +112,15 @@ export const createProduct = createAsyncThunk(
 );
 
 // ── UPDATE ───────────────────────────────────────────────────────
+type UpdateProductInput = Omit<Partial<Product>, "images" | "variants"> & {
+  id: string;
+  images?: ProductImageInput[];
+  variants?: ProductVariantInput[];
+};
+
 export const updateProduct = createAsyncThunk(
   "products/update",
-  async (
-    data: Partial<Product> & {
-      id: string;
-      images?: { image_url: string; sort_order?: number }[];
-    },
-    { rejectWithValue }
-  ) => {
+  async (data: UpdateProductInput, { rejectWithValue }) => {
     try {
       const res = await Axios.put(`products?id=${data.id}`, data);
       toast.success(res.data.message || "Product updated!");

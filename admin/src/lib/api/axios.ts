@@ -1,5 +1,6 @@
 import axios from "axios";
 import Cookies from "js-cookie";
+import { decryptData } from "../crypto";
 
 const Axios = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -8,7 +9,7 @@ const Axios = axios.create({
 Axios.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
-      const token = Cookies.get("token");
+      const token = decryptData(Cookies.get("token") as string);
 
       const isFormData = config.data instanceof FormData;
 
