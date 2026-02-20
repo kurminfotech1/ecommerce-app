@@ -6,17 +6,12 @@ import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import {
   BoxCubeIcon,
-  CalenderIcon,
   ChevronDownIcon,
   GridIcon,
-  HorizontaLDots,
   ListIcon,
-  PageIcon,
-  PieChartIcon,
-  PlugInIcon,
-  TableIcon,
   UserCircleIcon,
 } from "../icons/index";
+import { ShoppingCart, StarIcon,Tags } from "lucide-react";
 
 type NavItem = {
   name: string;
@@ -33,7 +28,7 @@ const navItems: NavItem[] = [
     // subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
   {
-    icon: <ListIcon />,
+    icon: <Tags />,
     name: "Categories",
     path: "/categories",
   },
@@ -41,6 +36,21 @@ const navItems: NavItem[] = [
     icon: <BoxCubeIcon />, // or any icon you like
     name: "Products",
     path: "/products",
+  },
+  {
+    icon: <ShoppingCart />, // or any icon you like
+    name: "Orders",
+    path: "/orders",
+  },
+  {
+    icon: <UserCircleIcon />, // or any icon you like
+    name: "Users",
+    path: "/users",
+  },
+  {
+    icon: <StarIcon />, // or any icon you like
+    name: "Reviews",
+    path: "/reviews",
   },
   // {
   //   icon: <CalenderIcon />,

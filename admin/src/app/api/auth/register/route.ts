@@ -41,7 +41,7 @@ export async function POST(req: Request) {
       }
 
       // 🔐 Validate token for further admin creation
-      const user: any = verifyToken(req);
+      const user: any =await verifyToken();
 
       if (!user) {
         return NextResponse.json(
@@ -122,7 +122,7 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   try {
-    const user = verifyToken(req);
+    const user =await verifyToken();
 
     if (!user) {
       return NextResponse.json(
@@ -131,6 +131,11 @@ export async function GET(req: Request) {
       );
     }
     const admins = await prisma.admin.findMany({
+      where: {
+        role: {
+          not: Role.SUPERADMIN,
+        },
+      },
       orderBy: {
         createdAt: "desc",
       },
@@ -140,10 +145,42 @@ export async function GET(req: Request) {
   } catch (error) {
     console.error(error);
 
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const user: any = await verifyToken();
+
+    if (!user || user.role !== Role.SUPERADMIN) {
+      return NextResponse.json(
+        { error: "Forbidden. Only Superadmin can delete admins." },
+        { status: 403 }
+      );
+    }
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ error: "ID is required" }, { status: 400 });
+    }
+
+    await prisma.admin.delete({
+      where: { id },
+    });
+
     return NextResponse.json(
-      { error: "Failed to fetch admins" },
+      { message: "User deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Delete user error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete user" },
       { status: 500 }
     );
   }
 }
+
 

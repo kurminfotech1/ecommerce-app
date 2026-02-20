@@ -7,17 +7,20 @@ import { encryptData } from "@/lib/crypto";
 
 // register
 export const register = createAsyncThunk<
-  Admin,          // return type
-  Partial<Admin>, // payload type
+  Admin,        
+  Partial<Admin>, 
   { rejectValue: string }
 >(
   "admin/register",
   async (data, { rejectWithValue }) => {
     try {
       const res = await Axios.post("auth/register", data);
+      toast.success(res?.data?.message);
       return res.data;
     } catch (error: any) {
-      return rejectWithValue(error);
+      const message = error.message || "Registration failed";
+      toast.error(message);
+      return rejectWithValue(message);
     }
   }
 );
@@ -34,6 +37,7 @@ export const fetchUsers = createAsyncThunk<
       const res = await Axios.get("auth/register");
       return res.data;
     } catch (error: any) {
+      toast.error(error?.response?.data?.message);
       return rejectWithValue(error);
     }
   }
@@ -112,4 +116,23 @@ export const updateAdmin = createAsyncThunk<
       return rejectWithValue(message);
     }
   }
-)
+);
+
+export const deleteAdmin = createAsyncThunk<
+  string,
+  string,
+  { rejectValue: string }
+>(
+  "admin/delete",
+  async (id, { rejectWithValue }) => {
+    try {
+      const res = await Axios.delete(`auth/register?id=${id}`);
+      toast.success(res?.data?.message);
+      return id;
+    } catch (error: any) {
+      const message = error?.response?.data?.error || "Error deleting user";
+      toast.error(message);
+      return rejectWithValue(message);
+    }
+  }
+);
