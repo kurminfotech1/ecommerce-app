@@ -47,11 +47,19 @@ export async function GET(req: Request) {
     const search = searchParams.get("search") || "";
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
+    const sortBy = searchParams.get("sortBy") || "newest";
+    const status = searchParams.get("status") || "all"; // all | active | inactive
 
     const skip = (page - 1) * limit;
 
-    // get all categories
+    // build where clause for status filter
+    const where: any = {};
+    if (status === "active") where.is_active = true;
+    else if (status === "inactive") where.is_active = false;
+
+    // get all categories (with optional status filter)
     const categories = await prisma.category.findMany({
+      where,
       orderBy: { created_at: "asc" },
     });
 
@@ -75,17 +83,40 @@ export async function GET(req: Request) {
       }
     });
 
+    // sort the top-level tree
+    const sortTree = (nodes: CategoryNode[]): CategoryNode[] => {
+      const sorted = [...nodes];
+      switch (sortBy) {
+        case "name_asc":
+          sorted.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case "name_desc":
+          sorted.sort((a, b) => b.name.localeCompare(a.name));
+          break;
+        case "oldest":
+          // already ordered by created_at asc
+          break;
+        case "newest":
+        default:
+          sorted.reverse(); // created_at asc → reverse for newest first
+          break;
+      }
+      return sorted;
+    };
+
+    const sortedTree = sortTree(tree);
+
     // search
-    const filteredTree = filterTree(tree, search);
+    const filteredTree = filterTree(sortedTree, search);
 
     // pagination
+    const totalRecords = filteredTree.length;
     const paginatedData = filteredTree.slice(skip, skip + limit);
-    const totalRecords = paginatedData.length;
 
     return NextResponse.json({
-      totalRecords: totalRecords,
+      totalRecords,
       currentPage: page,
-      totalPages: Math.ceil(paginatedData?.length / limit),
+      totalPages: Math.ceil(totalRecords / limit),
       pageSize: limit,
       data: paginatedData,
     });
@@ -129,7 +160,7 @@ export async function POST(req: Request) {
     console.error("CREATE CATEGORY ERROR:", error);
 
     if (error.code === "P2002") {
-      return NextResponse.json({ error: "Slug already exists" }, { status: 409 });
+      return NextResponse.json({ error: "Category name already exists" }, { status: 409 });
     }
 
     return NextResponse.json({ error: "Failed to create category" }, { status: 500 });
@@ -179,6 +210,46 @@ export async function PUT(req: Request) {
   }
 }
 
+
+/* ================= PATCH (toggle active/inactive) ================= */
+export async function PATCH(req: Request) {
+  try {
+    const user = await verifyToken();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const id = new URL(req.url).searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ error: "ID required" }, { status: 400 });
+    }
+
+    const category = await prisma.category.findUnique({ where: { id } });
+    if (!category) {
+      return NextResponse.json({ error: "Category not found" }, { status: 404 });
+    }
+
+    const newStatus = !category.is_active;
+
+    const updated = await prisma.category.update({
+      where: { id },
+      data: { is_active: newStatus },
+    });
+
+    const statusLabel = newStatus ? "activated" : "deactivated";
+
+    return NextResponse.json({
+      updated,
+      message: `Category ${updated.name} ${statusLabel} successfully`,
+    });
+  } catch (error) {
+    console.error("TOGGLE CATEGORY STATUS ERROR:", error);
+    return NextResponse.json(
+      { error: "Failed to toggle category status" },
+      { status: 500 }
+    );
+  }
+}
 
 /* ================= DELETE ================= */
 export async function DELETE(req: Request) {

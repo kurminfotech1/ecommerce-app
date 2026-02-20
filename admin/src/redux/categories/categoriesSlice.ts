@@ -4,18 +4,29 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
+  toggleCategoryStatus,
   Category,
 } from "./categoriesApi";
 
 interface CategoryState {
   loading: boolean;
+  isSubmitting: boolean;
   categories: Category[]; // tree
+  totalRecords: number;
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
   error: string | null;
 }
 
 const initialState: CategoryState = {
   loading: false,
+  isSubmitting: false,
   categories: [],
+  totalRecords: 0,
+  currentPage: 1,
+  totalPages: 1,
+  pageSize: 10,
   error: null,
 };
 
@@ -72,7 +83,11 @@ const categoriesSlice = createSlice({
       })
       .addCase(getCategories.fulfilled, (state, action) => {
         state.loading = false;
-        state.categories = action.payload;
+        state.categories   = action.payload.data;
+        state.totalRecords = action.payload.totalRecords;
+        state.currentPage  = action.payload.currentPage;
+        state.totalPages   = action.payload.totalPages;
+        state.pageSize     = action.payload.pageSize;
       })
       .addCase(getCategories.rejected, (state, action: any) => {
         state.loading = false;
@@ -81,41 +96,54 @@ const categoriesSlice = createSlice({
 
       // CREATE
       .addCase(createCategory.pending, (state) => {
-        state.loading = true;
+        state.isSubmitting = true;
       })
       .addCase(createCategory.fulfilled, (state, action) => {
-        state.loading = false;
+        state.isSubmitting = false;
         state.categories = insertIntoTree(state.categories, action.payload);
       })
       .addCase(createCategory.rejected, (state, action: any) => {
-        state.loading = false;
+        state.isSubmitting = false;
         state.error = action.payload || "Create failed";
       })
 
       // UPDATE
       .addCase(updateCategory.pending, (state) => {
-        state.loading = true;
+        state.isSubmitting = true;
       })
       .addCase(updateCategory.fulfilled, (state, action) => {
-        state.loading = false;
+        state.isSubmitting = false;
         state.categories = updateInTree(state.categories, action.payload);
       })
       .addCase(updateCategory.rejected, (state, action: any) => {
-        state.loading = false;
+        state.isSubmitting = false;
         state.error = action.payload || "Update failed";
       })
 
       // DELETE
       .addCase(deleteCategory.pending, (state) => {
-        state.loading = true;
+        state.isSubmitting = true;
       })
       .addCase(deleteCategory.fulfilled, (state, action) => {
-        state.loading = false;
+        state.isSubmitting = false;
         state.categories = removeFromTree(state.categories, action.payload);
       })
       .addCase(deleteCategory.rejected, (state, action: any) => {
-        state.loading = false;
+        state.isSubmitting = false;
         state.error = action.payload || "Delete failed";
+      })
+
+      // TOGGLE STATUS
+      .addCase(toggleCategoryStatus.pending, (state) => {
+        state.isSubmitting = true;
+      })
+      .addCase(toggleCategoryStatus.fulfilled, (state, action) => {
+        state.isSubmitting = false;
+        state.categories = updateInTree(state.categories, action.payload);
+      })
+      .addCase(toggleCategoryStatus.rejected, (state, action: any) => {
+        state.isSubmitting = false;
+        state.error = action.payload || "Toggle status failed";
       });
   },
 });
