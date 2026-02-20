@@ -2,19 +2,19 @@ import Axios from "@/lib/api/axios";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 
-// ── Types ────────────────────────────────────────────────────────
-export interface ProductImage {
-  id: string;
-  product_id: string;
-  image_url: string;
-  sort_order: number;
-}
-
-// Lightweight shape used when sending images to create/update endpoints
+// Lightweight shape used when sending images to create/update endpoints (used for variant images)
 export type ProductImageInput = {
   image_url: string;
   sort_order?: number;
 };
+
+// Variant-level image (returned from API)
+export interface VariantImage {
+  id: string;
+  variant_id: string;
+  image_url: string;
+  sort_order: number;
+}
 
 export interface ProductVariant {
   id: string;
@@ -25,6 +25,7 @@ export interface ProductVariant {
   compare_price?: number | null;
   stock: number;
   sku: string;
+  images?: VariantImage[]; // variant-level images
   created_at?: string;
   updated_at?: string;
 }
@@ -37,6 +38,7 @@ export type ProductVariantInput = {
   compare_price?: number;
   stock?: number;
   sku?: string;
+  images?: ProductImageInput[]; // optional per-variant images
 };
 
 export interface Product {
@@ -52,7 +54,6 @@ export interface Product {
   category_id: string;
 
   category?: { id: string; name: string };
-  images?: ProductImage[];
   variants?: ProductVariant[];
 
   sold_count?: number;
@@ -70,6 +71,9 @@ export interface GetProductsParams {
   category?: string;
   active?: boolean;
   featured?: boolean;
+  size?: string;
+  min_price?: number;
+  max_price?: number;
 }
 
 // ── GET all (paginated) ──────────────────────────────────────────

@@ -12,17 +12,16 @@ import {
   deleteProduct,
   uploadImages,
   Product,
-  ProductImageInput,
   ProductVariantInput,
 } from "@/redux/products/productsApi";
 import { getCategories, Category } from "@/redux/categories/categoriesApi";
 
 import {
-  Search, Plus, Eye, Pencil, Trash2, X, Upload,
+  Search, Plus, Eye, Pencil, Trash2, X,
   ChevronLeft, ChevronRight, Star, Package,
   LayoutGrid, List, ImageOff, Tag, Layers,
   CheckCircle2, XCircle, ChevronDown, ChevronUp,
-  Loader2,
+  Loader2, Upload,
 } from "lucide-react";
 import { DeleteModal } from "@/components/common/DeleteModal";
 
@@ -133,6 +132,11 @@ export default function ProductsPage() {
   // ── List state ─────────────────────────────────────────────────
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [activeFilter, setActiveFilter] = useState("");
+  const [featuredFilter, setFeaturedFilter] = useState("");
+  const [sizeFilter, setSizeFilter] = useState("");
+  const [minPriceFilter, setMinPriceFilter] = useState("");
+  const [maxPriceFilter, setMaxPriceFilter] = useState("");
   const [page, setPage] = useState(1);
 
   // ── Modal state ────────────────────────────────────────────────
@@ -154,13 +158,20 @@ export default function ProductsPage() {
     is_active: true, is_featured: false,
   };
 
-  type VariantRow = { size: string; color: string; price: string; compare_price: string; stock: string; sku: string; };
-  const emptyVariantRow = (): VariantRow => ({ size: "", color: "", price: "", compare_price: "", stock: "0", sku: "" });
+  type VariantRow = {
+    size: string; color: string;
+    price: string; compare_price: string;
+    stock: string; sku: string;
+    uploadedImages: string[]; // already-uploaded URLs
+    pendingFiles: File[];   // queued for upload
+  };
+  const emptyVariantRow = (): VariantRow => ({
+    size: "", color: "", price: "", compare_price: "", stock: "0", sku: "",
+    uploadedImages: [], pendingFiles: [],
+  });
 
   const [form, setForm] = useState<any>(emptyForm);
   const [variants, setVariants] = useState<VariantRow[]>([emptyVariantRow()]); // multi-variant rows
-  const [images, setImages] = useState<string[]>([]); // confirmed URLs
-  const [pendingFiles, setPendingFiles] = useState<File[]>([]); // awaiting upload
 
   // ── Cascading category state (L1 = main, L2 = child, L3 = sub) ─
   const [catL1, setCatL1] = useState("");
@@ -189,8 +200,18 @@ export default function ProductsPage() {
 
   // ── Fetch ──────────────────────────────────────────────────────
   const fetchProducts = useCallback(() => {
-    dispatch(getProducts({ page, limit: 10, search, category: categoryFilter }));
-  }, [page, search, categoryFilter, dispatch]);
+    dispatch(getProducts({
+      page,
+      limit: 10,
+      search,
+      category: categoryFilter,
+      active: activeFilter === "true" ? true : activeFilter === "false" ? false : undefined,
+      featured: featuredFilter === "true" ? true : undefined,
+      size: sizeFilter || undefined,
+      min_price: minPriceFilter ? Number(minPriceFilter) : undefined,
+      max_price: maxPriceFilter ? Number(maxPriceFilter) : undefined,
+    }));
+  }, [page, search, categoryFilter, activeFilter, featuredFilter, sizeFilter, minPriceFilter, maxPriceFilter, dispatch]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
   useEffect(() => { dispatch(getCategories()); }, [dispatch]);
@@ -217,8 +238,6 @@ export default function ProductsPage() {
   const openCreate = () => {
     setForm(emptyForm);
     setVariants([emptyVariantRow()]);
-    setImages([]);
-    setPendingFiles([]);
     setCatL1(""); setCatL2(""); setCatL3("");
     setEditId(null);
     setModalOpen(true);
@@ -226,8 +245,6 @@ export default function ProductsPage() {
 
   const openEdit = (p: Product) => {
     setEditId(p.id);
-    setImages(p.images?.map((i) => i.image_url) || []);
-    setPendingFiles([]);
     const resolved = resolveCatSelections(categories as Category[], p.category_id);
     setCatL1(resolved.l1); setCatL2(resolved.l2); setCatL3(resolved.l3);
     setForm({
@@ -241,7 +258,7 @@ export default function ProductsPage() {
       is_active: p.is_active,
       is_featured: p.is_featured,
     });
-    // Pre-fill variants from existing data
+    // Pre-fill variants — including their existing images
     if (p.variants && p.variants.length > 0) {
       setVariants(p.variants.map((v) => ({
         size: v.size ?? "",
@@ -250,6 +267,8 @@ export default function ProductsPage() {
         compare_price: v.compare_price ? String(v.compare_price) : "",
         stock: String(v.stock),
         sku: v.sku ?? "",
+        uploadedImages: v.images?.map((img) => img.image_url) ?? [],
+        pendingFiles: [],
       })));
     } else {
       setVariants([emptyVariantRow()]);
@@ -271,18 +290,8 @@ export default function ProductsPage() {
   };
 
   // ── File selection (local preview) ────────────────────────────
-  const handleFileSelect = (files: FileList | null) => {
-    if (!files) return;
-    setPendingFiles((prev) => [...prev, ...Array.from(files)]);
-  };
 
-  const removePending = (idx: number) =>
-    setPendingFiles((prev) => prev.filter((_, i) => i !== idx));
-
-  const removeUploaded = (idx: number) =>
-    setImages((prev) => prev.filter((_, i) => i !== idx));
-
-  // ── Variant helpers ──────────────────────────────────────────
+  // ── Variant field helpers ─────────────────────────────────────
   const updateVariant = (idx: number, field: string, value: string) =>
     setVariants((prev) => prev.map((v, i) => i === idx ? { ...v, [field]: value } : v));
 
@@ -290,6 +299,26 @@ export default function ProductsPage() {
 
   const removeVariant = (idx: number) =>
     setVariants((prev) => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev);
+
+  // Add files to a specific variant's pending queue
+  const addVariantFiles = (idx: number, files: FileList | null) => {
+    if (!files) return;
+    setVariants((prev) => prev.map((v, i) =>
+      i === idx ? { ...v, pendingFiles: [...v.pendingFiles, ...Array.from(files)] } : v
+    ));
+  };
+
+  // Remove a pending file from a variant
+  const removeVariantPending = (variantIdx: number, fileIdx: number) =>
+    setVariants((prev) => prev.map((v, i) =>
+      i === variantIdx ? { ...v, pendingFiles: v.pendingFiles.filter((_, fi) => fi !== fileIdx) } : v
+    ));
+
+  // Remove an already-uploaded image from a variant
+  const removeVariantUploaded = (variantIdx: number, imgIdx: number) =>
+    setVariants((prev) => prev.map((v, i) =>
+      i === variantIdx ? { ...v, uploadedImages: v.uploadedImages.filter((_, ii) => ii !== imgIdx) } : v
+    ));
 
   // ── Submit ─────────────────────────────────────────────────────
   const handleSubmit = async () => {
@@ -303,27 +332,26 @@ export default function ProductsPage() {
       return;
     }
 
-    // 1. Upload pending files first
-    let newUrls: string[] = [];
-    if (pendingFiles.length > 0) {
-      const result = await dispatch(uploadImages(pendingFiles));
-      if (uploadImages.fulfilled.match(result)) {
-        newUrls = result.payload;
-      } else {
-        return;
+    // Upload per-variant pending images, then build payloads
+    const variantsPayload: ProductVariantInput[] = [];
+    for (const v of validVariants) {
+      let variantImageUrls = [...v.uploadedImages];
+      if (v.pendingFiles.length > 0) {
+        const uploadRes = await dispatch(uploadImages(v.pendingFiles));
+        if (uploadImages.fulfilled.match(uploadRes)) {
+          variantImageUrls = [...variantImageUrls, ...uploadRes.payload];
+        }
       }
+      variantsPayload.push({
+        size: v.size || undefined,
+        color: v.color || undefined,
+        price: Number(v.price),
+        compare_price: v.compare_price ? Number(v.compare_price) : undefined,
+        stock: Number(v.stock || 0),
+        sku: v.sku || undefined,
+        images: variantImageUrls.map((url, i) => ({ image_url: url, sort_order: i })),
+      });
     }
-
-    const allImageUrls = [...images, ...newUrls];
-
-    const variantsPayload: ProductVariantInput[] = validVariants.map((v) => ({
-      size: v.size || undefined,
-      color: v.color || undefined,
-      price: Number(v.price),
-      compare_price: v.compare_price ? Number(v.compare_price) : undefined,
-      stock: Number(v.stock || 0),
-      sku: v.sku || undefined,
-    }));
 
     const payload = {
       product_name: form.product_name,
@@ -335,11 +363,11 @@ export default function ProductsPage() {
       is_featured: form.is_featured,
       meta_title: form.meta_title || null,
       meta_desc: form.meta_desc || null,
-      images: allImageUrls.map((url, idx) => ({ image_url: url, sort_order: idx })),
       variants: variantsPayload,
     };
 
-    // 2. Create or update
+
+    // 3. Create or update
     let result: any;
     if (editId) {
       result = await dispatch(updateProduct({ id: editId, ...payload }));
@@ -368,15 +396,25 @@ export default function ProductsPage() {
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
 
         {/* ── Header ── */}
-        <div className="flex flex-wrap gap-3 justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-            <p className="text-sm text-gray-500 mt-0.5">
-              {totalRecords} product{totalRecords !== 1 ? "s" : ""} total
-            </p>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap gap-3 justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Products</h1>
+              <p className="text-sm text-gray-500 mt-0.5">
+                {totalRecords} product{totalRecords !== 1 ? "s" : ""} total
+              </p>
+            </div>
+            {/* Add button */}
+            <button
+              onClick={openCreate}
+              className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 active:scale-95 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition"
+            >
+              <Plus size={16} /> Add Product
+            </button>
           </div>
 
-          <div className="flex gap-2 flex-wrap items-center">
+          {/* ── Filters Bar ── */}
+          <div className="flex gap-2 flex-wrap items-center bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
             {/* Search */}
             <div className="relative">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -400,13 +438,53 @@ export default function ProductsPage() {
               ))}
             </select>
 
-            {/* Add button */}
-            <button
-              onClick={openCreate}
-              className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 active:scale-95 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition"
+            {/* Size filter */}
+            <input
+              placeholder="Size (e.g. M)"
+              value={sizeFilter}
+              onChange={(e) => { setSizeFilter(e.target.value); setPage(1); }}
+              className="border border-gray-200 bg-white text-sm px-3 py-2 rounded-xl w-28 focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
+            />
+
+            {/* Price filter */}
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                placeholder="Min ₹"
+                value={minPriceFilter}
+                onChange={(e) => { setMinPriceFilter(e.target.value); setPage(1); }}
+                className="border border-gray-200 bg-white text-sm px-3 py-2 rounded-xl w-24 focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
+              />
+              <span className="text-gray-400">-</span>
+              <input
+                type="number"
+                placeholder="Max ₹"
+                value={maxPriceFilter}
+                onChange={(e) => { setMaxPriceFilter(e.target.value); setPage(1); }}
+                className="border border-gray-200 bg-white text-sm px-3 py-2 rounded-xl w-24 focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <select
+              value={activeFilter}
+              onChange={(e) => { setActiveFilter(e.target.value); setPage(1); }}
+              className="border border-gray-200 bg-white text-sm px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
             >
-              <Plus size={16} /> Add Product
-            </button>
+              <option value="">Status: All</option>
+              <option value="true">Active</option>
+              <option value="false">Inactive</option>
+            </select>
+
+            {/* Featured Filter */}
+            <select
+              value={featuredFilter}
+              onChange={(e) => { setFeaturedFilter(e.target.value); setPage(1); }}
+              className="border border-gray-200 bg-white text-sm px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
+            >
+              <option value="">Featured: All</option>
+              <option value="true">Featured Only</option>
+            </select>
           </div>
         </div>
 
@@ -439,10 +517,13 @@ export default function ProductsPage() {
                         <div className="flex items-center gap-3">
                           <div
                             className="w-12 h-12 rounded-xl border border-gray-200 overflow-hidden bg-gray-100 shrink-0 cursor-pointer"
-                            onClick={() => p.images?.[0] && setPreviewImage(p.images[0].image_url)}
+                            onClick={() => {
+                              const firstImg = p.variants?.[0]?.images?.[0]?.image_url;
+                              if (firstImg) setPreviewImage(firstImg);
+                            }}
                           >
-                            {p.images?.[0] ? (
-                              <img src={p.images[0].image_url} className="w-full h-full object-cover" />
+                            {p.variants?.[0]?.images?.[0] ? (
+                              <img src={p.variants[0].images[0].image_url} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
                                 <ImageOff size={14} className="text-gray-300" />
@@ -597,20 +678,6 @@ export default function ProductsPage() {
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Images */}
-              {detailProduct.images && detailProduct.images.length > 0 && (
-                <div className="grid grid-cols-4 gap-3">
-                  {detailProduct.images.map((img, i) => (
-                    <img
-                      key={i}
-                      src={img.image_url}
-                      className="aspect-square rounded-xl object-cover cursor-pointer border border-gray-100 hover:scale-105 transition"
-                      onClick={() => setPreviewImage(img.image_url)}
-                    />
-                  ))}
-                </div>
-              )}
-
               {/* Info grid */}
               <div className="grid grid-cols-2 gap-4">
                 {[
@@ -653,21 +720,51 @@ export default function ProductsPage() {
                   </button>
 
                   {expandedVariants && (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {detailProduct.variants.map((v) => (
-                        <div key={v.id} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
-                          <div className="flex-1">
-                            <div className="flex gap-2 flex-wrap">
-                              {v.sku && <Badge color="gray"><code className="font-mono">{v.sku}</code></Badge>}
-                              {v.size && <Badge color="gray">Size: {v.size}</Badge>}
-                              {v.color && <Badge color="gray">Color: {v.color}</Badge>}
+                        <div key={v.id} className="bg-gray-50 rounded-xl overflow-hidden">
+                          {/* Variant info row */}
+                          <div className="flex items-center gap-3 px-3 pt-3 pb-2">
+                            <div className="flex-1">
+                              <div className="flex gap-2 flex-wrap">
+                                {v.sku && <Badge color="gray"><code className="font-mono">{v.sku}</code></Badge>}
+                                {v.size && <Badge color="blue">Size: {v.size}</Badge>}
+                                {v.color && (
+                                  <Badge color="purple">
+                                    {v.color.startsWith("#") && (
+                                      <span
+                                        className="inline-block w-2.5 h-2.5 rounded-full border border-white/50 shrink-0"
+                                        style={{ background: v.color }}
+                                      />
+                                    )}
+                                    {v.color}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-sm font-semibold text-gray-800">₹{v.price.toLocaleString()}</p>
+                              {v.compare_price && (
+                                <p className="text-xs text-gray-400 line-through">₹{v.compare_price.toLocaleString()}</p>
+                              )}
+                              {stockBadge(v.stock)}
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="text-sm font-semibold text-gray-800">₹{v.price.toLocaleString()}</p>
-                            {v.compare_price && <p className="text-xs text-gray-400 line-through">₹{v.compare_price.toLocaleString()}</p>}
-                            {stockBadge(v.stock)}
-                          </div>
+
+                          {/* Variant images strip */}
+                          {v.images && v.images.length > 0 && (
+                            <div className="flex gap-2 px-3 pb-3 flex-wrap">
+                              {v.images.map((img, imgIdx) => (
+                                <img
+                                  key={imgIdx}
+                                  src={img.image_url}
+                                  alt={`Variant image ${imgIdx + 1}`}
+                                  onClick={() => setPreviewImage(img.image_url)}
+                                  className="w-14 h-14 object-cover rounded-lg border border-gray-200 cursor-zoom-in hover:scale-105 hover:shadow-md transition"
+                                />
+                              ))}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -848,16 +945,21 @@ export default function ProductsPage() {
                   </button>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {variants.map((v, idx) => (
                     <div
                       key={idx}
-                      className="border border-gray-100 rounded-xl p-4 bg-gray-50/60 relative group"
+                      className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm"
                     >
-                      {/* Row header */}
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+                      {/* Variant card header */}
+                      <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+                        <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
                           Variant #{idx + 1}
+                          {(v.size || v.color) && (
+                            <span className="ml-2 font-normal text-gray-400 capitalize">
+                              {[v.size, v.color].filter(Boolean).join(" · ")}
+                            </span>
+                          )}
                         </span>
                         {variants.length > 1 && (
                           <button
@@ -871,97 +973,169 @@ export default function ProductsPage() {
                         )}
                       </div>
 
-                      {/* Fields grid */}
-                      <div className="grid grid-cols-2 gap-3">
-                        {/* Price */}
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                            Price (₹) *
-                          </label>
-                          <input
-                            type="number"
-                            placeholder="0"
-                            value={v.price}
-                            onChange={(e) => updateVariant(idx, "price", e.target.value)}
-                            className={inputCls}
-                          />
-                        </div>
-
-                        {/* Compare Price */}
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                            Compare Price (₹)
-                          </label>
-                          <input
-                            type="number"
-                            placeholder="0"
-                            value={v.compare_price}
-                            onChange={(e) => updateVariant(idx, "compare_price", e.target.value)}
-                            className={inputCls}
-                          />
-                        </div>
-
-                        {/* Stock */}
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                            Stock
-                          </label>
-                          <input
-                            type="number"
-                            placeholder="0"
-                            value={v.stock}
-                            onChange={(e) => updateVariant(idx, "stock", e.target.value)}
-                            className={inputCls}
-                          />
-                        </div>
-
-                        {/* SKU */}
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                            SKU
-                          </label>
-                          <input
-                            placeholder="Auto-generated if blank"
-                            value={v.sku}
-                            onChange={(e) => updateVariant(idx, "sku", e.target.value)}
-                            className={inputCls}
-                          />
-                        </div>
-
-                        {/* Size */}
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                            Size
-                          </label>
-                          <input
-                            placeholder="e.g. S, M, L, XL"
-                            value={v.size}
-                            onChange={(e) => updateVariant(idx, "size", e.target.value)}
-                            className={inputCls}
-                          />
-                        </div>
-
-                        {/* Color */}
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                            Color
-                          </label>
-                          <div className="flex items-center gap-2">
+                      <div className="p-4 space-y-4">
+                        {/* Fields grid */}
+                        <div className="grid grid-cols-2 gap-3">
+                          {/* Price */}
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                              Price (₹) *
+                            </label>
                             <input
-                              type="color"
-                              value={v.color?.startsWith("#") ? v.color : "#000000"}
-                              onChange={(e) => updateVariant(idx, "color", e.target.value)}
-                              className="w-10 h-10 rounded-xl border border-gray-200 cursor-pointer p-0.5 bg-gray-50 shrink-0"
-                              title="Pick a color"
-                            />
-                            <input
-                              type="text"
-                              placeholder="e.g. Red, #FF0000"
-                              value={v.color}
-                              onChange={(e) => updateVariant(idx, "color", e.target.value)}
+                              type="number"
+                              placeholder="0"
+                              value={v.price}
+                              onChange={(e) => updateVariant(idx, "price", e.target.value)}
                               className={inputCls}
                             />
                           </div>
+
+                          {/* Compare Price */}
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                              Compare Price (₹)
+                            </label>
+                            <input
+                              type="number"
+                              placeholder="0"
+                              value={v.compare_price}
+                              onChange={(e) => updateVariant(idx, "compare_price", e.target.value)}
+                              className={inputCls}
+                            />
+                          </div>
+
+                          {/* Stock */}
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                              Stock
+                            </label>
+                            <input
+                              type="number"
+                              placeholder="0"
+                              value={v.stock}
+                              onChange={(e) => updateVariant(idx, "stock", e.target.value)}
+                              className={inputCls}
+                            />
+                          </div>
+
+                          {/* SKU */}
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                              SKU
+                            </label>
+                            <input
+                              placeholder="Auto-generated if blank"
+                              value={v.sku}
+                              onChange={(e) => updateVariant(idx, "sku", e.target.value)}
+                              className={inputCls}
+                            />
+                          </div>
+
+                          {/* Size */}
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                              Size
+                            </label>
+                            <input
+                              placeholder="e.g. S, M, L, XL"
+                              value={v.size}
+                              onChange={(e) => updateVariant(idx, "size", e.target.value)}
+                              className={inputCls}
+                            />
+                          </div>
+
+                          {/* Color */}
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                              Color
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="color"
+                                value={v.color?.startsWith("#") ? v.color : "#000000"}
+                                onChange={(e) => updateVariant(idx, "color", e.target.value)}
+                                className="w-10 h-10 rounded-xl border border-gray-200 cursor-pointer p-0.5 bg-gray-50 shrink-0"
+                                title="Pick a color"
+                              />
+                              <input
+                                type="text"
+                                placeholder="e.g. Red, #FF0000"
+                                value={v.color}
+                                onChange={(e) => updateVariant(idx, "color", e.target.value)}
+                                className={inputCls}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* ── Variant Images ── */}
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                            <Upload size={11} /> Variant Images
+                          </label>
+
+                          {/* Thumbnails row */}
+                          {(v.uploadedImages.length > 0 || v.pendingFiles.length > 0) && (
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              {/* Already uploaded */}
+                              {v.uploadedImages.map((url, imgIdx) => (
+                                <div key={`up-${imgIdx}`} className="relative group w-16 h-16">
+                                  <img
+                                    src={url}
+                                    onClick={() => setPreviewImage(url)}
+                                    className="w-16 h-16 object-cover rounded-lg border border-gray-200 cursor-zoom-in"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => removeVariantUploaded(idx, imgIdx)}
+                                    className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition flex items-center justify-center"
+                                  >
+                                    <X size={9} />
+                                  </button>
+                                </div>
+                              ))}
+                              {/* Pending (local preview) */}
+                              {v.pendingFiles.map((file, fi) => {
+                                const objUrl = URL.createObjectURL(file);
+                                return (
+                                  <div key={`pf-${fi}`} className="relative group w-16 h-16">
+                                    <img
+                                      src={objUrl}
+                                      onClick={() => setPreviewImage(objUrl)}
+                                      className="w-16 h-16 object-cover rounded-lg border-2 border-dashed border-violet-300 cursor-zoom-in"
+                                    />
+                                    <div className="absolute inset-0 bg-violet-500/10 rounded-lg flex items-end justify-center pb-1 pointer-events-none">
+                                      <span className="text-[9px] text-violet-700 font-bold bg-white/80 px-1 rounded">Pending</span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => removeVariantPending(idx, fi)}
+                                      className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition flex items-center justify-center"
+                                    >
+                                      <X size={9} />
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* Upload trigger */}
+                          <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-gray-300 hover:border-violet-400 hover:bg-violet-50/40 rounded-xl cursor-pointer transition group">
+                            <Upload size={14} className="text-gray-400 group-hover:text-violet-500 transition shrink-0" />
+                            <span className="text-xs text-gray-500 group-hover:text-violet-600 transition">
+                              {v.uploadedImages.length + v.pendingFiles.length > 0
+                                ? `Add more images for this variant`
+                                : `Upload images for this variant`}
+                            </span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              className="hidden"
+                              onChange={(e) => addVariantFiles(idx, e.target.files)}
+                            />
+                          </label>
                         </div>
                       </div>
                     </div>
@@ -1024,78 +1198,6 @@ export default function ProductsPage() {
                 </label>
               </div>
 
-              {/* ── Section: Images ── */}
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                  <Upload size={12} /> Product Images
-                </p>
-
-                {/* Upload zone */}
-                <label className="block border-2 border-dashed border-gray-200 hover:border-violet-300 rounded-xl p-5 text-center cursor-pointer transition bg-gray-50 hover:bg-violet-50/30">
-                  <Upload size={20} className="mx-auto text-gray-400 mb-2" />
-                  <p className="text-sm text-gray-500">Click to upload images</p>
-                  <p className="text-xs text-gray-400 mt-0.5">PNG, JPG, WEBP up to 5 MB each</p>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => handleFileSelect(e.target.files)}
-                  />
-                </label>
-
-                {/* Pending (not yet uploaded) */}
-                {pendingFiles.length > 0 && (
-                  <div className="mt-3">
-                    <p className="text-xs text-gray-400 mb-2">Pending upload ({pendingFiles.length})</p>
-                    <div className="flex gap-2 flex-wrap">
-                      {pendingFiles.map((file, i) => (
-                        <div key={i} className="relative group">
-                          <img
-                            src={URL.createObjectURL(file)}
-                            className="w-20 h-20 object-cover rounded-xl border-2 border-dashed border-amber-300"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removePending(i)}
-                            className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs shadow"
-                          >
-                            <X size={10} />
-                          </button>
-                          <div className="absolute bottom-1 left-0 right-0 text-center">
-                            <span className="text-[9px] bg-amber-400 text-white px-1 rounded">pending</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Uploaded images */}
-                {images.length > 0 && (
-                  <div className="mt-3">
-                    <p className="text-xs text-gray-400 mb-2">Uploaded ({images.length})</p>
-                    <div className="flex gap-2 flex-wrap">
-                      {images.map((url, i) => (
-                        <div key={i} className="relative group">
-                          <img
-                            src={url}
-                            className="w-20 h-20 object-cover rounded-xl border border-gray-200 cursor-pointer"
-                            onClick={() => setPreviewImage(url)}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeUploaded(i)}
-                            className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs shadow opacity-0 group-hover:opacity-100 transition"
-                          >
-                            <X size={10} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
 
             {/* Modal Footer */}

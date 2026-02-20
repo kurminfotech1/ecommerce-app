@@ -91,6 +91,7 @@ model ProductVariant {
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 
+  images        VariantImage[]
   cartItems     Cart[]
   orderItems    OrderItem[]
 }
@@ -102,6 +103,15 @@ model ProductImage {
   sort_order Int     @default(0)
 
   product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+}
+
+model VariantImage {
+  id         String   @id @default(uuid())
+  variant_id String
+  image_url  String
+  sort_order Int     @default(0)
+
+  variant ProductVariant @relation(fields: [variant_id], references: [id], onDelete: Cascade)
 }
 
 model User {
@@ -158,8 +168,8 @@ model Order {
   order_status String
   created_at   DateTime @default(now())
 
-  user   User        @relation(fields: [user_id], references: [id])
-  items  OrderItem[]
+  user    User        @relation(fields: [user_id], references: [id])
+  items   OrderItem[]
   payment Payment?
 }
 

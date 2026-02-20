@@ -16,20 +16,30 @@ function extractStoragePath(url: string): string | null {
   }
 }
 
+/** Delete an array of public URLs from Supabase storage (best-effort, non-fatal) */
+async function deleteFromStorage(urls: string[]) {
+  const paths = urls.map(extractStoragePath).filter(Boolean) as string[];
+  if (paths.length === 0) return;
+  const { error } = await supabaseAdmin.storage.from(BUCKET).remove(paths);
+  if (error) console.error("Supabase storage delete error:", error.message);
+}
+
 /** Standard product include — used across all APIs */
 const productInclude = {
   category: true,
-  images: {
-    orderBy: { sort_order: "asc" as const },
-  },
   variants: {
     orderBy: { created_at: "asc" as const },
+    include: {
+      images: {
+        orderBy: { sort_order: "asc" as const },
+      },
+    },
   },
 } as const;
 
 // ─────────────────────────────────────────────────────────────────
 // GET  /api/products
-//   ?id=<uuid>              → single product with variants & images
+//   ?id=<uuid>              → single product with variants, variant images & product images
 //   ?page=1&limit=10        → paginated list
 //   ?search=keyword         → search by product_name
 //   ?category=<uuid>        → filter by category_id
@@ -69,27 +79,33 @@ export async function GET(req: Request) {
     const search = searchParams.get("search")?.trim() || "";
     const category = searchParams.get("category");
     const activeParam = searchParams.get("active");    // "true" | "false" | null
-    const featuredParam = searchParams.get("featured"); // "true" | null
+    const featuredParam = searchParams.get("featured");  // "true" | null
+    const size = searchParams.get("size")?.trim();
+    const minPrice = searchParams.get("min_price");
+    const maxPrice = searchParams.get("max_price");
 
     const skip = (page - 1) * limit;
 
+    const variantFilters: any = {};
+    if (size) {
+      variantFilters.size = { equals: size, mode: "insensitive" };
+    }
+    if (minPrice || maxPrice) {
+      variantFilters.price = {};
+      if (minPrice) variantFilters.price.gte = Number(minPrice);
+      if (maxPrice) variantFilters.price.lte = Number(maxPrice);
+    }
+
     const where: any = {
-      // is_active filter (omit entirely when param not provided → show all)
       ...(activeParam !== null ? { is_active: activeParam === "true" } : {}),
-
-      // is_featured filter
       ...(featuredParam === "true" ? { is_featured: true } : {}),
-
       AND: [
-        // Full-text search on product name
         search ? { product_name: { contains: search, mode: "insensitive" } } : {},
-
-        // Category filter
         category ? { category_id: category } : {},
       ],
+      ...(Object.keys(variantFilters).length > 0 ? { variants: { some: variantFilters } } : {}),
     };
 
-    // Fetch all matched products (in-memory pagination for flexibility)
     const allProducts = await prisma.product.findMany({
       where,
       include: productInclude,
@@ -120,15 +136,16 @@ export async function GET(req: Request) {
 // POST  /api/products
 // Body JSON:
 // {
-//   product_name, category_id,       ← required
+//   product_name, category_id,          ← required
 //   slug?, description?, short_desc?,
 //   is_active?, is_featured?,
 //   meta_title?, meta_desc?,
-//   images?:   [{ image_url, sort_order? }]   ← from /api/upload
+//   images?:   [{ image_url, sort_order? }]  ← product-level images
 //   variants?: [{
 //     size?, color?,
-//     price,                          ← required per variant
-//     compare_price?, stock?, sku?
+//     price,                             ← required per variant
+//     compare_price?, stock?, sku?,
+//     images?: [{ image_url, sort_order? }]  ← variant-level images
 //   }]
 // }
 // ─────────────────────────────────────────────────────────────────
@@ -164,21 +181,7 @@ export async function POST(req: Request) {
       include: { category: true },
     });
 
-    // 2️⃣ Save images (if provided)
-    const imagePayload: { image_url: string; sort_order?: number }[] =
-      body.images ?? [];
-
-    if (imagePayload.length > 0) {
-      await prisma.productImage.createMany({
-        data: imagePayload.map((img, idx) => ({
-          product_id: product.id,
-          image_url: img.image_url,
-          sort_order: img.sort_order ?? idx,
-        })),
-      });
-    }
-
-    // 3️⃣ Save variants (if provided)
+    // 2️⃣ Save variants (if provided)
     const variantPayload: {
       size?: string;
       color?: string;
@@ -186,11 +189,12 @@ export async function POST(req: Request) {
       compare_price?: number;
       stock?: number;
       sku?: string;
+      images?: { image_url: string; sort_order?: number }[];
     }[] = body.variants ?? [];
 
     if (variantPayload.length > 0) {
       for (const [idx, v] of variantPayload.entries()) {
-        if (v.price == null) continue; // price is required per variant
+        if (v.price == null) continue;
 
         // Auto-generate SKU if not supplied
         let sku = v.sku;
@@ -203,7 +207,8 @@ export async function POST(req: Request) {
           sku = `${categoryCode}-${productCode}-${product.id.slice(-4).toUpperCase()}-${idx + 1}`;
         }
 
-        await prisma.productVariant.create({
+        // Create variant
+        const variant = await prisma.productVariant.create({
           data: {
             product_id: product.id,
             size: v.size ?? null,
@@ -214,6 +219,18 @@ export async function POST(req: Request) {
             sku,
           },
         });
+
+        // 3a. Save variant-level images (if provided)
+        const variantImages = v.images ?? [];
+        if (variantImages.length > 0) {
+          await prisma.variantImage.createMany({
+            data: variantImages.map((img, imgIdx) => ({
+              variant_id: variant.id,
+              image_url: img.image_url,
+              sort_order: img.sort_order ?? imgIdx,
+            })),
+          });
+        }
       }
     }
 
@@ -239,9 +256,10 @@ export async function POST(req: Request) {
 // ─────────────────────────────────────────────────────────────────
 // PUT  /api/products?id=<uuid>
 // Body JSON: same fields as POST
-// For images:   pass `images`   array to REPLACE all existing images,
-//               or omit `images` key to leave images unchanged.
-// For variants: pass `variants` array to REPLACE all existing variants,
+// For images:   pass `images`   array to REPLACE all product-level images,
+//               or omit `images` key to leave them unchanged.
+// For variants: pass `variants` array to REPLACE all existing variants
+//               (including their variant-level images),
 //               or omit `variants` key to leave variants unchanged.
 // ─────────────────────────────────────────────────────────────────
 export async function PUT(req: Request) {
@@ -274,49 +292,8 @@ export async function PUT(req: Request) {
       },
     });
 
-    // ── Replace images if `images` key is present in body ─────
-    if (body.images !== undefined) {
-      const newImages: { image_url: string; sort_order?: number }[] =
-        body.images ?? [];
 
-      const newUrls = new Set(newImages.map((img) => img.image_url));
-
-      // Fetch old images from DB
-      const oldImages = await prisma.productImage.findMany({
-        where: { product_id: id },
-      });
-
-      // Only delete from Supabase the images removed by the user
-      const removedPaths = oldImages
-        .filter((img) => !newUrls.has(img.image_url))
-        .map((img) => extractStoragePath(img.image_url))
-        .filter(Boolean) as string[];
-
-      if (removedPaths.length > 0) {
-        const { error: storageError } = await supabaseAdmin.storage
-          .from(BUCKET)
-          .remove(removedPaths);
-
-        if (storageError) {
-          console.error("Storage delete error during PUT:", storageError.message);
-        }
-      }
-
-      // Replace DB records
-      await prisma.productImage.deleteMany({ where: { product_id: id } });
-
-      if (newImages.length > 0) {
-        await prisma.productImage.createMany({
-          data: newImages.map((img, idx) => ({
-            product_id: id,
-            image_url: img.image_url,
-            sort_order: img.sort_order ?? idx,
-          })),
-        });
-      }
-    }
-
-    // ── Replace variants if `variants` key is present in body ─
+    // ── Replace variants if `variants` key present ─────────────
     if (body.variants !== undefined) {
       const newVariants: {
         size?: string;
@@ -325,17 +302,30 @@ export async function PUT(req: Request) {
         compare_price?: number;
         stock?: number;
         sku?: string;
+        images?: { image_url: string; sort_order?: number }[];
       }[] = body.variants ?? [];
 
-      // Get the product's category for auto-SKU
+      // Fetch product + category for auto-SKU
       const productWithCat = await prisma.product.findUnique({
         where: { id },
         include: { category: true },
       });
 
-      // Delete all existing variants first
+      // Fetch old variant images to clean up from Supabase
+      const oldVariants = await prisma.productVariant.findMany({
+        where: { product_id: id },
+        include: { images: true },
+      });
+
+      const allOldVariantImageUrls = oldVariants.flatMap((v) =>
+        v.images.map((img) => img.image_url)
+      );
+      await deleteFromStorage(allOldVariantImageUrls);
+
+      // Delete all existing variants (cascade removes variantImages rows in DB)
       await prisma.productVariant.deleteMany({ where: { product_id: id } });
 
+      // Re-create variants
       for (const [idx, v] of newVariants.entries()) {
         if (v.price == null) continue;
 
@@ -349,7 +339,7 @@ export async function PUT(req: Request) {
           sku = `${categoryCode}-${productCode}-${id.slice(-4).toUpperCase()}-${idx + 1}`;
         }
 
-        await prisma.productVariant.create({
+        const variant = await prisma.productVariant.create({
           data: {
             product_id: id,
             size: v.size ?? null,
@@ -360,6 +350,18 @@ export async function PUT(req: Request) {
             sku: sku ?? `VAR-${id.slice(-4)}-${idx + 1}`,
           },
         });
+
+        // Save variant-level images
+        const variantImages = v.images ?? [];
+        if (variantImages.length > 0) {
+          await prisma.variantImage.createMany({
+            data: variantImages.map((img, imgIdx) => ({
+              variant_id: variant.id,
+              image_url: img.image_url,
+              sort_order: img.sort_order ?? imgIdx,
+            })),
+          });
+        }
       }
     }
 
@@ -384,7 +386,8 @@ export async function PUT(req: Request) {
 
 // ─────────────────────────────────────────────────────────────────
 // DELETE  /api/products?id=<uuid>
-// Deletes the product and removes ALL related images from Supabase.
+// Deletes the product and removes ALL related images (product-level
+// + variant-level) from Supabase storage.
 // ─────────────────────────────────────────────────────────────────
 export async function DELETE(req: Request) {
   try {
@@ -398,28 +401,17 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "ID required" }, { status: 400 });
     }
 
-    // 1️⃣ Fetch all images for this product
-    const images = await prisma.productImage.findMany({
+    // 1️⃣ Collect variant-level image URLs to clean from Supabase
+    const variants = await prisma.productVariant.findMany({
       where: { product_id: id },
+      include: { images: true },
     });
+    const variantImageUrls = variants.flatMap((v) =>
+      v.images.map((img) => img.image_url)
+    );
+    await deleteFromStorage(variantImageUrls);
 
-    // 2️⃣ Delete from Supabase storage
-    const storagePaths = images
-      .map((img) => extractStoragePath(img.image_url))
-      .filter(Boolean) as string[];
-
-    if (storagePaths.length > 0) {
-      const { error: storageError } = await supabaseAdmin.storage
-        .from(BUCKET)
-        .remove(storagePaths);
-
-      if (storageError) {
-        // Non-fatal — log and continue so DB record is still cleaned up
-        console.error("Storage delete error:", storageError.message);
-      }
-    }
-
-    // 3️⃣ Delete product from DB (cascade removes variants + images rows)
+    // 2️⃣ Delete product from DB (cascade removes variants + variantImages)
     await prisma.product.delete({ where: { id } });
 
     return NextResponse.json({
