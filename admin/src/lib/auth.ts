@@ -20,6 +20,7 @@
 // }
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { cookies, headers } from "next/headers";
+import { decryptData } from "./crypto";
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
@@ -41,7 +42,7 @@ export async function verifyToken(): Promise<AuthUser | null> {
   if (!token) return null;
 
   try {
-    return jwt.verify(token, JWT_SECRET) as AuthUser;
+    return jwt.verify(decryptData(token) as string, JWT_SECRET) as AuthUser;
   } catch {
     return null;
   }
