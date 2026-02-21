@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchAdminById, fetchUsers, login, register, updateAdmin } from "./authApi";
+import { fetchAdminById, fetchUsers, login, register, updateAdmin, deleteAdmin } from "./authApi";
 import { Admin } from "@/types/auth";
 import Cookies from "js-cookie";
 interface AdminState {
@@ -100,6 +100,19 @@ const adminSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(updateAdmin.rejected, (state, action: any) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      
+      // DELETE ADMIN
+      .addCase(deleteAdmin.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(deleteAdmin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.admins = state.admins.filter(admin => admin.id !== action.payload);
+      })
+      .addCase(deleteAdmin.rejected, (state, action: any) => {
         state.loading = false;
         state.error = action.payload;
       });
