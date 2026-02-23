@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ErrorMsg from '@/components/common/error-msg';
 import { getProductType } from '@/redux/features/productApi';
 import { TextShapeLine } from '@/svg';

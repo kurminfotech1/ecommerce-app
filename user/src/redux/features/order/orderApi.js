@@ -90,3 +90,26 @@ export const useGetUserOrdersQuery = async () => {
     throw error;
   }
 };
+
+export const saveOrder = async (data) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/order/saveOrder`, data);
+    return { data: response.data };
+  } catch (error) {
+    console.error("Error saving order:", error);
+    return { error: error.response?.data || error.message };
+  }
+};
+
+export const createPaymentIntent = async (data) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/order/create-payment-intent`,
+      data,
+    );
+    return { data: response.data };
+  } catch (error) {
+    console.error("Error creating payment intent:", error);
+    return { error: error.response?.data || error.message };
+  }
+};

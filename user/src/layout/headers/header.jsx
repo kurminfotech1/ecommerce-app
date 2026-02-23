@@ -1,20 +1,28 @@
-import React, { useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useDispatch, useSelector } from "react-redux";
 // internal
-import Menus from './header-com/menus';
-import useSticky from '@/hooks/use-sticky';
-import logo from '@assets/img/logo/logo.svg';
-import useCartInfo from '@/hooks/use-cart-info';
-import OffCanvas from '@/components/common/off-canvas';
-import { openCartMini } from '@/redux/features/cartSlice';
-import HeaderCategory from './header-com/header-category';
-import HeaderTopRight from './header-com/header-top-right';
-import HeaderMainRight from './header-com/header-main-right';
-import CartMiniSidebar from '@/components/common/cart-mini-sidebar';
-import HeaderSearchForm from '@/components/forms/header-search-form';
-import { CartTwo, CategoryMenu, Compare, Menu, Phone, ShippingCar, Wishlist } from '@/svg';
+import Menus from "./header-com/menus";
+import useSticky from "@/hooks/use-sticky";
+import logo from "@assets/img/logo/logo.svg";
+import useCartInfo from "@/hooks/use-cart-info";
+import OffCanvas from "@/components/common/off-canvas";
+import { openCartMini } from "@/redux/features/cartSlice";
+import HeaderCategory from "./header-com/header-category";
+import HeaderTopRight from "./header-com/header-top-right";
+import HeaderMainRight from "./header-com/header-main-right";
+import CartMiniSidebar from "@/components/common/cart-mini-sidebar";
+import HeaderSearchForm from "@/components/forms/header-search-form";
+import {
+  CartTwo,
+  CategoryMenu,
+  Compare,
+  Menu,
+  Phone,
+  ShippingCar,
+  Wishlist,
+} from "@/svg";
 
 const Header = () => {
   const { wishlist } = useSelector((state) => state.wishlist);
@@ -28,7 +36,7 @@ const Header = () => {
       <header>
         <div className="tp-header-area p-relative z-index-11">
           {/* header top start  */}
-          <div className="tp-header-top black-bg p-relative z-index-1 d-none d-md-block">
+          {/* <div className="tp-header-top black-bg p-relative z-index-1 d-none d-md-block">
             <div className="container">
               <div className="row align-items-center">
                 <div className="col-md-6">
@@ -46,7 +54,7 @@ const Header = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* header main start */}
           <div className="tp-header-main tp-header-sticky">
@@ -89,7 +97,10 @@ const Header = () => {
                         All Departments
                       </button>
                       <nav className="tp-category-menu-content">
-                        <HeaderCategory categoryType="electronics" isCategoryActive={isCategoryActive} />
+                        <HeaderCategory
+                          categoryType="electronics"
+                          isCategoryActive={isCategoryActive}
+                        />
                       </nav>
                     </div>
                     {/* category end */}
@@ -124,7 +135,10 @@ const Header = () => {
       </header>
 
       {/* sticky header start */}
-      <div id="header-sticky-2" className={`tp-header-sticky-area ${sticky ? 'header-sticky-2' : ''}`}>
+      <div
+        id="header-sticky-2"
+        className={`tp-header-sticky-area ${sticky ? "header-sticky-2" : ""}`}
+      >
         <div className="container">
           <div className="tp-mega-menu-wrapper p-relative">
             <div className="row align-items-center">
@@ -187,7 +201,11 @@ const Header = () => {
       {/* cart mini sidebar end */}
 
       {/* off canvas start */}
-      <OffCanvas isOffCanvasOpen={isOffCanvasOpen} setIsCanvasOpen={setIsCanvasOpen} categoryType="electronics" />
+      <OffCanvas
+        isOffCanvasOpen={isOffCanvasOpen}
+        setIsCanvasOpen={setIsCanvasOpen}
+        categoryType="electronics"
+      />
       {/* off canvas end */}
     </>
   );

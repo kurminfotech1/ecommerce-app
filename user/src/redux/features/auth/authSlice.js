@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import Cookies from 'js-cookie';
+import { toast } from 'react-toastify';
 
 const initialState = {
   accessToken: undefined,

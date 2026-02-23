@@ -35,8 +35,8 @@ const ProductArea = () => {
   };
   // refetch when active value change
   useEffect(() => {
-    refetch()
-  },[activeTab,refetch])
+    fetchProducts()
+  },[activeTab])
 
   // decide what to render
   let content = null;

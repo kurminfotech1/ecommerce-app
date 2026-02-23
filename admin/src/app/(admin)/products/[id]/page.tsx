@@ -65,9 +65,11 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
   const router = useRouter();
   const { product, loading } = useSelector((state: RootState) => state.products);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [expandedVariants, setExpandedVariants] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<'description' | 'additional' | 'reviews'>('description');
+  
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
   
   // Unwrap the params Promise
   const unwrappedParams = use(params);
@@ -75,6 +77,39 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
   useEffect(() => {
     dispatch(getProduct(unwrappedParams.id));
   }, [dispatch, unwrappedParams.id]);
+
+  useEffect(() => {
+    if (product?.variants?.length > 0) {
+      setSelectedSize(product.variants[0].size || null);
+      setSelectedColor(product.variants[0].color || null);
+    }
+  }, [product]);
+
+  const handleSizeSelect = (size: string) => {
+    setSelectedSize(size);
+    const exists = product?.variants?.find((v: any) => (v.size || null) === size && (v.color || null) === selectedColor);
+    if (!exists) {
+      const fallback = product?.variants?.find((v: any) => (v.size || null) === size);
+      if (fallback) setSelectedColor(fallback.color || null);
+    }
+  };
+
+  const handleColorSelect = (color: string) => {
+    setSelectedColor(color);
+    const exists = product?.variants?.find((v: any) => (v.size || null) === selectedSize && (v.color || null) === color);
+    if (!exists) {
+      const fallback = product?.variants?.find((v: any) => (v.color || null) === color);
+      if (fallback) setSelectedSize(fallback.size || null);
+    }
+  };
+
+  const currentVariant = product?.variants?.find((v: any) => 
+    (v.size || null) === selectedSize && (v.color || null) === selectedColor
+  ) || product?.variants?.[0];
+
+  useEffect(() => {
+    setActiveImageIndex(0);
+  }, [currentVariant?.id]);
 
   // ── Keyboard / scroll lock ───────────────────────────────────────
   useEffect(() => {
@@ -106,7 +141,9 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
     return [...new Set(allImages)]; // Remove duplicates
   };
 
-  const allImages: string[] = getAllImages();
+  const allImages: string[] = currentVariant?.images && currentVariant.images.length > 0
+    ? currentVariant.images.map((img: any) => img.image_url)
+    : getAllImages();
 
   if (loading) {
     return (
@@ -250,14 +287,30 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
               {/* Price Display */}
               {product.variants && product.variants.length > 0 && (
                 <div className="mb-6">
-                  <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                    ₹{Math.min(...product.variants.map((v: any) => v.price)).toLocaleString()}
-                    {Math.min(...product.variants.map((v: any) => v.price)) !== Math.max(...product.variants.map((v: any) => v.price)) && 
-                      ` - ₹${Math.max(...product.variants.map((v: any) => v.price)).toLocaleString()}`}
-                  </div>
-                  {product.variants.some((v: any) => v.compare_price) && (
-                    <div className="text-lg text-gray-500 dark:text-gray-400 line-through">
-                      ₹{Math.max(...product.variants.filter((v: any) => v.compare_price).map((v: any) => v.compare_price)).toLocaleString()}
+                  {currentVariant ? (
+                    <>
+                      <div className="flex items-end gap-3 mb-2">
+                        <div className="text-3xl font-bold text-gray-900 dark:text-white">
+                          ₹{currentVariant.price.toLocaleString()}
+                        </div>
+                        {currentVariant.compare_price && (
+                          <div className="text-lg text-gray-500 dark:text-gray-400 line-through mb-1">
+                            ₹{currentVariant.compare_price.toLocaleString()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 text-sm mt-3">
+                        {stockBadge(currentVariant.stock)}
+                        {currentVariant.sku && (
+                          <span className="text-gray-500 font-medium">SKU: <span className="text-gray-900 dark:text-gray-200">{currentVariant.sku}</span></span>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                      ₹{Math.min(...product.variants.map((v: any) => v.price)).toLocaleString()}
+                      {Math.min(...product.variants.map((v: any) => v.price)) !== Math.max(...product.variants.map((v: any) => v.price)) && 
+                        ` - ₹${Math.max(...product.variants.map((v: any) => v.price)).toLocaleString()}`}
                     </div>
                   )}
                 </div>
@@ -272,10 +325,15 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                   <div>
                     <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">SIZE</h3>
                     <div className="flex flex-wrap gap-2">
-                      {Array.from(new Set(product.variants.filter((v: any) => v.size).map((v: any) => v.size))).map((size, idx) => (
+                      {Array.from(new Set(product.variants.filter((v: any) => v.size).map((v: any) => v.size))).map((size: any, idx) => (
                         <button
                           key={idx}
-                          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:border-[#155dfc] hover:text-[#155dfc] dark:hover:text-[#155dfc] transition-colors"
+                          onClick={() => handleSizeSelect(size)}
+                          className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
+                            selectedSize === size
+                              ? 'border-[#155dfc] text-[#155dfc] bg-blue-50 dark:bg-[#155dfc]/10'
+                              : 'border-gray-300 dark:border-gray-600 hover:border-[#155dfc] hover:text-[#155dfc] dark:hover:text-[#155dfc]'
+                          }`}
                         >
                           {size}
                         </button>
@@ -289,13 +347,18 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                   <div>
                     <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">COLOR</h3>
                     <div className="flex flex-wrap gap-3">
-                      {Array.from(new Set(product.variants.filter((v: any) => v.color).map((v: any) => v.color))).map((color, idx) => (
+                      {Array.from(new Set(product.variants.filter((v: any) => v.color).map((v: any) => v.color))).map((color: any, idx) => (
                         <button
                           key={idx}
-                          className="flex flex-col items-center"
+                          onClick={() => handleColorSelect(color)}
+                          className={`flex flex-col items-center p-1 rounded-lg border-2 transition-all ${
+                            selectedColor === color
+                              ? 'border-[#155dfc] bg-blue-50 dark:bg-[#155dfc]/10'
+                              : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700'
+                          }`}
                         >
                           <div 
-                            className="w-8 h-8 rounded-full border-2 border-gray-300 dark:border-gray-600"
+                            className="w-8 h-8 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm"
                             style={{ backgroundColor: color }}
                           ></div>
                           <span className="text-xs mt-1 text-gray-600 dark:text-gray-300">{color}</span>
@@ -480,97 +543,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
             </div>
           </div>
           
-          {/* Variants Section */}
-          {product.variants && product.variants.length > 0 && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
-              <div className="flex flex-wrap gap-3 justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Product Variants</h2>
-                <button
-                  onClick={() => setExpandedVariants(!expandedVariants)}
-                  className="flex items-center gap-2 text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                >
-                  {expandedVariants ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                  {expandedVariants ? 'Hide' : 'Show'} variants
-                </button>
-              </div>
-              
-              {expandedVariants && (
-                <div className="space-y-4">
-                  {product.variants.map((variant: any) => (
-                    <div key={variant.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                      <div className="flex flex-col md:flex-row gap-6">
-                        {/* Variant Images */}
-                        {variant.images && variant.images.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {variant.images.map((img: any, imgIdx: number) => (
-                              <div key={imgIdx} className="relative">
-                                <img
-                                  src={img.image_url}
-                                  alt={`Variant image ${imgIdx + 1}`}
-                                  onClick={() => setPreviewImage(img.image_url)}
-                                  className="w-16 h-16 object-cover rounded-lg border border-gray-200 dark:border-gray-700 cursor-zoom-in hover:scale-105 hover:shadow-md transition"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        
-                        <div className="flex-1">
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div>
-                              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">SKU</h3>
-                              <p className="font-medium text-gray-900 dark:text-gray-200">{variant.sku || '—'}</p>
-                            </div>
-                            <div>
-                              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Size</h3>
-                              <p className="font-medium text-gray-900 dark:text-gray-200">{variant.size || '—'}</p>
-                            </div>
-                            <div>
-                              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Color</h3>
-                              <p className="font-medium text-gray-900 dark:text-gray-200">
-                                {variant.color ? (
-                                  <span className="flex items-center gap-2">
-                                    <span
-                                      className="inline-block w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600"
-                                      style={{ backgroundColor: variant.color }}
-                                    ></span>
-                                    {variant.color}
-                                  </span>
-                                ) : '—'}
-                              </p>
-                            </div>
-                            <div>
-                              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Stock</h3>
-                              <p className="font-medium">{stockBadge(variant.stock)}</p>
-                            </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                            <div>
-                              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Price</h3>
-                              <p className="font-medium text-gray-900 dark:text-gray-200">₹{variant.price.toLocaleString()}</p>
-                            </div>
-                            <div>
-                              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Compare Price</h3>
-                              <p className="font-medium text-gray-500 dark:text-gray-400">{variant.compare_price ? `₹${variant.compare_price.toLocaleString()}` : '—'}</p>
-                            </div>
-                            <div>
-                              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Created</h3>
-                              <p className="font-medium text-gray-900 dark:text-gray-200">{variant.created_at ? new Date(variant.created_at).toLocaleDateString() : '—'}</p>
-                            </div>
-                            <div>
-                              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Updated</h3>
-                              <p className="font-medium text-gray-900 dark:text-gray-200">{variant.updated_at ? new Date(variant.updated_at).toLocaleDateString() : '—'}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+
           
           {/* Additional Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

@@ -6,9 +6,9 @@ import ShopCategoryLoader from "../loader/shop/shop-category-loader";
 
 const ShopCategoryArea = () => {
   // const { data: categories, isLoading, isError } = useGetShowCategoryQuery();
-  const [categories,setCategories] = useState([]);
-  const [isLoading,setIsLoading] = useState(false);
-  const [isError,setIsError] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -32,7 +32,7 @@ const ShopCategoryArea = () => {
         .toLowerCase()
         .replace("&", "")
         .split(" ")
-        .join("-")}`
+        .join("-")}`,
     );
   };
 

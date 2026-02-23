@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 // internal
 import { ArrowRightSmTwo } from '@/svg';
 import ProductItem from './product-item';
 import ErrorMsg from '@/components/common/error-msg';
 
-import { HomeThreePrdLoader } from '@/components/loader';
+import { HomeThreePrdLoader } from '@/components/loader'; 
 import { getProductType } from '@/redux/features/productApi';
 
 const ProductArea = () => {
