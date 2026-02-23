@@ -4,22 +4,24 @@ import Wrapper from "@/layout/wrapper";
 import HeaderTwo from "@/layout/headers/header-2";
 import ShopBreadcrumb from "@/components/breadcrumb/shop-breadcrumb";
 import ShopArea from "@/components/shop/shop-area";
-import { getAllProducts } from "@/redux/features/productApi";
 import ErrorMsg from "@/components/common/error-msg";
 import Footer from "@/layout/footers/footer";
 import ShopFilterOffCanvas from "@/components/common/shop-filter-offcanvas";
 import ShopLoader from "@/components/loader/shop/shop-loader";
+import { getAllProducts } from "@/redux/features/products/productsApi";
+import { useDispatch } from "react-redux";
 
 const ShopPage = ({ query }) => {
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const dispatch = useDispatch();
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const data = await getAllProducts();
-        setProducts(data?.data || []);
-        console.log("data", data?.data);
+        const res = await dispatch(getAllProducts());
+        setProducts(res?.payload.data || []);
+        console.log("data", res);
       } catch (err) {
         setIsError(true);
       } finally {
@@ -161,12 +163,12 @@ const ShopPage = ({ query }) => {
     content = (
       <>
         <ShopArea
-          all_products={products.data}
+          all_products={products}
           products={product_items}
           otherProps={otherProps}
         />
         <ShopFilterOffCanvas
-          all_products={products.data}
+          all_products={products}
           otherProps={otherProps}
         />
       </>

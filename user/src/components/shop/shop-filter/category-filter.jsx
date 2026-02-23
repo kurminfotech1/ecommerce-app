@@ -6,19 +6,22 @@ import ErrorMsg from "@/components/common/error-msg";
 import { getShowCategory, useGetShowCategoryQuery } from "@/redux/features/categoryApi";
 import { handleFilterSidebarClose } from "@/redux/features/shop-filter-slice";
 import ShopCategoryLoader from "@/components/loader/shop/shop-category-loader";
+import { getCategories } from "@/redux/features/categories/categoriesApi";
 
 const CategoryFilter = ({setCurrPage,shop_right=false}) => {
   // const { data: categories, isLoading, isError } = useGetShowCategoryQuery();
   const [categories,setCategories] = useState([]);
+  console.log("categories", categories)
   const [isLoading,setIsLoading] = useState(false);
   const [isError,setIsError] = useState(false);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchCategories = async () => {
       setIsLoading(true);
       try {
-        const res = await getShowCategory();
-        setCategories(res);
+        const res = await dispatch(getCategories());
+        setCategories(res?.payload?.data);
       } catch (error) {
         setIsError(true);
       } finally {
@@ -28,7 +31,6 @@ const CategoryFilter = ({setCurrPage,shop_right=false}) => {
     fetchCategories();
   }, []);
   const router = useRouter();
-  const dispatch = useDispatch();
 
   // handle category route
   const handleCategoryRoute = (title) => {
@@ -51,24 +53,24 @@ const CategoryFilter = ({setCurrPage,shop_right=false}) => {
   if (!isLoading && isError) {
     content = <ErrorMsg msg="There was an error" />;
   }
-  if (!isLoading && !isError && categories?.result?.length === 0) {
+  if (!isLoading && !isError && categories?.length === 0) {
     content = <ErrorMsg msg="No Category found!" />;
   }
-  if (!isLoading && !isError && categories?.result?.length > 0) {
-    const category_items = categories.result;
+  if (!isLoading && !isError && categories?.length > 0) {
+    const category_items = categories;
     content = category_items.map((item) => (
       <li key={item._id}>
         <a
-          onClick={() => handleCategoryRoute(item.parent)}
+          onClick={() => handleCategoryRoute(item.name)}
           style={{ cursor: "pointer" }}
           className={
             router.query.category ===
-            item.parent.toLowerCase().replace("&", "").split(" ").join("-")
+            item.name.toLowerCase().replace("&", "").split(" ").join("-")
               ? "active"
               : ""
           }
         >
-          {item.parent} <span>{item.products.length}</span>
+          {item.name} 
         </a>
       </li>
     ));
