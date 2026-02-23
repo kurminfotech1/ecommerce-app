@@ -11,7 +11,18 @@ import { add_to_wishlist } from "@/redux/features/wishlist-slice";
 import { add_to_compare } from "@/redux/features/compareSlice";
 
 const ProductItem = ({ product, style_2 = false }) => {
-  const { _id, img, category, title, reviews, price, discount, tags, status } = product || {};
+  const {
+    _id,
+    img,
+    category,
+    title,
+    reviews,
+    price,
+    discount,
+    tags,
+    status,
+    variants,
+  } = product || {};
   const [ratingVal, setRatingVal] = useState(0);
   const { cart_products } = useSelector((state) => state.cart);
   const { wishlist } = useSelector((state) => state.wishlist);
@@ -32,7 +43,31 @@ const ProductItem = ({ product, style_2 = false }) => {
 
   // handle add product
   const handleAddProduct = (prd) => {
-    dispatch(add_cart_product(prd));
+    const defaultVariant =
+      prd.variants && prd.variants.length > 0 ? prd.variants[0] : null;
+    if (defaultVariant) {
+      dispatch(
+        add_cart_product({
+          ...prd,
+          price: defaultVariant.price || prd.price,
+          compare_price: defaultVariant.compare_price || prd.compare_price,
+          discount:
+            defaultVariant.compare_price > defaultVariant.price
+              ? Math.round(
+                  ((defaultVariant.compare_price - defaultVariant.price) /
+                    defaultVariant.compare_price) *
+                    100,
+                )
+              : prd.discount,
+          quantity: defaultVariant.stock || prd.quantity,
+          sku: defaultVariant.sku || prd.sku,
+          selected_size: defaultVariant.size,
+          selected_color: defaultVariant.color,
+        }),
+      );
+    } else {
+      dispatch(add_cart_product(prd));
+    }
   };
   // handle wishlist product
   const handleWishlistProduct = (prd) => {
@@ -44,20 +79,16 @@ const ProductItem = ({ product, style_2 = false }) => {
     dispatch(add_to_compare(prd));
   };
 
-
   return (
     <div className={`tp-product-item-2 ${style_2 ? "" : "mb-40"}`}>
       <div className="tp-product-thumb-2 p-relative z-index-1 fix">
         <Link href={`/product-details/${_id}`}>
-          <Image
-            src={img}
-            alt="product img"
-            width={284}
-            height={302}
-          />
+          <Image src={img} alt="product img" width={284} height={302} />
         </Link>
         <div className="tp-product-badge">
-          {status === 'out-of-stock' && <span className="product-hot">out-stock</span>}
+          {status === "out-of-stock" && (
+            <span className="product-hot">out-stock</span>
+          )}
         </div>
         {/* product action */}
         <div className="tp-product-action-2 tp-product-action-blackStyle">
@@ -65,7 +96,7 @@ const ProductItem = ({ product, style_2 = false }) => {
             {isAddedToCart ? (
               <Link
                 href="/cart"
-                className={`tp-product-action-btn-2 ${isAddedToCart ? 'active' : ''} tp-product-add-cart-btn`}
+                className={`tp-product-action-btn-2 ${isAddedToCart ? "active" : ""} tp-product-add-cart-btn`}
               >
                 <Cart />
                 <span className="tp-product-tooltip tp-product-tooltip-right">
@@ -76,8 +107,8 @@ const ProductItem = ({ product, style_2 = false }) => {
               <button
                 type="button"
                 onClick={() => handleAddProduct(product)}
-                className={`tp-product-action-btn-2 ${isAddedToCart ? 'active' : ''} tp-product-add-cart-btn`}
-                disabled={status === 'out-of-stock'}
+                className={`tp-product-action-btn-2 ${isAddedToCart ? "active" : ""} tp-product-add-cart-btn`}
+                disabled={status === "out-of-stock"}
               >
                 <Cart />
                 <span className="tp-product-tooltip tp-product-tooltip-right">
@@ -94,13 +125,21 @@ const ProductItem = ({ product, style_2 = false }) => {
                 Quick View
               </span>
             </button>
-            <button disabled={status === 'out-of-stock'} onClick={() => handleWishlistProduct(product)} className={`tp-product-action-btn-2 ${isAddedToWishlist ? 'active' : ''} tp-product-add-to-wishlist-btn`}>
+            <button
+              disabled={status === "out-of-stock"}
+              onClick={() => handleWishlistProduct(product)}
+              className={`tp-product-action-btn-2 ${isAddedToWishlist ? "active" : ""} tp-product-add-to-wishlist-btn`}
+            >
               <Wishlist />
               <span className="tp-product-tooltip tp-product-tooltip-right">
                 Add To Wishlist
               </span>
             </button>
-            <button disabled={status === 'out-of-stock'} onClick={() => handleCompareProduct(product)} className="tp-product-action-btn-2 tp-product-add-to-compare-btn">
+            <button
+              disabled={status === "out-of-stock"}
+              onClick={() => handleCompareProduct(product)}
+              className="tp-product-action-btn-2 tp-product-add-to-compare-btn"
+            >
               <CompareThree />
               <span className="tp-product-tooltip tp-product-tooltip-right">
                 Add To Compare
@@ -121,8 +160,33 @@ const ProductItem = ({ product, style_2 = false }) => {
         <h3 className="tp-product-title-2">
           <Link href={`/product-details/${_id}`}>{title}</Link>
         </h3>
+        {variants && variants.length > 0 && (
+          <div
+            className="tp-product-variants-info mt-5"
+            style={{ fontSize: "12px", color: "#777" }}
+          >
+            <span>
+              {
+                Array.from(
+                  new Set(variants.map((v) => v.color).filter(Boolean)),
+                ).length
+              }{" "}
+              Colors &nbsp;|&nbsp;
+              {
+                Array.from(new Set(variants.map((v) => v.size).filter(Boolean)))
+                  .length
+              }{" "}
+              Sizes
+            </span>
+          </div>
+        )}
         <div className="tp-product-rating-icon tp-product-rating-icon-2">
-          <Rating allowFraction size={16} initialValue={ratingVal} readonly={true} />
+          <Rating
+            allowFraction
+            size={16}
+            initialValue={ratingVal}
+            readonly={true}
+          />
         </div>
         <div className="tp-product-price-wrapper-2">
           {discount > 0 ? (
@@ -131,7 +195,12 @@ const ProductItem = ({ product, style_2 = false }) => {
                 ${price.toFixed(2)}{" "}
               </span>
               <span className="tp-product-price-2 old-price">
-                {" "}${(Number(price) - (Number(price) * Number(discount)) / 100).toFixed(2)}
+                {" "}
+                $
+                {(
+                  Number(price) -
+                  (Number(price) * Number(discount)) / 100
+                ).toFixed(2)}
               </span>
             </>
           ) : (

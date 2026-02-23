@@ -46,7 +46,7 @@ const DetailsTabNav = ({ product }) => {
         <nav>
           <div className="nav nav-tabs justify-content-center p-relative tp-product-tab" id="navPresentationTab" role="tablist">
             <NavItem active={true} linkRef={activeRef} id="desc" title="Description" />
-            <NavItem id="additional" title="Additional information" />
+          
             <NavItem id="review" title={`Reviews (${reviews.length})`} />
 
             <span ref={marker} id="productTabMarker" className="tp-product-details-tab-line"></span>
@@ -67,26 +67,6 @@ const DetailsTabNav = ({ product }) => {
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* addInfo */}
-          <div className="tab-pane fade" id="nav-additional" role="tabpanel" aria-labelledby="nav-additional-tab" tabIndex="-1">
-
-            <div className="tp-product-details-additional-info ">
-              <div className="row justify-content-center">
-                <div className="col-xl-10">
-                  <table>
-                    <tbody>
-                      {additionalInformation?.map((item, i) => (
-                        <tr key={i}>
-                          <td>{item.key}</td>
-                          <td>{item.value}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
                 </div>
               </div>
             </div>

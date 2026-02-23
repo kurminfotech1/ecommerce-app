@@ -20,8 +20,54 @@ const ShopPage = ({ query }) => {
     const fetchProducts = async () => {
       try {
         const res = await dispatch(getAllProducts());
-        setProducts(res?.payload.data || []);
-        console.log("data", res);
+        const fetchedData = res?.payload?.data || [];
+
+        // Map data to the format expected by the components
+        const mappedProducts = fetchedData.map((p) => {
+          const firstVariant = p.variants?.[0] || {};
+          const price = firstVariant.price || 0;
+          const comparePrice = firstVariant.compare_price || 0;
+          const discount =
+            comparePrice > price
+              ? Math.round(((comparePrice - price) / comparePrice) * 100)
+              : 0;
+          const img = firstVariant.images?.[0]?.image_url || "";
+
+          // Extracting all images properly
+          const allImages =
+            p.variants?.flatMap(
+              (v) =>
+                v.images?.map((imgObj) => ({
+                  img: imgObj.image_url,
+                  color: { name: v.color || "", clrCode: v.color || "" },
+                })) || [],
+            ) || [];
+
+          const quantity =
+            p.variants?.reduce((acc, v) => acc + (v.stock || 0), 0) || 0;
+
+          return {
+            ...p,
+            _id: p.id,
+            title: p.product_name,
+            price: price,
+            compare_price: comparePrice,
+            discount: discount,
+            img: img,
+            description: p.description || p.short_desc || "",
+            parent: p.category?.name || "Category",
+            children: "sub",
+            brand: p.brand || { name: "Brand" },
+            quantity: p.variants?.[0]?.stock || quantity || 0,
+            tags: [],
+            reviews: [],
+            status: firstVariant.stock > 0 ? "in-stock" : "out-of-stock",
+            imageURLs: allImages,
+          };
+        });
+
+        setProducts(mappedProducts);
+        console.log("mapped data", mappedProducts);
       } catch (err) {
         setIsError(true);
       } finally {
@@ -40,7 +86,9 @@ const ShopPage = ({ query }) => {
       const maxPrice = products.reduce((max, product) => {
         return product.price > max ? product.price : max;
       }, 0);
-      setPriceValue([0, maxPrice]);
+      setPriceValue([0, maxPrice > 0 ? maxPrice : 100]);
+    } else {
+      setPriceValue([0, 100]);
     }
   }, [isLoading, isError, products]);
 
@@ -69,10 +117,14 @@ const ShopPage = ({ query }) => {
   let content = null;
 
   if (isLoading) {
-    content = <ShopLoader loading={isLoading}/>;
+    content = <ShopLoader loading={isLoading} />;
   }
   if (!isLoading && isError) {
-    content = <div className="pb-80 text-center"><ErrorMsg msg="There was an error" /></div>;
+    content = (
+      <div className="pb-80 text-center">
+        <ErrorMsg msg="There was an error" />
+      </div>
+    );
   }
   if (!isLoading && !isError && products?.length === 0) {
     content = <ErrorMsg msg="No Products found!" />;
@@ -104,7 +156,7 @@ const ShopPage = ({ query }) => {
     }
     // price filter
     product_items = product_items.filter(
-      (p) => p.price >= priceValue[0] && p.price <= priceValue[1]
+      (p) => p.price >= priceValue[0] && p.price <= priceValue[1],
     );
 
     // status filter
@@ -121,7 +173,7 @@ const ShopPage = ({ query }) => {
       product_items = product_items.filter(
         (p) =>
           p.parent.toLowerCase().replace("&", "").split(" ").join("-") ===
-          query.category
+          query.category,
       );
     }
 
@@ -130,7 +182,7 @@ const ShopPage = ({ query }) => {
       product_items = product_items.filter(
         (p) =>
           p.children.toLowerCase().replace("&", "").split(" ").join("-") ===
-          query.subCategory
+          query.subCategory,
       );
     }
 
@@ -156,7 +208,7 @@ const ShopPage = ({ query }) => {
       product_items = product_items.filter(
         (p) =>
           p.brand.name.toLowerCase().replace("&", "").split(" ").join("-") ===
-          query.brand
+          query.brand,
       );
     }
 
@@ -167,10 +219,7 @@ const ShopPage = ({ query }) => {
           products={product_items}
           otherProps={otherProps}
         />
-        <ShopFilterOffCanvas
-          all_products={products}
-          otherProps={otherProps}
-        />
+        <ShopFilterOffCanvas all_products={products} otherProps={otherProps} />
       </>
     );
   }

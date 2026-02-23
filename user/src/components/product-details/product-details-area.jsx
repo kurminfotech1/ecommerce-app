@@ -61,22 +61,6 @@ const ProductDetailsArea = ({ productItem }) => {
         </div>
       </div>
       {/* product details description */}
-
-      {/* related products start */}
-      <section className="tp-related-product pt-95 pb-50">
-        <div className="container">
-          <div className="row">
-            <div className="tp-section-title-wrapper-6 text-center mb-40">
-              <span className="tp-section-title-pre-6">Next day Products</span>
-              <h3 className="tp-section-title-6">Related Products</h3>
-            </div>
-          </div>
-          <div className="row">
-            <RelatedProducts id={_id} />
-          </div>
-        </div>
-      </section>
-      {/* related products end */}
     </section>
   );
 };

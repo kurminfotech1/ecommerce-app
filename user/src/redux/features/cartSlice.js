@@ -5,7 +5,7 @@ import { notifyError, notifySuccess } from "@/utils/toast";
 const initialState = {
   cart_products: [],
   orderQuantity: 1,
-  cartMiniOpen:false,
+  cartMiniOpen: false,
 };
 
 export const cartSlice = createSlice({
@@ -13,7 +13,12 @@ export const cartSlice = createSlice({
   initialState,
   reducers: {
     add_cart_product: (state, { payload }) => {
-      const isExist = state.cart_products.some((i) => i._id === payload._id);
+      const isExist = state.cart_products.some(
+        (i) =>
+          i._id === payload._id &&
+          i.selected_size === payload.selected_size &&
+          i.selected_color === payload.selected_color,
+      );
       if (!isExist) {
         const newItem = {
           ...payload,
@@ -22,20 +27,27 @@ export const cartSlice = createSlice({
         state.cart_products.push(newItem);
         notifySuccess(`${state.orderQuantity} ${payload.title} added to cart`);
       } else {
-        state.cart_products.map((item) => {
-          if (item._id === payload._id) {
-            if (item.quantity >= item.orderQuantity + state.orderQuantity) {
+        state.cart_products = state.cart_products.map((item) => {
+          if (
+            item._id === payload._id &&
+            item.selected_size === payload.selected_size &&
+            item.selected_color === payload.selected_color
+          ) {
+            const itemQtyLimit = item.quantity || payload.quantity || 0;
+            if (itemQtyLimit >= item.orderQuantity + state.orderQuantity) {
               item.orderQuantity =
                 state.orderQuantity !== 1
                   ? state.orderQuantity + item.orderQuantity
                   : item.orderQuantity + 1;
-              notifySuccess(`${state.orderQuantity} ${item.title} added to cart`);
+              notifySuccess(
+                `${state.orderQuantity} ${item.title} added to cart`,
+              );
             } else {
               notifyError("No more quantity available for this product!");
               state.orderQuantity = 1;
             }
           }
-          return { ...item };
+          return item;
         });
       }
       setLocalStorage("cart_products", state.cart_products);
@@ -50,19 +62,28 @@ export const cartSlice = createSlice({
           : (state.orderQuantity = 1);
     },
     quantityDecrement: (state, { payload }) => {
-      state.cart_products.map((item) => {
-        if (item._id === payload._id) {
+      state.cart_products = state.cart_products.map((item) => {
+        if (
+          item._id === payload._id &&
+          item.selected_size === payload.selected_size &&
+          item.selected_color === payload.selected_color
+        ) {
           if (item.orderQuantity > 1) {
-            item.orderQuantity = item.orderQuantity - 1;
+            item.orderQuantity -= 1;
           }
         }
-        return { ...item };
+        return item;
       });
       setLocalStorage("cart_products", state.cart_products);
     },
     remove_product: (state, { payload }) => {
       state.cart_products = state.cart_products.filter(
-        (item) => item._id !== payload.id
+        (item) =>
+          !(
+            item._id === payload.id &&
+            item.selected_size === payload.selected_size &&
+            item.selected_color === payload.selected_color
+          ),
       );
       setLocalStorage("cart_products", state.cart_products);
       notifyError(`${payload.title} Remove from cart`);
@@ -73,18 +94,20 @@ export const cartSlice = createSlice({
     initialOrderQuantity: (state, { payload }) => {
       state.orderQuantity = 1;
     },
-    clearCart:(state) => {
-      const isClearCart = window.confirm('Are you sure you want to remove all items ?');
-      if(isClearCart){
-        state.cart_products = []
+    clearCart: (state) => {
+      const isClearCart = window.confirm(
+        "Are you sure you want to remove all items ?",
+      );
+      if (isClearCart) {
+        state.cart_products = [];
       }
       setLocalStorage("cart_products", state.cart_products);
     },
-    openCartMini:(state,{payload}) => {
-      state.cartMiniOpen = true
+    openCartMini: (state, { payload }) => {
+      state.cartMiniOpen = true;
     },
-    closeCartMini:(state,{payload}) => {
-      state.cartMiniOpen = false
+    closeCartMini: (state, { payload }) => {
+      state.cartMiniOpen = false;
     },
   },
 });
