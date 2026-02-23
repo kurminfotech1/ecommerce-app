@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import {
   getProducts,
+  getProduct,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -13,6 +14,7 @@ interface ProductState {
   submitting: boolean;
   uploading: boolean;
   products: Product[];
+  product: Product | null;
   totalRecords: number;
   currentPage: number;
   totalPages: number;
@@ -25,6 +27,7 @@ const initialState: ProductState = {
   submitting: false,
   uploading: false,
   products: [],
+  product: null,
   totalRecords: 0,
   currentPage: 1,
   totalPages: 1,
@@ -55,6 +58,21 @@ const productsSlice = createSlice({
       .addCase(getProducts.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message ?? "Failed";
+      })
+
+      // ── GET SINGLE PRODUCT ───────────────────────────────────────
+      .addCase(getProduct.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getProduct.fulfilled, (state, action) => {
+        state.loading = false;
+        state.product = action.payload;
+      })
+      .addCase(getProduct.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message ?? "Failed";
+        state.product = null;
       })
 
       // ── CREATE ─────────────────────────────────────────────────

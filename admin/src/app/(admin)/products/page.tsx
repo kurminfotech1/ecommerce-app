@@ -14,6 +14,7 @@ import {
   Product,
   ProductVariantInput,
 } from "@/redux/products/productsApi";
+import Link from "next/link";
 import { getCategories, Category } from "@/redux/categories/categoriesApi";
 
 import {
@@ -29,16 +30,16 @@ import { DeleteModal } from "@/components/common/DeleteModal";
 const Skeleton = () => (
   <div className="space-y-3">
     {Array.from({ length: 6 }).map((_, i) => (
-      <div key={i} className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-100 animate-pulse">
-        <div className="w-14 h-14 bg-gray-200 rounded-xl shrink-0" />
+      <div key={i} className="flex items-center gap-4 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 animate-pulse">
+        <div className="w-14 h-14 bg-gray-200 dark:bg-gray-700 rounded-xl shrink-0" />
         <div className="flex-1 space-y-2">
-          <div className="h-4 bg-gray-200 rounded w-2/5" />
-          <div className="h-3 bg-gray-100 rounded w-1/4" />
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/5" />
+          <div className="h-3 bg-gray-100 dark:bg-gray-600 rounded w-1/4" />
         </div>
-        <div className="w-20 h-5 bg-gray-200 rounded-full" />
-        <div className="w-16 h-4 bg-gray-200 rounded" />
-        <div className="w-24 h-4 bg-gray-200 rounded" />
-        <div className="w-20 h-8 bg-gray-200 rounded-lg" />
+        <div className="w-20 h-5 bg-gray-200 dark:bg-gray-700 rounded-full" />
+        <div className="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded" />
+        <div className="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded" />
+        <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg" />
       </div>
     ))}
   </div>
@@ -47,15 +48,15 @@ const Skeleton = () => (
 // ── Badge ────────────────────────────────────────────────────────
 const Badge = ({ children, color = "gray" }: { children: React.ReactNode; color?: string }) => {
   const colors: Record<string, string> = {
-    green: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    red: "bg-red-50 text-red-600 border-red-200",
-    blue: "bg-blue-50 text-blue-700 border-blue-200",
-    amber: "bg-amber-50 text-amber-700 border-amber-200",
-    gray: "bg-gray-50 text-gray-600 border-gray-200",
-    purple: "bg-purple-50 text-purple-700 border-purple-200",
+    green: "bg-success-50 text-success-700 border-success-200 dark:bg-success-500/20 dark:text-success-400 dark:border-success-500/30",
+    red: "bg-error-50 text-error-600 border-error-200 dark:bg-error-500/20 dark:text-error-400 dark:border-error-500/30",
+    blue: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30",
+    amber: "bg-warning-50 text-warning-700 border-warning-200 dark:bg-warning-500/20 dark:text-warning-400 dark:border-warning-500/30",
+    gray: "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-500/20 dark:text-gray-400 dark:border-gray-500/30",
+    purple: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/20 dark:text-purple-400 dark:border-purple-500/30",
   };
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${colors[color]}`}>
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${colors[color]}`}>
       {children}
     </span>
   );
@@ -67,19 +68,19 @@ const ImagePreview = ({ url, onClose }: { url: string; onClose: () => void }) =>
     <button className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition" onClick={onClose}>
       <X size={20} />
     </button>
-    <img src={url} className="max-w-[90vw] max-h-[90vh] rounded-2xl shadow-2xl object-contain" onClick={(e) => e.stopPropagation()} />
+    <img src={url} className="max-w-[90vw] max-h-[90vh] rounded-xl shadow-2xl object-contain" onClick={(e) => e.stopPropagation()} />
   </div>
 );
 
 // ── Form Field ───────────────────────────────────────────────────
 const Field = ({ label, children, span = 1 }: { label: string; children: React.ReactNode; span?: number }) => (
   <div className={span === 2 ? "col-span-2" : ""}>
-    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{label}</label>
+    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">{label}</label>
     {children}
   </div>
 );
 
-const inputCls = "w-full border border-gray-200 bg-gray-50 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 focus:bg-white transition placeholder:text-gray-400";
+const inputCls = "w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#155dfc] focus:bg-white dark:focus:bg-gray-700 transition placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-white";
 const selectCls = `${inputCls} cursor-pointer`;
 
 // ── Utility: find category node anywhere in the tree ─────────────
@@ -108,13 +109,13 @@ function resolveCatSelections(categories: Category[], id: string) {
 
 // ── Empty state ──────────────────────────────────────────────────
 const EmptyState = ({ onAdd }: { onAdd: () => void }) => (
-  <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl border border-dashed border-gray-200">
-    <div className="w-16 h-16 bg-violet-50 rounded-2xl flex items-center justify-center mb-4">
-      <Package size={28} className="text-violet-400" />
+  <div className="flex flex-col items-center justify-center py-20 text-center bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
+    <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center mb-4">
+      <Package size={28} className="text-gray-400 dark:text-gray-500" />
     </div>
-    <p className="text-lg font-semibold text-gray-700 mb-1">No products yet</p>
-    <p className="text-sm text-gray-400 mb-6">Start adding products to your inventory.</p>
-    <button onClick={onAdd} className="bg-violet-600 hover:bg-violet-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm">
+    <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-1">No products yet</p>
+    <p className="text-sm text-gray-400 dark:text-gray-500 mb-6">Start adding products to your inventory.</p>
+    <button onClick={onAdd} className="bg-[#155dfc] hover:bg-[#1246cc] text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm">
       + Add First Product
     </button>
   </div>
@@ -142,10 +143,6 @@ export default function ProductsPage() {
   // ── Modal state ────────────────────────────────────────────────
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-
-  // ── Detail modal ───────────────────────────────────────────────
-  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
-  const [expandedVariants, setExpandedVariants] = useState(false);
 
   // ── Preview ────────────────────────────────────────────────────
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -221,7 +218,6 @@ export default function ProductsPage() {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setPreviewImage(null);
-        setDetailProduct(null);
         setModalOpen(false);
       }
     };
@@ -230,9 +226,9 @@ export default function ProductsPage() {
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = previewImage || detailProduct || modalOpen ? "hidden" : "";
+    document.body.style.overflow = previewImage || modalOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
-  }, [previewImage, detailProduct, modalOpen]);
+  }, [previewImage, modalOpen]);
 
   // ── Helpers ────────────────────────────────────────────────────
   const openCreate = () => {
@@ -388,11 +384,118 @@ export default function ProductsPage() {
     return <Badge color="green">{stock} in stock</Badge>;
   };
 
+  // ── Product Card Component ─────────────────────────────────────
+  const ProductCard = ({ product }: { product: Product }) => {
+    const firstVariant = product.variants?.[0];
+    const firstImage = firstVariant?.images?.[0]?.image_url;
+    console.log("product", product);
+    return (
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow group">
+        <Link href={`/products/${product.id}`}>
+          <div className="relative">
+            <div className="aspect-square bg-gray-100 flex items-center justify-center">
+              {firstImage ? (
+                <img 
+                  src={firstImage} 
+                  alt={product.product_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <ImageOff size={32} className="text-gray-300" />
+              )}
+            </div>
+            
+            {/* Featured badge */}
+            {product.is_featured && (
+              <div className="absolute top-3 left-3">
+                <Badge color="amber">
+                  <Star size={10} fill="currentColor" /> Featured
+                </Badge>
+              </div>
+            )}
+            
+            {/* Status badge */}
+            <div className="absolute top-3 right-3">
+              {product.is_active ? (
+                <Badge color="green"><CheckCircle2 size={10} /> Active</Badge>
+              ) : (
+                <Badge color="red"><XCircle size={10} /> Inactive</Badge>
+              )}
+            </div>
+          </div>
+        </Link>
+        
+        <div className="p-4">
+          <Link href={`/products/${product.id}`} className="block">
+            <h3 className="font-semibold text-gray-800 mb-1 line-clamp-2 group-hover:text-violet-600 transition-colors">
+              {product.product_name}
+            </h3>
+          </Link>
+          
+          {product.short_desc && (
+            <p className="text-xs text-gray-500 mb-3 line-clamp-2">
+              {product.short_desc}
+            </p>
+          )}
+          
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              {firstVariant ? (
+                <>
+                  <p className="font-bold text-gray-900">₹{firstVariant.price.toLocaleString()}</p>
+                  {firstVariant.compare_price && (
+                    <p className="text-xs text-gray-400 line-through">₹{firstVariant.compare_price.toLocaleString()}</p>
+                  )}
+                </>
+              ) : (
+                <span className="text-gray-400">No price</span>
+              )}
+            </div>
+            
+            <div>
+              {firstVariant ? stockBadge(firstVariant.stock) : <span className="text-gray-400">—</span>}
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+            <Badge color="purple">
+              <Tag size={10} />
+              {product.category?.name || "—"}
+            </Badge>
+            
+            {product.variants && product.variants.length > 0 && (
+              <Badge color="blue">
+                <Layers size={10} />
+                {product.variants.length} variant{product.variants.length > 1 ? "s" : ""}
+              </Badge>
+            )}
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100">
+            <button
+              onClick={() => openEdit(product)}
+              className="flex-1 flex items-center justify-center gap-1.5 bg-violet-50 hover:bg-violet-100 text-violet-600 py-2 rounded-lg text-sm font-medium transition"
+            >
+              <Pencil size={14} />
+              Edit
+            </button>
+            <DeleteModal
+              onConfirm={() => dispatch(deleteProduct(product.id))}
+              parentTitle="Delete product?"
+              childTitle="This will permanently delete this product and all its variants."
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // ────────────────────────────────────────────────────────────────
   // RENDER
   // ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-50/60">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
 
         {/* ── Header ── */}
@@ -407,14 +510,14 @@ export default function ProductsPage() {
             {/* Add button */}
             <button
               onClick={openCreate}
-              className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 active:scale-95 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition"
+              className="flex items-center gap-2 bg-[#155dfc] hover:bg-[#1246cc] active:scale-95 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition"
             >
               <Plus size={16} /> Add Product
             </button>
           </div>
 
           {/* ── Filters Bar ── */}
-          <div className="flex gap-2 flex-wrap items-center bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
+          <div className="flex gap-2 flex-wrap items-center bg-white dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
             {/* Search */}
             <div className="relative">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -422,7 +525,7 @@ export default function ProductsPage() {
                 placeholder="Search products..."
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                className="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-violet-400 w-56 transition"
+                className="pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[#155dfc] w-56 transition"
               />
             </div>
 
@@ -430,7 +533,7 @@ export default function ProductsPage() {
             <select
               value={categoryFilter}
               onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
-              className="border border-gray-200 bg-white text-sm px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
+              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
             >
               <option value="">All categories</option>
               {categories.map((c: any) => (
@@ -443,7 +546,7 @@ export default function ProductsPage() {
               placeholder="Size (e.g. M)"
               value={sizeFilter}
               onChange={(e) => { setSizeFilter(e.target.value); setPage(1); }}
-              className="border border-gray-200 bg-white text-sm px-3 py-2 rounded-xl w-28 focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
+              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl w-28 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
             />
 
             {/* Price filter */}
@@ -453,15 +556,15 @@ export default function ProductsPage() {
                 placeholder="Min ₹"
                 value={minPriceFilter}
                 onChange={(e) => { setMinPriceFilter(e.target.value); setPage(1); }}
-                className="border border-gray-200 bg-white text-sm px-3 py-2 rounded-xl w-24 focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
+                className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl w-24 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
               />
-              <span className="text-gray-400">-</span>
+              <span className="text-gray-400 dark:text-gray-500">-</span>
               <input
                 type="number"
                 placeholder="Max ₹"
                 value={maxPriceFilter}
                 onChange={(e) => { setMaxPriceFilter(e.target.value); setPage(1); }}
-                className="border border-gray-200 bg-white text-sm px-3 py-2 rounded-xl w-24 focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
+                className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl w-24 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
               />
             </div>
 
@@ -469,7 +572,7 @@ export default function ProductsPage() {
             <select
               value={activeFilter}
               onChange={(e) => { setActiveFilter(e.target.value); setPage(1); }}
-              className="border border-gray-200 bg-white text-sm px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
+              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
             >
               <option value="">Status: All</option>
               <option value="true">Active</option>
@@ -480,7 +583,7 @@ export default function ProductsPage() {
             <select
               value={featuredFilter}
               onChange={(e) => { setFeaturedFilter(e.target.value); setPage(1); }}
-              className="border border-gray-200 bg-white text-sm px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
+              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
             >
               <option value="">Featured: All</option>
               <option value="true">Featured Only</option>
@@ -488,165 +591,48 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        {/* ── Table ── */}
+        {/* ── Product Cards Grid ── */}
         {loading ? (
-          <Skeleton />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden animate-pulse">
+                <div className="aspect-square bg-gray-200 dark:bg-gray-700" />
+                <div className="p-4 space-y-3">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+                  <div className="h-3 bg-gray-100 dark:bg-gray-600 rounded w-1/2" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : products?.length === 0 ? (
           <EmptyState onAdd={openCreate} />
         ) : (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    <th className="px-4 py-3 text-left">Product</th>
-                    <th className="px-4 py-3 text-left">Category</th>
-                    <th className="px-4 py-3 text-left">Price</th>
-                    <th className="px-4 py-3 text-left">Stock</th>
-                    <th className="px-4 py-3 text-left">Variants</th>
-                    <th className="px-4 py-3 text-left">SKU</th>
-                    <th className="px-4 py-3 text-left">Status</th>
-                    <th className="px-4 py-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {products.map((p: Product) => (
-                    <tr key={p.id} className="hover:bg-violet-50/30 transition group">
-                      {/* Product name + image */}
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-12 h-12 rounded-xl border border-gray-200 overflow-hidden bg-gray-100 shrink-0 cursor-pointer"
-                            onClick={() => {
-                              const firstImg = p.variants?.[0]?.images?.[0]?.image_url;
-                              if (firstImg) setPreviewImage(firstImg);
-                            }}
-                          >
-                            {p.variants?.[0]?.images?.[0] ? (
-                              <img src={p.variants[0].images[0].image_url} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <ImageOff size={14} className="text-gray-300" />
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-gray-800 leading-tight">{p.product_name}</p>
-                            {p.short_desc && (
-                              <p className="text-xs text-gray-400 mt-0.5 max-w-[200px] truncate">{p.short_desc}</p>
-                            )}
-                            {p.is_featured && (
-                              <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 font-medium mt-0.5">
-                                <Star size={9} fill="currentColor" /> Featured
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Category */}
-                      <td className="px-4 py-3">
-                        <Badge color="purple">
-                          <Tag size={10} />
-                          {p.category?.name || "—"}
-                        </Badge>
-                      </td>
-
-                      {/* Price — from first variant */}
-                      <td className="px-4 py-3">
-                        {p.variants?.[0] ? (
-                          <>
-                            <p className="font-semibold text-gray-800">₹{p.variants[0].price.toLocaleString()}</p>
-                            {p.variants[0].compare_price && (
-                              <p className="text-xs text-gray-400 line-through">₹{p.variants[0].compare_price.toLocaleString()}</p>
-                            )}
-                          </>
-                        ) : <span className="text-gray-300">—</span>}
-                      </td>
-
-                      {/* Stock — from first variant */}
-                      <td className="px-4 py-3">
-                        {p.variants?.[0] ? stockBadge(p.variants[0].stock) : <span className="text-gray-300">—</span>}
-                      </td>
-
-                      {/* Variants count */}
-                      <td className="px-4 py-3">
-                        {p.variants && p.variants.length > 0 ? (
-                          <Badge color="blue">
-                            <Layers size={10} />
-                            {p.variants.length} variant{p.variants.length > 1 ? "s" : ""}
-                          </Badge>
-                        ) : (
-                          <span className="text-gray-300">—</span>
-                        )}
-                      </td>
-
-                      {/* SKU — from first variant */}
-                      <td className="px-4 py-3">
-                        <code className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-mono">
-                          {p.variants?.[0]?.sku || "—"}
-                        </code>
-                      </td>
-
-                      {/* Status */}
-                      <td className="px-4 py-3">
-                        {p.is_active ? (
-                          <Badge color="green"><CheckCircle2 size={10} /> Active</Badge>
-                        ) : (
-                          <Badge color="red"><XCircle size={10} /> Inactive</Badge>
-                        )}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1 opacity-70 group-hover:opacity-100 transition">
-                          <button
-                            onClick={() => setDetailProduct(p)}
-                            title="View"
-                            className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition"
-                          >
-                            <Eye size={15} />
-                          </button>
-                          <button
-                            onClick={() => openEdit(p)}
-                            title="Edit"
-                            className="p-2 rounded-lg hover:bg-violet-100 text-violet-600 transition"
-                          >
-                            <Pencil size={15} />
-                          </button>
-                          <DeleteModal
-                            onConfirm={() => dispatch(deleteProduct(p.id))}
-                            parentTitle="Delete product?"
-                            childTitle="This will permanently delete this product and all its variants."
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {products.map((product: Product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
           </div>
         )}
 
         {/* ── Pagination ── */}
         {!loading && totalPages > 1 && (
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Page {page} of {totalPages}
             </p>
             <div className="flex gap-2">
               <button
                 disabled={page === 1}
                 onClick={() => setPage((p) => p - 1)}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40 transition"
+                className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 transition"
               >
                 <ChevronLeft size={14} /> Prev
               </button>
               <button
                 disabled={page === totalPages}
                 onClick={() => setPage((p) => p + 1)}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40 transition"
+                className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 transition"
               >
                 Next <ChevronRight size={14} />
               </button>
@@ -655,142 +641,7 @@ export default function ProductsPage() {
         )}
       </div>
 
-      {/* ══════════════════════════════════════════════════════════
-          Detail Modal
-      ══════════════════════════════════════════════════════════ */}
-      {detailProduct && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setDetailProduct(null)}>
-          <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
 
-            {/* Header */}
-            <div className="flex items-start justify-between p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">{detailProduct.product_name}</h2>
-                <div className="flex gap-2 mt-1.5 flex-wrap">
-                  {detailProduct.is_active ? <Badge color="green"><CheckCircle2 size={10} /> Active</Badge> : <Badge color="red"><XCircle size={10} /> Inactive</Badge>}
-                  {detailProduct.is_featured && <Badge color="amber"><Star size={10} fill="currentColor" /> Featured</Badge>}
-                  {detailProduct.variants?.[0]?.sku && <Badge color="gray"><code className="font-mono">{detailProduct.variants[0].sku}</code></Badge>}
-                </div>
-              </div>
-              <button onClick={() => setDetailProduct(null)} className="p-2 rounded-lg hover:bg-gray-100 transition">
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* Info grid */}
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { label: "Category", value: detailProduct.category?.name },
-                  { label: "Slug", value: detailProduct.slug || "—" },
-                  { label: "Meta Title", value: detailProduct.meta_title || "—" },
-                  { label: "Meta Description", value: detailProduct.meta_desc || "—" },
-                ].map(({ label, value }) => (
-                  <div key={label} className="bg-gray-50 rounded-xl p-3">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">{label}</p>
-                    <p className="text-sm text-gray-800 font-medium">{String(value)}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Descriptions */}
-              {detailProduct.short_desc && (
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Short Description</p>
-                  <p className="text-sm text-gray-700">{detailProduct.short_desc}</p>
-                </div>
-              )}
-              {detailProduct.description && (
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Description</p>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{detailProduct.description}</p>
-                </div>
-              )}
-
-              {/* Variants */}
-              {detailProduct.variants && detailProduct.variants.length > 0 && (
-                <div>
-                  <button
-                    onClick={() => setExpandedVariants((v) => !v)}
-                    className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3"
-                  >
-                    <Layers size={15} />
-                    {detailProduct.variants.length} Variant{detailProduct.variants.length > 1 ? "s" : ""}
-                    {expandedVariants ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                  </button>
-
-                  {expandedVariants && (
-                    <div className="space-y-3">
-                      {detailProduct.variants.map((v) => (
-                        <div key={v.id} className="bg-gray-50 rounded-xl overflow-hidden">
-                          {/* Variant info row */}
-                          <div className="flex items-center gap-3 px-3 pt-3 pb-2">
-                            <div className="flex-1">
-                              <div className="flex gap-2 flex-wrap">
-                                {v.sku && <Badge color="gray"><code className="font-mono">{v.sku}</code></Badge>}
-                                {v.size && <Badge color="blue">Size: {v.size}</Badge>}
-                                {v.color && (
-                                  <Badge color="purple">
-                                    {v.color.startsWith("#") && (
-                                      <span
-                                        className="inline-block w-2.5 h-2.5 rounded-full border border-white/50 shrink-0"
-                                        style={{ background: v.color }}
-                                      />
-                                    )}
-                                    {v.color}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                            <div className="text-right shrink-0">
-                              <p className="text-sm font-semibold text-gray-800">₹{v.price.toLocaleString()}</p>
-                              {v.compare_price && (
-                                <p className="text-xs text-gray-400 line-through">₹{v.compare_price.toLocaleString()}</p>
-                              )}
-                              {stockBadge(v.stock)}
-                            </div>
-                          </div>
-
-                          {/* Variant images strip */}
-                          {v.images && v.images.length > 0 && (
-                            <div className="flex gap-2 px-3 pb-3 flex-wrap">
-                              {v.images.map((img, imgIdx) => (
-                                <img
-                                  key={imgIdx}
-                                  src={img.image_url}
-                                  alt={`Variant image ${imgIdx + 1}`}
-                                  onClick={() => setPreviewImage(img.image_url)}
-                                  className="w-14 h-14 object-cover rounded-lg border border-gray-200 cursor-zoom-in hover:scale-105 hover:shadow-md transition"
-                                />
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="flex gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
-              <button
-                onClick={() => { setDetailProduct(null); openEdit(detailProduct); }}
-                className="flex-1 bg-violet-600 hover:bg-violet-700 text-white py-2.5 rounded-xl text-sm font-semibold transition"
-              >
-                Edit Product
-              </button>
-              <button
-                onClick={() => setDetailProduct(null)}
-                className="px-6 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-sm font-semibold transition"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ══════════════════════════════════════════════════════════
           Image Preview
@@ -802,19 +653,19 @@ export default function ProductsPage() {
       ══════════════════════════════════════════════════════════ */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl">
+          <div className="bg-white dark:bg-gray-800 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl">
 
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 rounded-t-xl z-10">
               <div>
-                <h2 className="text-lg font-bold text-gray-900">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
                   {editId ? "Edit Product" : "Add New Product"}
                 </h2>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                   {editId ? "Update product details" : "Fill in the details to create a new product"}
                 </p>
               </div>
-              <button onClick={closeModal} className="p-2 rounded-lg hover:bg-gray-100 transition">
+              <button onClick={closeModal} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
                 <X size={18} />
               </button>
             </div>
@@ -823,7 +674,7 @@ export default function ProductsPage() {
 
               {/* ── Section: Basic ── */}
               <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                   <Package size={12} /> Basic Info
                 </p>
                 <div className="grid grid-cols-2 gap-3">
@@ -930,16 +781,16 @@ export default function ProductsPage() {
               {/* ── Section: Variants ── */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                  <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest flex items-center gap-2">
                     <Layers size={12} /> Variants
-                    <span className="ml-1 px-1.5 py-0.5 bg-violet-100 text-violet-600 rounded-full text-[10px] font-bold">
+                    <span className="ml-1 px-1.5 py-0.5 bg-[#155dfc]/10 text-[#155dfc] rounded-full text-[10px] font-bold">
                       {variants.length}
                     </span>
                   </p>
                   <button
                     type="button"
                     onClick={addVariant}
-                    className="flex items-center gap-1.5 text-xs font-semibold text-violet-600 hover:text-violet-700 bg-violet-50 hover:bg-violet-100 px-3 py-1.5 rounded-lg transition"
+                    className="flex items-center gap-1.5 text-xs font-semibold text-[#155dfc] hover:text-[#1246cc] bg-[#155dfc]/10 hover:bg-[#155dfc]/20 px-3 py-1.5 rounded-lg transition"
                   >
                     <Plus size={12} /> Add Variant
                   </button>
@@ -949,14 +800,14 @@ export default function ProductsPage() {
                   {variants.map((v, idx) => (
                     <div
                       key={idx}
-                      className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm"
+                      className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800 shadow-sm"
                     >
                       {/* Variant card header */}
-                      <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
-                        <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
-                          Variant #{idx + 1}
+                      <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 dark:bg-gray-700/30 border-b border-gray-200 dark:border-gray-700">
+                        <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+                          Variant#{idx + 1}
                           {(v.size || v.color) && (
-                            <span className="ml-2 font-normal text-gray-400 capitalize">
+                            <span className="ml-2 font-normal text-gray-400 dark:text-gray-500 capitalize">
                               {[v.size, v.color].filter(Boolean).join(" · ")}
                             </span>
                           )}
@@ -965,7 +816,7 @@ export default function ProductsPage() {
                           <button
                             type="button"
                             onClick={() => removeVariant(idx)}
-                            className="w-6 h-6 flex items-center justify-center rounded-full bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 transition"
+                            className="w-6 h-6 flex items-center justify-center rounded-full bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-400 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 transition"
                             title="Remove variant"
                           >
                             <X size={12} />
@@ -1046,7 +897,7 @@ export default function ProductsPage() {
 
                           {/* Color */}
                           <div>
-                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
                               Color
                             </label>
                             <div className="flex items-center gap-2">
@@ -1054,7 +905,7 @@ export default function ProductsPage() {
                                 type="color"
                                 value={v.color?.startsWith("#") ? v.color : "#000000"}
                                 onChange={(e) => updateVariant(idx, "color", e.target.value)}
-                                className="w-10 h-10 rounded-xl border border-gray-200 cursor-pointer p-0.5 bg-gray-50 shrink-0"
+                                className="w-10 h-10 rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer p-0.5 bg-gray-50 dark:bg-gray-700 shrink-0"
                                 title="Pick a color"
                               />
                               <input
@@ -1121,9 +972,9 @@ export default function ProductsPage() {
                           )}
 
                           {/* Upload trigger */}
-                          <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-gray-300 hover:border-violet-400 hover:bg-violet-50/40 rounded-xl cursor-pointer transition group">
-                            <Upload size={14} className="text-gray-400 group-hover:text-violet-500 transition shrink-0" />
-                            <span className="text-xs text-gray-500 group-hover:text-violet-600 transition">
+                          <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-gray-300 dark:border-gray-600 hover:border-[#155dfc] dark:hover:border-[#155dfc] hover:bg-[#155dfc]/10 dark:hover:bg-[#155dfc]/10 rounded-xl cursor-pointer transition group">
+                            <Upload size={14} className="text-gray-400 dark:text-gray-500 group-hover:text-[#155dfc] transition shrink-0" />
+                            <span className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-[#155dfc] transition">
                               {v.uploadedImages.length + v.pendingFiles.length > 0
                                 ? `Add more images for this variant`
                                 : `Upload images for this variant`}
@@ -1146,7 +997,7 @@ export default function ProductsPage() {
                 <button
                   type="button"
                   onClick={addVariant}
-                  className="mt-3 w-full border-2 border-dashed border-gray-200 hover:border-violet-300 hover:bg-violet-50/30 text-gray-400 hover:text-violet-500 py-2.5 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2"
+                  className="mt-3 w-full border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-[#155dfc] dark:hover:border-[#155dfc] hover:bg-[#155dfc]/10 dark:hover:bg-[#155dfc]/10 text-gray-400 dark:text-gray-500 hover:text-[#155dfc] py-2.5 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2"
                 >
                   <Plus size={14} /> Add Another Variant
                 </button>
@@ -1154,7 +1005,7 @@ export default function ProductsPage() {
 
               {/* ── Section: SEO ── */}
               <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">SEO</p>
+                <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">SEO</p>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Meta Title" span={2}>
                     <input
@@ -1180,32 +1031,32 @@ export default function ProductsPage() {
                 <label className="flex items-center gap-2.5 cursor-pointer select-none">
                   <div
                     onClick={() => setForm({ ...form, is_active: !form.is_active })}
-                    className={`w-10 h-5 rounded-full transition-colors relative ${form.is_active ? "bg-violet-500" : "bg-gray-200"}`}
+                    className={`w-10 h-5 rounded-full transition-colors relative ${form.is_active ? "bg-[#155dfc]" : "bg-gray-200 dark:bg-gray-600"}`}
                   >
                     <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_active ? "translate-x-5" : "translate-x-0.5"}`} />
                   </div>
-                  <span className="text-sm font-medium text-gray-700">Active</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Active</span>
                 </label>
 
                 <label className="flex items-center gap-2.5 cursor-pointer select-none">
                   <div
                     onClick={() => setForm({ ...form, is_featured: !form.is_featured })}
-                    className={`w-10 h-5 rounded-full transition-colors relative ${form.is_featured ? "bg-amber-400" : "bg-gray-200"}`}
+                    className={`w-10 h-5 rounded-full transition-colors relative ${form.is_featured ? "bg-amber-400 dark:bg-amber-500" : "bg-gray-200 dark:bg-gray-600"}`}
                   >
                     <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_featured ? "translate-x-5" : "translate-x-0.5"}`} />
                   </div>
-                  <span className="text-sm font-medium text-gray-700">Featured</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Featured</span>
                 </label>
               </div>
 
             </div>
 
             {/* Modal Footer */}
-            <div className="flex gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl sticky bottom-0">
+            <div className="flex gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30 rounded-b-xl sticky bottom-0">
               <button
                 onClick={handleSubmit}
                 disabled={submitting || uploading}
-                className="flex-1 flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white py-2.5 rounded-xl text-sm font-semibold transition"
+                className="flex-1 flex items-center justify-center gap-2 bg-[#155dfc] hover:bg-[#1246cc] disabled:opacity-60 text-white py-2.5 rounded-xl text-sm font-semibold transition"
               >
                 {(submitting || uploading) && <Loader2 size={15} className="animate-spin" />}
                 {uploading ? "Uploading images..." : submitting ? "Saving..." : editId ? "Update Product" : "Create Product"}
@@ -1213,7 +1064,7 @@ export default function ProductsPage() {
               <button
                 onClick={closeModal}
                 disabled={submitting || uploading}
-                className="px-6 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-sm font-semibold transition"
+                className="px-6 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2.5 rounded-xl text-sm font-semibold transition"
               >
                 Cancel
               </button>

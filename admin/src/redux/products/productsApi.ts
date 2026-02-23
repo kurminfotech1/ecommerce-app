@@ -95,6 +95,20 @@ export const getProducts = createAsyncThunk(
   }
 );
 
+// ── GET single product ───────────────────────────────────────────
+export const getProduct = createAsyncThunk(
+  "products/getOne",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await Axios.get(`/products?id=${id}`);
+      return res.data.data as Product;
+    } catch (e: any) {
+      toast.error(e?.response?.data?.error || "Failed to load product");
+      return rejectWithValue(e.message);
+    }
+  }
+);
+
 // ── CREATE ───────────────────────────────────────────────────────
 type CreateProductInput = Omit<Partial<Product>, "images" | "variants"> & {
   images?: ProductImageInput[];
