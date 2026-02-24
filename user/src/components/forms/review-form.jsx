@@ -1,33 +1,25 @@
 import React, { useState } from "react";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { Rating } from "react-simple-star-rating";
 import * as Yup from "yup";
 // internal
 import ErrorMsg from "../common/error-msg";
-import { useAddReviewMutation } from "@/redux/features/reviewApi";
-import { notifyError, notifySuccess } from "@/utils/toast";
+import { addReview } from "@/redux/features/reviews/ReviewsApi";
+import { notifyError } from "@/utils/toast";
 
 // schema
 const schema = Yup.object().shape({
-  name: Yup.string().required().label("Name"),
-  email: Yup.string().required().email().label("Email"),
-  comment: Yup.string().required().label("Comment"),
+  title: Yup.string().required("Review summary is required!").label("Title"),
+  comment: Yup.string().required("Comment is required!").label("Comment"),
 });
 
 const ReviewForm = ({ product_id }) => {
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const { loading } = useSelector((state) => state.reviews);
   const [rating, setRating] = useState(0);
-  const handleAddReview = async (data) => {
-    try {
-      const response = await useAddReviewMutation(data);
-      return response.data;
-    } catch (error) {
-      console.error("Error adding review:", error);
-      throw error;
-    }
-  };
 
   // Catch Rating value
   const handleRating = (rate) => {
@@ -46,23 +38,28 @@ const ReviewForm = ({ product_id }) => {
   // on submit
   const onSubmit = (data) => {
     if (!user) {
-      notifyError("Please login first");
+      notifyError("Please login to submit a review");
       return;
-    } else {
-      addReview({
-        userId: user?._id,
-        productId: product_id,
-        rating: rating,
-        comment: data.comment,
-      }).then((result) => {
-        if (result?.error) {
-          notifyError(result?.error?.data?.message);
-        } else {
-          notifySuccess(result?.data?.message);
-        }
-      });
     }
-    reset();
+    if (rating === 0) {
+      notifyError("Please select a rating");
+      return;
+    }
+
+    dispatch(
+      addReview({
+        product_id,
+        rating: rating,
+        title: data.title,
+        body: data.comment,
+      }),
+    ).then((result) => {
+      // Only clear if successful
+      if (!result.error) {
+        reset();
+        setRating(0);
+      }
+    });
   };
 
   return (
@@ -96,37 +93,26 @@ const ReviewForm = ({ product_id }) => {
         <div className="tp-product-details-review-input-box">
           <div className="tp-product-details-review-input">
             <input
-              {...register("name", { required: `Name is required!` })}
-              name="name"
-              id="name"
+              {...register("title", { required: `Title is required!` })}
+              name="title"
+              id="title"
               type="text"
-              placeholder="Shahnewaz Sakil"
+              placeholder="Summary of your review"
             />
           </div>
           <div className="tp-product-details-review-input-title">
-            <label htmlFor="name">Your Name</label>
+            <label htmlFor="title">Review Title</label>
           </div>
-          <ErrorMsg msg={errors.name?.name} />
-        </div>
-        <div className="tp-product-details-review-input-box">
-          <div className="tp-product-details-review-input">
-            <input
-              {...register("email", { required: `Name is required!` })}
-              name="email"
-              id="email"
-              type="email"
-              placeholder="shofy@mail.com"
-            />
-          </div>
-          <div className="tp-product-details-review-input-title">
-            <label htmlFor="email">Your Email</label>
-          </div>
-          <ErrorMsg msg={errors.name?.email} />
+          <ErrorMsg msg={errors.title?.message} />
         </div>
       </div>
       <div className="tp-product-details-review-btn-wrapper">
-        <button type="submit" className="tp-product-details-review-btn">
-          Submit
+        <button
+          type="submit"
+          disabled={loading}
+          className="tp-product-details-review-btn"
+        >
+          {loading ? "Submitting..." : "Submit Review"}
         </button>
       </div>
     </form>

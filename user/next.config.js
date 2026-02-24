@@ -1,13 +1,25 @@
-/** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
 
   images: {
-    domains: [
-      "i.ibb.co",
-      "lh3.googleusercontent.com",
-      "res.cloudinary.com",
-      "xzvcgnktjjhrvgnyrehl.supabase.co",
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "xzvcgnktjjhrvgnyrehl.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+      {
+        protocol: "https",
+        hostname: "i.ibb.co",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
     ],
   },
 

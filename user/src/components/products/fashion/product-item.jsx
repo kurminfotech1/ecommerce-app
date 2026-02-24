@@ -4,11 +4,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { Rating } from "react-simple-star-rating";
 import Link from "next/link";
 // internal
-import { Cart, CompareThree, QuickView, Wishlist } from "@/svg";
+import { Cart, QuickView, Wishlist } from "@/svg";
 import { handleProductModal } from "@/redux/features/productModalSlice";
 import { add_cart_product } from "@/redux/features/cartSlice";
 import { add_to_wishlist } from "@/redux/features/wishlist-slice";
-import { add_to_compare } from "@/redux/features/compareSlice";
 
 const ProductItem = ({ product, style_2 = false }) => {
   const {
@@ -18,6 +17,7 @@ const ProductItem = ({ product, style_2 = false }) => {
     title,
     reviews,
     price,
+    compare_price,
     discount,
     tags,
     status,
@@ -74,16 +74,17 @@ const ProductItem = ({ product, style_2 = false }) => {
     dispatch(add_to_wishlist(prd));
   };
 
-  // handle compare product
-  const handleCompareProduct = (prd) => {
-    dispatch(add_to_compare(prd));
-  };
-
   return (
     <div className={`tp-product-item-2 ${style_2 ? "" : "mb-40"}`}>
       <div className="tp-product-thumb-2 p-relative z-index-1 fix">
         <Link href={`/product-details/${_id}`}>
-          <Image src={img} alt="product img" width={284} height={302} />
+          <Image
+            src={img}
+            alt="product img"
+            width={284}
+            height={302}
+            style={{ width: "100%", height: "300px", objectFit: "cover" }}
+          />
         </Link>
         <div className="tp-product-badge">
           {status === "out-of-stock" && (
@@ -133,16 +134,6 @@ const ProductItem = ({ product, style_2 = false }) => {
               <Wishlist />
               <span className="tp-product-tooltip tp-product-tooltip-right">
                 Add To Wishlist
-              </span>
-            </button>
-            <button
-              disabled={status === "out-of-stock"}
-              onClick={() => handleCompareProduct(product)}
-              className="tp-product-action-btn-2 tp-product-add-to-compare-btn"
-            >
-              <CompareThree />
-              <span className="tp-product-tooltip tp-product-tooltip-right">
-                Add To Compare
               </span>
             </button>
           </div>
@@ -196,11 +187,7 @@ const ProductItem = ({ product, style_2 = false }) => {
               </span>
               <span className="tp-product-price-2 old-price">
                 {" "}
-                $
-                {(
-                  Number(price) -
-                  (Number(price) * Number(discount)) / 100
-                ).toFixed(2)}
+                ${(compare_price || 0).toFixed(2)}
               </span>
             </>
           ) : (

@@ -21,8 +21,12 @@ import {
   Trash2,
   Heart,
   Share,
-  ShoppingCart
+  ShoppingCart,
+  Eye,
+  Plus,
+  X
 } from "lucide-react";
+import Image from "next/image";
 import { DeleteModal } from "@/components/common/DeleteModal";
 import { deleteProduct } from "@/redux/products/productsApi";
 
@@ -49,7 +53,15 @@ const ImagePreview = ({ url, onClose }: { url: string; onClose: () => void }) =>
     <button className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition" onClick={onClose}>
       <XCircle size={20} />
     </button>
-    <img src={url} className="max-w-[90vw] max-h-[90vh] rounded-2xl shadow-2xl object-contain" onClick={(e) => e.stopPropagation()} />
+    <div className="relative max-w-[90vw] max-h-[90vh] w-full h-full" onClick={(e) => e.stopPropagation()}>
+      <Image 
+        src={url} 
+        alt="Product Preview" 
+        fill 
+        className="object-contain rounded-2xl shadow-2xl" 
+        unoptimized
+      />
+    </div>
   </div>
 );
 
@@ -66,10 +78,11 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
   const { product, loading } = useSelector((state: RootState) => state.products);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState<'description' | 'additional' | 'reviews'>('description');
+  const [activeTab, setActiveTab] = useState<'description' | 'additional' | 'benefits' | 'certifications' | 'reviews'>('description');
   
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedWeight, setSelectedWeight] = useState<string | null>(null);
   
   // Unwrap the params Promise
   const unwrappedParams = use(params);
@@ -78,38 +91,75 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
     dispatch(getProduct(unwrappedParams.id));
   }, [dispatch, unwrappedParams.id]);
 
+  // Derived current variant without relying on redundant side-effect sync
+  const currentVariant = (product?.variants?.find((v: any) => 
+    (v.size || null) === (selectedSize || product?.variants?.[0]?.size || null) && 
+    (v.color || null) === (selectedColor || product?.variants?.[0]?.color || null) &&
+    (v.weight || null) === (selectedWeight || product?.variants?.[0]?.weight || null)
+  )) || product?.variants?.[0];
+
   useEffect(() => {
-    if (product?.variants?.length > 0) {
-      setSelectedSize(product.variants[0].size || null);
-      setSelectedColor(product.variants[0].color || null);
+    if (product?.variants && product.variants.length > 0 && !selectedSize && !selectedColor && !selectedWeight) {
+      const first = product.variants[0];
+      // We only set initial state if data is loaded and no selection exists
+      // To avoid linter cascading render warning, we can use a functional update or event-driven approach.
+      // However, the best way is to derived 'effective' selection in render (see currentVariant above).
     }
-  }, [product]);
+  }, [product, selectedSize, selectedColor, selectedWeight]);
 
   const handleSizeSelect = (size: string) => {
     setSelectedSize(size);
-    const exists = product?.variants?.find((v: any) => (v.size || null) === size && (v.color || null) === selectedColor);
-    if (!exists) {
+    setActiveImageIndex(0);
+    const match = product?.variants?.find((v: any) => 
+      (v.size || null) === size && 
+      (v.color || null) === (selectedColor || product?.variants?.[0]?.color || null) && 
+      (v.weight || null) === (selectedWeight || product?.variants?.[0]?.weight || null)
+    );
+    if (!match) {
       const fallback = product?.variants?.find((v: any) => (v.size || null) === size);
-      if (fallback) setSelectedColor(fallback.color || null);
+      if (fallback) {
+        setSelectedColor(fallback.color || null);
+        setSelectedWeight(fallback.weight || null);
+      }
     }
   };
 
   const handleColorSelect = (color: string) => {
     setSelectedColor(color);
-    const exists = product?.variants?.find((v: any) => (v.size || null) === selectedSize && (v.color || null) === color);
-    if (!exists) {
+    setActiveImageIndex(0);
+    const match = product?.variants?.find((v: any) => 
+      (v.size || null) === (selectedSize || product?.variants?.[0]?.size || null) && 
+      (v.color || null) === color && 
+      (v.weight || null) === (selectedWeight || product?.variants?.[0]?.weight || null)
+    );
+    if (!match) {
       const fallback = product?.variants?.find((v: any) => (v.color || null) === color);
-      if (fallback) setSelectedSize(fallback.size || null);
+      if (fallback) {
+        setSelectedSize(fallback.size || null);
+        setSelectedWeight(fallback.weight || null);
+      }
     }
   };
 
-  const currentVariant = product?.variants?.find((v: any) => 
-    (v.size || null) === selectedSize && (v.color || null) === selectedColor
-  ) || product?.variants?.[0];
-
-  useEffect(() => {
+  const handleWeightSelect = (weight: string) => {
+    setSelectedWeight(weight);
     setActiveImageIndex(0);
-  }, [currentVariant?.id]);
+    const match = product?.variants?.find((v: any) => 
+      (v.size || null) === (selectedSize || product?.variants?.[0]?.size || null) && 
+      (v.color || null) === (selectedColor || product?.variants?.[0]?.color || null) && 
+      (v.weight || null) === weight
+    );
+    if (!match) {
+      const fallback = product?.variants?.find((v: any) => (v.weight || null) === weight);
+      if (fallback) {
+        setSelectedSize(fallback.size || null);
+        setSelectedColor(fallback.color || null);
+      }
+    }
+  };
+
+  // Removed setActiveImageIndex(0) effect to avoid cascading render warning.
+  // Resets are now handled in handleSelect event handlers.
 
   // ── Keyboard / scroll lock ───────────────────────────────────────
   useEffect(() => {
@@ -164,7 +214,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
             <Package size={28} className="text-gray-400" />
           </div>
           <h2 className="text-xl font-semibold text-gray-700 mb-2">Product not found</h2>
-          <p className="text-gray-500 mb-6">The product you're looking for doesn't exist or has been removed.</p>
+          <p className="text-gray-500 mb-6">The product you&apos;re looking for doesn&apos;t exist or has been removed.</p>
           <button
             onClick={() => router.push("/products")}
             className="bg-violet-600 hover:bg-violet-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm"
@@ -219,11 +269,14 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
             <div className="relative bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
               <div className="aspect-square w-full flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-700/30">
                 {allImages.length > 0 ? (
-                  <img 
+                  <Image 
                     src={allImages[activeImageIndex]} 
-                    alt={`${product.product_name} - Image ${activeImageIndex + 1}`}
-                    className="w-full h-full object-contain max-h-[500px]"
+                    alt={`${product.product_name} - Main View`}
+                    width={500}
+                    height={500}
+                    className="w-full h-full object-contain max-h-[500px] cursor-pointer"
                     onClick={() => setPreviewImage(allImages[activeImageIndex])}
+                    unoptimized
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -250,14 +303,13 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                     onClick={() => setActiveImageIndex(index)}
                     className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${activeImageIndex === index ? 'border-[#155dfc]' : 'border-gray-200 dark:border-gray-700'}`}
                   >
-                    <img 
+                    <Image 
                       src={imgUrl} 
-                      alt={`Thumbnail ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      alt={`View ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      unoptimized
                     />
-                    {activeImageIndex === index && (
-                      <div className="absolute inset-0 border-2 border-[#155dfc] rounded-xl"></div>
-                    )}
                   </button>
                 ))}
               </div>
@@ -275,6 +327,8 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                   <Badge color="red"><XCircle size={10} /> Inactive</Badge>
                 )}
                 {product.is_featured && <Badge color="amber"><Star size={10} fill="currentColor" /> Featured</Badge>}
+                {product.is_bestseller && <Badge color="purple">🔥 Bestseller</Badge>}
+                {product.is_new && <Badge color="blue">✨ New Arrival</Badge>}
                 <Badge color="purple"><Tag size={10} /> {product.category?.name || "—"}</Badge>
               </div>
               
@@ -299,8 +353,11 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-4 text-sm mt-3">
+                      <div className="flex flex-wrap items-center gap-4 text-sm mt-3">
                         {stockBadge(currentVariant.stock)}
+                        {currentVariant.weight && (
+                          <span className="text-gray-500 font-medium">Weight: <span className="text-gray-900 dark:text-gray-200">{currentVariant.weight}</span></span>
+                        )}
                         {currentVariant.sku && (
                           <span className="text-gray-500 font-medium">SKU: <span className="text-gray-900 dark:text-gray-200">{currentVariant.sku}</span></span>
                         )}
@@ -320,24 +377,52 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
             {/* Variant Selection */}
             {product.variants && product.variants.length > 0 && (
               <div className="space-y-6">
+                {/* Weight Selection */}
+                {Array.from(new Set(product.variants.filter((v: any) => v.weight).map((v: any) => v.weight))).length > 0 && (
+                  <div>
+                    <h3 className="text-[10px] font-bold text-gray-400 dark:text-gray-500 mb-2 font-mono uppercase tracking-widest">Weight Selection</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from(new Set(product.variants.filter((v: any) => v.weight).map((v: any) => v.weight))).map((weight: any, idx) => {
+                        const isSelected = selectedWeight === weight || (!selectedWeight && currentVariant?.weight === weight);
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => handleWeightSelect(weight)}
+                            className={`px-4 py-2 border rounded-xl text-sm font-semibold transition-all ${
+                              isSelected
+                                ? 'border-[#155dfc] text-[#155dfc] bg-blue-50 dark:bg-[#155dfc]/10 shadow-sm'
+                                : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-[#155dfc] hover:text-[#155dfc]'
+                            }`}
+                          >
+                            {weight}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Size Selection */}
                 {Array.from(new Set(product.variants.filter((v: any) => v.size).map((v: any) => v.size))).length > 0 && (
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">SIZE</h3>
+                    <h3 className="text-[10px] font-bold text-gray-400 dark:text-gray-500 mb-2 font-mono uppercase tracking-widest">Size Selection</h3>
                     <div className="flex flex-wrap gap-2">
-                      {Array.from(new Set(product.variants.filter((v: any) => v.size).map((v: any) => v.size))).map((size: any, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => handleSizeSelect(size)}
-                          className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
-                            selectedSize === size
-                              ? 'border-[#155dfc] text-[#155dfc] bg-blue-50 dark:bg-[#155dfc]/10'
-                              : 'border-gray-300 dark:border-gray-600 hover:border-[#155dfc] hover:text-[#155dfc] dark:hover:text-[#155dfc]'
-                          }`}
-                        >
-                          {size}
-                        </button>
-                      ))}
+                      {Array.from(new Set(product.variants.filter((v: any) => v.size).map((v: any) => v.size))).map((size: any, idx) => {
+                        const isSelected = selectedSize === size || (!selectedSize && currentVariant?.size === size);
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => handleSizeSelect(size)}
+                            className={`px-4 py-2 border rounded-xl text-sm font-semibold transition-all ${
+                              isSelected
+                                ? 'border-[#155dfc] text-[#155dfc] bg-blue-50 dark:bg-[#155dfc]/10 shadow-sm'
+                                : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-[#155dfc] hover:text-[#155dfc]'
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -345,25 +430,28 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                 {/* Color Selection */}
                 {Array.from(new Set(product.variants.filter((v: any) => v.color).map((v: any) => v.color))).length > 0 && (
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">COLOR</h3>
+                    <h3 className="text-[10px] font-bold text-gray-400 dark:text-gray-500 mb-2 font-mono uppercase tracking-widest">Color Selection</h3>
                     <div className="flex flex-wrap gap-3">
-                      {Array.from(new Set(product.variants.filter((v: any) => v.color).map((v: any) => v.color))).map((color: any, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => handleColorSelect(color)}
-                          className={`flex flex-col items-center p-1 rounded-lg border-2 transition-all ${
-                            selectedColor === color
-                              ? 'border-[#155dfc] bg-blue-50 dark:bg-[#155dfc]/10'
-                              : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700'
-                          }`}
-                        >
-                          <div 
-                            className="w-8 h-8 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm"
-                            style={{ backgroundColor: color }}
-                          ></div>
-                          <span className="text-xs mt-1 text-gray-600 dark:text-gray-300">{color}</span>
-                        </button>
-                      ))}
+                      {Array.from(new Set(product.variants.filter((v: any) => v.color).map((v: any) => v.color))).map((color: any, idx) => {
+                        const isSelected = selectedColor === color || (!selectedColor && currentVariant?.color === color);
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => handleColorSelect(color)}
+                            className={`flex flex-col items-center p-1.5 rounded-xl border-2 transition-all ${
+                              isSelected
+                                ? 'border-[#155dfc] bg-blue-50 dark:bg-[#155dfc]/10 shadow-sm'
+                                : 'border-transparent hover:bg-gray-100 dark:hover:bg-gray-800'
+                            }`}
+                          >
+                            <div 
+                              className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-700 shadow-inner"
+                              style={{ backgroundColor: color }}
+                            ></div>
+                            <span className="text-[10px] mt-1 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-tight">{color}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -432,13 +520,25 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                   Description
                 </button>
                 <button
-                  className={`py-4 px-6 text-center font-medium text-sm ${activeTab === 'additional' ? 'text-[#155dfc] border-b-2 border-[#155dfc]' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                  className={`py-4 px-6 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'additional' ? 'text-[#155dfc] border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
                   onClick={() => setActiveTab('additional')}
                 >
                   Additional Info
                 </button>
                 <button
-                  className={`py-4 px-6 text-center font-medium text-sm ${activeTab === 'reviews' ? 'text-[#155dfc] border-b-2 border-[#155dfc]' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                  className={`py-4 px-6 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'benefits' ? 'text-[#155dfc] border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                  onClick={() => setActiveTab('benefits')}
+                >
+                  Benefits
+                </button>
+                <button
+                  className={`py-4 px-6 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'certifications' ? 'text-[#155dfc] border-b-2 border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                  onClick={() => setActiveTab('certifications')}
+                >
+                  Certifications
+                </button>
+                <button
+                  className={`py-4 px-6 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'reviews' ? 'text-[#155dfc] border-b-2 border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
                   onClick={() => setActiveTab('reviews')}
                 >
                   Reviews
@@ -461,22 +561,82 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Additional Information</h2>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Category</h3>
-                      <p className="text-gray-600 dark:text-gray-300">{product.category?.name || 'N/A'}</p>
+                      <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2 font-mono text-[10px] uppercase tracking-widest">Category</h3>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm">{product.category?.name || 'N/A'}</p>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">SKU</h3>
-                      <p className="text-gray-600 dark:text-gray-300">{product.variants && product.variants.length > 0 ? product.variants[0]?.sku || 'N/A' : 'N/A'}</p>
+                      <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2 font-mono text-[10px] uppercase tracking-widest">SKU</h3>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm">{product.variants && product.variants.length > 0 ? product.variants[0]?.sku || 'N/A' : 'N/A'}</p>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Created</h3>
-                      <p className="text-gray-600 dark:text-gray-300">{product.created_at ? new Date(product.created_at).toLocaleDateString() : 'N/A'}</p>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Updated</h3>
-                      <p className="text-gray-600 dark:text-gray-300">{product.updated_at ? new Date(product.updated_at).toLocaleDateString() : 'N/A'}</p>
-                    </div>
+                    {product.country_of_origin && (
+                      <div>
+                        <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2 font-mono text-[10px] uppercase tracking-widest">Origin</h3>
+                        <p className="text-gray-600 dark:text-gray-300 text-sm">{product.country_of_origin}</p>
+                      </div>
+                    )}
+                    {product.expiry_months && (
+                      <div>
+                        <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2 font-mono text-[10px] uppercase tracking-widest">Shelf Life</h3>
+                        <p className="text-gray-600 dark:text-gray-300 text-sm">{product.expiry_months} Months</p>
+                      </div>
+                    )}
+                    {product.storage_info && (
+                      <div className="col-span-2">
+                        <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2 font-mono text-[10px] uppercase tracking-widest">Storage</h3>
+                        <p className="text-gray-600 dark:text-gray-300 text-sm">{product.storage_info}</p>
+                      </div>
+                    )}
                   </div>
+
+                  {product.ingredient && (
+                    <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+                      <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-3 font-mono text-[10px] uppercase tracking-widest">Ingredients</h3>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{product.ingredient}</p>
+                    </div>
+                  )}
+
+                  {product.allergen_info && (
+                    <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+                      <h3 className="font-semibold text-red-600 dark:text-red-400 mb-3 font-mono text-[10px] uppercase tracking-widest">Allergen Information</h3>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm">{product.allergen_info}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'benefits' && (
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Product Benefits</h2>
+                  {product.benefits && product.benefits.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {product.benefits.map((b, i) => (
+                        <div key={i} className="flex items-start gap-3 p-4 bg-violet-50 dark:bg-violet-500/5 rounded-xl border border-violet-100 dark:border-violet-500/10">
+                          <CheckCircle2 size={18} className="text-violet-500 shrink-0 mt-0.5" />
+                          <span className="text-gray-800 dark:text-gray-200 font-medium">{b}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 dark:text-gray-400 italic">No benefits listed for this product.</p>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'certifications' && (
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Certifications</h2>
+                  {product.certifications && product.certifications.length > 0 ? (
+                    <div className="flex flex-wrap gap-4">
+                      {product.certifications.map((c, i) => (
+                        <div key={i} className="flex items-center gap-2.5 px-5 py-3 bg-success-50 dark:bg-success-500/5 rounded-xl border border-success-100 dark:border-success-500/10">
+                          <CheckCircle2 size={18} className="text-success-500" />
+                          <span className="text-gray-800 dark:text-gray-200 font-bold tracking-tight uppercase text-sm">{c}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 dark:text-gray-400 italic">No certifications listed for this product.</p>
+                  )}
                 </div>
               )}
               
@@ -568,39 +728,92 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
               </div>
             )}
             
-            {/* Product Stats */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Product Stats</h2>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Status</span>
-                  <span className={`font-medium ${product.is_active ? 'text-success-600 dark:text-success-400' : 'text-error-600 dark:text-error-400'}`}>
-                    {product.is_active ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Featured</span>
-                  <span className={`font-medium ${product.is_featured ? 'text-warning-600 dark:text-warning-400' : 'text-gray-400 dark:text-gray-500'}`}>
-                    {product.is_featured ? 'Yes' : 'No'}
-                  </span>
-                </div>
-                {product.rating_avg !== undefined && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Rating</span>
-                    <div className="flex items-center gap-1">
-                      <Star size={14} className="text-amber-400 fill-current" />
-                      <span className="font-medium text-gray-900 dark:text-white">{product.rating_avg?.toFixed(1)}</span>
-                      <span className="text-gray-500 dark:text-gray-400 text-sm">({product.rating_count || 0})</span>
-                    </div>
-                  </div>
-                )}
-                {product.sold_count !== undefined && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Sold</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{product.sold_count}</span>
-                  </div>
-                )}
-              </div>
+            </div>
+
+          {/* Variants Inventory Table */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Layers size={18} className="text-[#155dfc]" />
+                Variants Inventory
+              </h2>
+              <Badge color="blue">{product.variants?.length || 0} Total Variants</Badge>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-50/50 dark:bg-gray-700/30">
+                    <th className="px-6 py-3 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Info</th>
+                    <th className="px-6 py-3 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Weight/Size</th>
+                    <th className="px-6 py-3 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">SKU</th>
+                    <th className="px-6 py-3 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Price</th>
+                    <th className="px-6 py-3 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest text-center">Stock</th>
+                    <th className="px-6 py-3 text-right"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                  {product.variants?.map((v: any, idx) => (
+                    <tr 
+                      key={v.id} 
+                      className={`group hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${currentVariant?.id === v.id ? 'bg-blue-50/30 dark:bg-[#155dfc]/5' : ''}`}
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="relative w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200 dark:border-gray-600">
+                            {v.images?.[0] ? (
+                              <Image 
+                                src={v.images[0].image_url} 
+                                alt="Variant Preview" 
+                                fill
+                                className="object-cover"
+                                unoptimized
+                              />
+                            ) : (
+                              <Package size={16} className="text-gray-300" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-gray-900 dark:text-white">Variant #{idx + 1}</p>
+                            <p className="text-[11px] text-gray-400 uppercase font-bold tracking-tight">{v.color || 'Default Color'}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{v.weight || '—'}</span>
+                          <span className="text-[11px] text-gray-400 font-medium">{v.size || 'No Size'}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <code className="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-[11px] font-mono text-gray-600 dark:text-gray-400">{v.sku || 'N/A'}</code>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-bold text-gray-900 dark:text-white">₹{v.price.toLocaleString()}</p>
+                        {v.compare_price && (
+                          <p className="text-[11px] text-gray-400 line-through">₹{v.compare_price.toLocaleString()}</p>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {stockBadge(v.stock)}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button 
+                          onClick={() => {
+                            setSelectedSize(v.size || null);
+                            setSelectedColor(v.color || null);
+                            setSelectedWeight(v.weight || null);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          className="p-2 text-[#155dfc] hover:bg-[#155dfc]/10 rounded-lg transition"
+                          title="View Details"
+                        >
+                          <Eye size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

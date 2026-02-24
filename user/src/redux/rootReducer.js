@@ -32,6 +32,7 @@ import shopFilterSlice from "./features/shop-filter-slice";
 import wishlistSlice from "./features/wishlist-slice";
 import couponSlice from "./features/coupon/couponSlice";
 import orderSlice from "./features/order/orderSlice";
+import reviewsSlice from "./features/reviews/ReviewsSlice";
 
 const rootReducer = combineReducers({
   auth: authSlice,
@@ -42,6 +43,7 @@ const rootReducer = combineReducers({
   compare: compareSlice,
   coupon: couponSlice,
   order: orderSlice,
+  reviews: reviewsSlice,
 });
 
 export default rootReducer;

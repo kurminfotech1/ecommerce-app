@@ -1,0 +1,252 @@
+import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
+import { verifyToken } from "@/lib/auth";
+
+/** Standard blog include — used across all APIs */
+const blogInclude = {
+  category: true,
+  author: true,
+  tags: true,
+} as const;
+
+// ─────────────────────────────────────────────────────────────────
+// GET  /api/blog
+//   ?id=<uuid>              → single blog
+//   ?page=1&limit=10        → paginated list
+//   ?search=keyword         → search by title
+//   ?category=<uuid>        → filter by category_id
+//   ?author=<uuid>          → filter by author_id
+//   ?tag=<uuid>             → filter by tag_id
+//   ?published=true|false   → filter by is_published
+//   ?featured=true          → filter only featured blogs
+// ─────────────────────────────────────────────────────────────────
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    // ── Single Blog ─────────────────────────────────────────────
+    if (id) {
+      const blog = await prisma.blog.findUnique({
+        where: { id },
+        include: blogInclude,
+      });
+
+      if (!blog) {
+        return NextResponse.json({ error: "Blog not found" }, { status: 404 });
+      }
+
+      return NextResponse.json({ data: blog });
+    }
+
+    // ── Paginated List ──────────────────────────────────────────
+    const page = Math.max(1, Number(searchParams.get("page") || 1));
+    const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") || 10)));
+    const search = searchParams.get("search")?.trim() || "";
+    const category = searchParams.get("category");
+    const author = searchParams.get("author");
+    const tag = searchParams.get("tag");
+    const publishedParam = searchParams.get("published");
+    const featuredParam = searchParams.get("featured");
+
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      ...(publishedParam !== null ? { is_published: publishedParam === "true" } : {}),
+      ...(featuredParam === "true" ? { is_featured: true } : {}),
+      AND: [
+        search ? { title: { contains: search, mode: "insensitive" } } : {},
+        category ? { category_id: category } : {},
+        author ? { author_id: author } : {},
+        tag ? { tags: { some: { id: tag } } } : {},
+      ],
+    };
+
+    const [blogs, totalRecords] = await Promise.all([
+      prisma.blog.findMany({
+        where,
+        include: blogInclude,
+        orderBy: { created_at: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.blog.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(totalRecords / limit);
+
+    return NextResponse.json({
+      totalRecords,
+      currentPage: page,
+      totalPages,
+      pageSize: limit,
+      data: blogs,
+    });
+  } catch (error) {
+    console.error("GET BLOGS ERROR:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// POST  /api/blog
+// ─────────────────────────────────────────────────────────────────
+export async function POST(req: Request) {
+  try {
+    const user = await verifyToken();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json();
+
+    if (!body.title || !body.slug || !body.content || !body.category_id || !body.author_id) {
+      return NextResponse.json(
+        { error: "Missing required fields (title, slug, content, category_id, author_id)" },
+        { status: 400 }
+      );
+    }
+
+    const blog = await prisma.blog.create({
+      data: {
+        title: body.title,
+        slug: body.slug,
+        excerpt: body.excerpt ?? null,
+        content: body.content,
+        featured_image: body.featured_image ?? null,
+        meta_title: body.meta_title ?? null,
+        meta_desc: body.meta_desc ?? null,
+        canonical_url: body.canonical_url ?? null,
+        is_published: body.is_published ?? false,
+        is_featured: body.is_featured ?? false,
+        published_at: body.is_published ? new Date() : null,
+        category: { connect: { id: body.category_id } },
+        author: { connect: { id: body.author_id } },
+        tags: body.tag_ids?.length > 0 
+          ? { connect: body.tag_ids.map((id: string) => ({ id })) } 
+          : undefined,
+      },
+      include: blogInclude,
+    });
+
+    return NextResponse.json(
+      { message: "Blog created successfully", data: blog },
+      { status: 201 }
+    );
+  } catch (error: any) {
+    console.error("POST BLOG ERROR:", error);
+    if (error.code === 'P2002') {
+      return NextResponse.json({ error: "Slug already exists" }, { status: 400 });
+    }
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// PUT  /api/blog?id=<uuid>
+// ─────────────────────────────────────────────────────────────────
+export async function PUT(req: Request) {
+  try {
+    const user = await verifyToken();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const id = new URL(req.url).searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ error: "ID required" }, { status: 400 });
+    }
+
+    const body = await req.json();
+
+    const existingBlog = await prisma.blog.findUnique({
+      where: { id },
+    });
+
+    if (!existingBlog) {
+      return NextResponse.json({ error: "Blog not found" }, { status: 404 });
+    }
+
+    const updatedBlog = await prisma.blog.update({
+      where: { id },
+      data: {
+        title: body.title,
+        slug: body.slug,
+        excerpt: body.excerpt,
+        content: body.content,
+        featured_image: body.featured_image,
+        meta_title: body.meta_title,
+        meta_desc: body.meta_desc,
+        canonical_url: body.canonical_url,
+        is_published: body.is_published,
+        is_featured: body.is_featured,
+        
+        ...(body.is_published !== undefined && body.is_published !== existingBlog.is_published && {
+          published_at: body.is_published ? new Date() : null
+        }),
+
+        ...(body.category_id && { category: { connect: { id: body.category_id } } }),
+        ...(body.author_id && { author: { connect: { id: body.author_id } } }),
+        
+        ...(body.tag_ids !== undefined && {
+          tags: {
+            set: body.tag_ids.map((id: string) => ({ id }))
+          }
+        }),
+      },
+      include: blogInclude,
+    });
+
+    return NextResponse.json({
+      message: "Blog updated successfully",
+      data: updatedBlog,
+    });
+  } catch (error: any) {
+    console.error("PUT BLOG ERROR:", error);
+    if (error.code === 'P2002') {
+      return NextResponse.json({ error: "Slug already exists" }, { status: 400 });
+    }
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// DELETE  /api/blog?id=<uuid>
+// ─────────────────────────────────────────────────────────────────
+export async function DELETE(req: Request) {
+  try {
+    const user = await verifyToken();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const id = new URL(req.url).searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ error: "ID required" }, { status: 400 });
+    }
+
+    await prisma.blog.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Blog deleted successfully",
+    });
+  } catch (error) {
+    console.error("DELETE BLOG ERROR:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

@@ -99,6 +99,8 @@ export async function GET(req: Request) {
     const where: any = {
       ...(activeParam !== null ? { is_active: activeParam === "true" } : {}),
       ...(featuredParam === "true" ? { is_featured: true } : {}),
+      ...(searchParams.get("bestseller") === "true" ? { is_bestseller: true } : {}),
+      ...(searchParams.get("new") === "true" ? { is_new: true } : {}),
       AND: [
         search ? { product_name: { contains: search, mode: "insensitive" } } : {},
         category ? { category_id: category } : {},
@@ -173,8 +175,20 @@ export async function POST(req: Request) {
         description: body.description ?? null,
         short_desc: body.short_desc ?? null,
         category_id: body.category_id,
+        
+        ingredient: body.ingredient ?? null,
+        benefits: body.benefits ?? [],
+        certifications: body.certifications ?? [],
+        country_of_origin: body.country_of_origin ?? null,
+        expiry_months: body.expiry_months ? Number(body.expiry_months) : null,
+        storage_info: body.storage_info ?? null,
+        allergen_info: body.allergen_info ?? null,
+
         is_active: body.is_active ?? true,
         is_featured: body.is_featured ?? false,
+        is_bestseller: body.is_bestseller ?? false,
+        is_new: body.is_new ?? false,
+
         meta_title: body.meta_title ?? null,
         meta_desc: body.meta_desc ?? null,
       },
@@ -185,11 +199,13 @@ export async function POST(req: Request) {
     const variantPayload: {
       size?: string;
       color?: string;
+      weight?: string;
       price: number;
       compare_price?: number;
       stock?: number;
+      low_stock_threshold?: number;
       sku?: string;
-      images?: { image_url: string; sort_order?: number }[];
+      images?: { image_url: string; alt_text?: string; sort_order?: number }[];
     }[] = body.variants ?? [];
 
     if (variantPayload.length > 0) {
@@ -213,9 +229,11 @@ export async function POST(req: Request) {
             product_id: product.id,
             size: v.size ?? null,
             color: v.color ?? null,
+            weight: v.weight ?? null,
             price: Number(v.price),
             compare_price: v.compare_price ? Number(v.compare_price) : null,
             stock: Number(v.stock ?? 0),
+            low_stock_threshold: v.low_stock_threshold ? Number(v.low_stock_threshold) : 5,
             sku,
           },
         });
@@ -227,6 +245,7 @@ export async function POST(req: Request) {
             data: variantImages.map((img, imgIdx) => ({
               variant_id: variant.id,
               image_url: img.image_url,
+              alt_text: img.alt_text ?? null,
               sort_order: img.sort_order ?? imgIdx,
             })),
           });
@@ -285,8 +304,20 @@ export async function PUT(req: Request) {
         ...(body.description !== undefined && { description: body.description }),
         ...(body.short_desc !== undefined && { short_desc: body.short_desc }),
         ...(body.category_id !== undefined && { category_id: body.category_id }),
+
+        ...(body.ingredient !== undefined && { ingredient: body.ingredient }),
+        ...(body.benefits !== undefined && { benefits: body.benefits }),
+        ...(body.certifications !== undefined && { certifications: body.certifications }),
+        ...(body.country_of_origin !== undefined && { country_of_origin: body.country_of_origin }),
+        ...(body.expiry_months !== undefined && { expiry_months: body.expiry_months ? Number(body.expiry_months) : null }),
+        ...(body.storage_info !== undefined && { storage_info: body.storage_info }),
+        ...(body.allergen_info !== undefined && { allergen_info: body.allergen_info }),
+
         ...(body.is_active !== undefined && { is_active: body.is_active }),
         ...(body.is_featured !== undefined && { is_featured: body.is_featured }),
+        ...(body.is_bestseller !== undefined && { is_bestseller: body.is_bestseller }),
+        ...(body.is_new !== undefined && { is_new: body.is_new }),
+
         ...(body.meta_title !== undefined && { meta_title: body.meta_title }),
         ...(body.meta_desc !== undefined && { meta_desc: body.meta_desc }),
       },
@@ -298,11 +329,13 @@ export async function PUT(req: Request) {
       const newVariants: {
         size?: string;
         color?: string;
+        weight?: string;
         price: number;
         compare_price?: number;
         stock?: number;
+        low_stock_threshold?: number;
         sku?: string;
-        images?: { image_url: string; sort_order?: number }[];
+        images?: { image_url: string; alt_text?: string; sort_order?: number }[];
       }[] = body.variants ?? [];
 
       // Fetch product + category for auto-SKU
@@ -320,7 +353,18 @@ export async function PUT(req: Request) {
       const allOldVariantImageUrls = oldVariants.flatMap((v) =>
         v.images.map((img) => img.image_url)
       );
-      await deleteFromStorage(allOldVariantImageUrls);
+
+      const allNewVariantImageUrls = newVariants.flatMap((v) =>
+        (v.images ?? []).map((img) => img.image_url)
+      );
+
+      const urlsToDelete = allOldVariantImageUrls.filter(
+        (url) => !allNewVariantImageUrls.includes(url)
+      );
+
+      if (urlsToDelete.length > 0) {
+        await deleteFromStorage(urlsToDelete);
+      }
 
       // Delete all existing variants (cascade removes variantImages rows in DB)
       await prisma.productVariant.deleteMany({ where: { product_id: id } });
@@ -344,9 +388,11 @@ export async function PUT(req: Request) {
             product_id: id,
             size: v.size ?? null,
             color: v.color ?? null,
+            weight: v.weight ?? null,
             price: Number(v.price),
             compare_price: v.compare_price ? Number(v.compare_price) : null,
             stock: Number(v.stock ?? 0),
+            low_stock_threshold: v.low_stock_threshold ? Number(v.low_stock_threshold) : 5,
             sku: sku ?? `VAR-${id.slice(-4)}-${idx + 1}`,
           },
         });
@@ -358,6 +404,7 @@ export async function PUT(req: Request) {
             data: variantImages.map((img, imgIdx) => ({
               variant_id: variant.id,
               image_url: img.image_url,
+              alt_text: img.alt_text ?? null,
               sort_order: img.sort_order ?? imgIdx,
             })),
           });

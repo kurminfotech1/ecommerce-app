@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 // Lightweight shape used when sending images to create/update endpoints (used for variant images)
 export type ProductImageInput = {
   image_url: string;
+  alt_text?: string | null;
   sort_order?: number;
 };
 
@@ -13,6 +14,7 @@ export interface VariantImage {
   id: string;
   variant_id: string;
   image_url: string;
+  alt_text?: string | null;
   sort_order: number;
 }
 
@@ -21,9 +23,11 @@ export interface ProductVariant {
   product_id: string;
   size?: string | null;
   color?: string | null;
+  weight?: string | null;
   price: number;
   compare_price?: number | null;
   stock: number;
+  low_stock_threshold?: number;
   sku: string;
   images?: VariantImage[]; // variant-level images
   created_at?: string;
@@ -34,9 +38,11 @@ export interface ProductVariant {
 export type ProductVariantInput = {
   size?: string;
   color?: string;
+  weight?: string;
   price: number;
   compare_price?: number;
   stock?: number;
+  low_stock_threshold?: number;
   sku?: string;
   images?: ProductImageInput[]; // optional per-variant images
 };
@@ -47,8 +53,20 @@ export interface Product {
   slug?: string | null;
   description?: string | null;
   short_desc?: string | null;
+
+  ingredient?: string | null;
+  benefits?: string[];
+  certifications?: string[];
+  country_of_origin?: string | null;
+  expiry_months?: number | null;
+  storage_info?: string | null;
+  allergen_info?: string | null;
+
   is_active: boolean;
   is_featured: boolean;
+  is_bestseller: boolean;
+  is_new: boolean;
+
   meta_title?: string | null;
   meta_desc?: string | null;
   category_id: string;

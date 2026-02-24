@@ -85,9 +85,9 @@ export const createCategory = createAsyncThunk<
 /* ── PUT ────────────────────────────────────────── */
 export const updateCategory = createAsyncThunk<
   Category,
-  { id: string; name: string; slug: string; parentId?: string | null },
+  { id: string; name: string; slug: string; parentId?: string | null; is_active?: boolean },
   { rejectValue: string }
->(
+> (
   "categories/update",
   async (data, { rejectWithValue }) => {
     try {
@@ -95,8 +95,9 @@ export const updateCategory = createAsyncThunk<
       toast.success(res.data?.message || "Category updated");
       return res.data.updated;
     } catch (error: any) {
-      toast.error(error?.response?.data?.error );
-      return rejectWithValue(error.message);
+      const errorMessage = error.response?.data?.error || error.message;
+      toast.error(errorMessage);
+      return rejectWithValue(errorMessage);
     }
   }
 );

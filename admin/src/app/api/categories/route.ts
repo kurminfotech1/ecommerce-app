@@ -46,11 +46,12 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const limitParam = searchParams.get("limit");
+    const limit = limitParam ? parseInt(limitParam) : null;
     const sortBy = searchParams.get("sortBy") || "newest";
     const status = searchParams.get("status") || "all"; // all | active | inactive
 
-    const skip = (page - 1) * limit;
+    const skip = limit ? (page - 1) * limit : 0;
 
     // build where clause for status filter
     const where: any = {};
@@ -111,13 +112,13 @@ export async function GET(req: Request) {
 
     // pagination
     const totalRecords = filteredTree.length;
-    const paginatedData = filteredTree.slice(skip, skip + limit);
+    const paginatedData = limit ? filteredTree.slice(skip, skip + limit) : filteredTree;
 
     return NextResponse.json({
       totalRecords,
       currentPage: page,
-      totalPages: Math.ceil(totalRecords / limit),
-      pageSize: limit,
+      totalPages: limit ? Math.ceil(totalRecords / limit) : 1,
+      pageSize: limit || totalRecords,
       data: paginatedData,
     });
 
@@ -204,8 +205,11 @@ export async function PUT(req: Request) {
       { updated, message: "Category updated successfully" },
       { status: 200 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("UPDATE CATEGORY ERROR:", error);
+    if (error.code === "P2002") {
+      return NextResponse.json({ error: "Category name already exists" }, { status: 409 });
+    }
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }
 }

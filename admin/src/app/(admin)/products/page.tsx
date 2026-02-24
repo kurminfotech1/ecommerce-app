@@ -26,25 +26,6 @@ import {
 } from "lucide-react";
 import { DeleteModal } from "@/components/common/DeleteModal";
 
-// ── Skeleton ────────────────────────────────────────────────────
-const Skeleton = () => (
-  <div className="space-y-3">
-    {Array.from({ length: 6 }).map((_, i) => (
-      <div key={i} className="flex items-center gap-4 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 animate-pulse">
-        <div className="w-14 h-14 bg-gray-200 dark:bg-gray-700 rounded-xl shrink-0" />
-        <div className="flex-1 space-y-2">
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/5" />
-          <div className="h-3 bg-gray-100 dark:bg-gray-600 rounded w-1/4" />
-        </div>
-        <div className="w-20 h-5 bg-gray-200 dark:bg-gray-700 rounded-full" />
-        <div className="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded" />
-        <div className="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded" />
-        <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-      </div>
-    ))}
-  </div>
-);
-
 // ── Badge ────────────────────────────────────────────────────────
 const Badge = ({ children, color = "gray" }: { children: React.ReactNode; color?: string }) => {
   const colors: Record<string, string> = {
@@ -82,6 +63,46 @@ const Field = ({ label, children, span = 1 }: { label: string; children: React.R
 
 const inputCls = "w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#155dfc] focus:bg-white dark:focus:bg-gray-700 transition placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-white";
 const selectCls = `${inputCls} cursor-pointer`;
+
+const TagInput = ({ tags, setTags, placeholder }: { tags: string[], setTags: (t: string[]) => void, placeholder: string }) => {
+  const [val, setVal] = useState("");
+  const add = () => {
+    if (val.trim() && !tags.includes(val.trim())) {
+      setTags([...tags, val.trim()]);
+      setVal("");
+    }
+  };
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        <input 
+          value={val} 
+          onChange={e => setVal(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), add())}
+          placeholder={placeholder}
+          className={inputCls}
+        />
+        <button 
+          type="button"
+          onClick={e => { e.preventDefault(); add(); }} 
+          className="px-4 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition text-gray-500"
+        >
+          <Plus size={16} />
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {tags.map((t, i) => (
+          <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1 bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-lg text-[13px] font-medium border border-violet-100 dark:border-violet-500/20">
+            {t}
+            <button type="button" onClick={() => setTags(tags.filter((_, idx) => idx !== i))} className="hover:text-violet-800 dark:hover:text-white transition">
+              <X size={12} />
+            </button>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 // ── Utility: find category node anywhere in the tree ─────────────
 function findCatNode(nodes: Category[], id: string): Category | null {
@@ -151,19 +172,24 @@ export default function ProductsPage() {
   const emptyForm = {
     product_name: "", slug: "", short_desc: "", description: "",
     category_id: "",
+    ingredient: "", benefits: [] as string[], certifications: [] as string[],
+    country_of_origin: "", expiry_months: "", storage_info: "", allergen_info: "",
     meta_title: "", meta_desc: "",
-    is_active: true, is_featured: false,
+    is_active: true, is_featured: false, is_bestseller: false, is_new: false,
   };
 
   type VariantRow = {
     size: string; color: string;
+    weight: string;
     price: string; compare_price: string;
-    stock: string; sku: string;
+    stock: string; 
+    low_stock_threshold: string;
+    sku: string;
     uploadedImages: string[]; // already-uploaded URLs
     pendingFiles: File[];   // queued for upload
   };
   const emptyVariantRow = (): VariantRow => ({
-    size: "", color: "", price: "", compare_price: "", stock: "0", sku: "",
+    size: "", color: "", weight: "", price: "", compare_price: "", stock: "0", low_stock_threshold: "5", sku: "",
     uploadedImages: [], pendingFiles: [],
   });
 
@@ -249,19 +275,30 @@ export default function ProductsPage() {
       short_desc: p.short_desc ?? "",
       description: p.description ?? "",
       category_id: p.category_id,
+      ingredient: p.ingredient ?? "",
+      benefits: p.benefits ?? [],
+      certifications: p.certifications ?? [],
+      country_of_origin: p.country_of_origin ?? "",
+      expiry_months: p.expiry_months ? String(p.expiry_months) : "",
+      storage_info: p.storage_info ?? "",
+      allergen_info: p.allergen_info ?? "",
       meta_title: p.meta_title ?? "",
       meta_desc: p.meta_desc ?? "",
       is_active: p.is_active,
       is_featured: p.is_featured,
+      is_bestseller: p.is_bestseller ?? false,
+      is_new: p.is_new ?? false,
     });
     // Pre-fill variants — including their existing images
     if (p.variants && p.variants.length > 0) {
       setVariants(p.variants.map((v) => ({
         size: v.size ?? "",
         color: v.color ?? "",
+        weight: v.weight ?? "",
         price: String(v.price),
         compare_price: v.compare_price ? String(v.compare_price) : "",
         stock: String(v.stock),
+        low_stock_threshold: v.low_stock_threshold ? String(v.low_stock_threshold) : "5",
         sku: v.sku ?? "",
         uploadedImages: v.images?.map((img) => img.image_url) ?? [],
         pendingFiles: [],
@@ -341,9 +378,11 @@ export default function ProductsPage() {
       variantsPayload.push({
         size: v.size || undefined,
         color: v.color || undefined,
+        weight: v.weight || undefined,
         price: Number(v.price),
         compare_price: v.compare_price ? Number(v.compare_price) : undefined,
         stock: Number(v.stock || 0),
+        low_stock_threshold: v.low_stock_threshold ? Number(v.low_stock_threshold) : undefined,
         sku: v.sku || undefined,
         images: variantImageUrls.map((url, i) => ({ image_url: url, sort_order: i })),
       });
@@ -355,8 +394,20 @@ export default function ProductsPage() {
       description: form.description || null,
       short_desc: form.short_desc || null,
       category_id: form.category_id,
+
+      ingredient: form.ingredient || null,
+      benefits: form.benefits,
+      certifications: form.certifications,
+      country_of_origin: form.country_of_origin || null,
+      expiry_months: form.expiry_months ? Number(form.expiry_months) : null,
+      storage_info: form.storage_info || null,
+      allergen_info: form.allergen_info || null,
+
       is_active: form.is_active,
       is_featured: form.is_featured,
+      is_bestseller: form.is_bestseller,
+      is_new: form.is_new,
+
       meta_title: form.meta_title || null,
       meta_desc: form.meta_desc || null,
       variants: variantsPayload,
@@ -406,13 +457,23 @@ export default function ProductsPage() {
             </div>
             
             {/* Featured badge */}
-            {product.is_featured && (
-              <div className="absolute top-3 left-3">
+            <div className="absolute top-3 left-3 flex flex-col gap-1">
+              {product.is_featured && (
                 <Badge color="amber">
                   <Star size={10} fill="currentColor" /> Featured
                 </Badge>
-              </div>
-            )}
+              )}
+              {product.is_bestseller && (
+                <Badge color="purple">
+                  🔥 Bestseller
+                </Badge>
+              )}
+              {product.is_new && (
+                <Badge color="blue">
+                  ✨ New
+                </Badge>
+              )}
+            </div>
             
             {/* Status badge */}
             <div className="absolute top-3 right-3">
@@ -653,10 +714,10 @@ export default function ProductsPage() {
       ══════════════════════════════════════════════════════════ */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl">
+          <div className="bg-white dark:bg-gray-800 w-full max-w-2xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
 
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 rounded-t-xl z-10">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-t-xl z-20 shrink-0">
               <div>
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white">
                   {editId ? "Edit Product" : "Add New Product"}
@@ -670,7 +731,7 @@ export default function ProductsPage() {
               </button>
             </div>
 
-            <div className="px-6 py-5 space-y-6">
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 custom-scrollbar">
 
               {/* ── Section: Basic ── */}
               <div>
@@ -773,6 +834,71 @@ export default function ProductsPage() {
                       value={form.description}
                       onChange={(e) => setForm({ ...form, description: e.target.value })}
                       className={inputCls}
+                    />
+                  </Field>
+                </div>
+              </div>
+
+              {/* ── Section: Lifestyle/Organic ── */}
+              <div>
+                <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  🌱 Wellness & Organic Details
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Ingredients" span={2}>
+                    <textarea 
+                      placeholder="e.g. Organic Hemp, Raw Honey..."
+                      value={form.ingredient}
+                      onChange={e => setForm({...form, ingredient: e.target.value})}
+                      className={inputCls}
+                      rows={2}
+                    />
+                  </Field>
+                  <Field label="Country of Origin">
+                    <input 
+                      placeholder="e.g. India"
+                      value={form.country_of_origin}
+                      onChange={e => setForm({...form, country_of_origin: e.target.value})}
+                      className={inputCls}
+                    />
+                  </Field>
+                  <Field label="Expiry (Months)">
+                    <input 
+                      type="number"
+                      placeholder="e.g. 12"
+                      value={form.expiry_months}
+                      onChange={e => setForm({...form, expiry_months: e.target.value})}
+                      className={inputCls}
+                    />
+                  </Field>
+                  <Field label="Storage Info">
+                    <input 
+                      placeholder="e.g. Store in cool dry place"
+                      value={form.storage_info}
+                      onChange={e => setForm({...form, storage_info: e.target.value})}
+                      className={inputCls}
+                    />
+                  </Field>
+                  <Field label="Allergen Info">
+                    <input 
+                      placeholder="e.g. Contains Nuts"
+                      value={form.allergen_info}
+                      onChange={e => setForm({...form, allergen_info: e.target.value})}
+                      className={inputCls}
+                    />
+                  </Field>
+                  <Field label="Benefits" span={2}>
+                    <TagInput 
+                      placeholder="Add a benefit (e.g. Energy Boost)"
+                      tags={form.benefits}
+                      setTags={t => setForm({...form, benefits: t})}
+                    />
+                  </Field>
+                  <Field label="Certifications" span={2}>
+                    <TagInput 
+                      placeholder="Add a certification (e.g. USDA Organic)"
+                      tags={form.certifications}
+                      setTags={t => setForm({...form, certifications: t})}
                     />
                   </Field>
                 </div>
@@ -882,10 +1008,37 @@ export default function ProductsPage() {
                             />
                           </div>
 
+                          {/* Weight */}
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                              Weight (e.g. 500g, 1kg)
+                            </label>
+                            <input
+                              placeholder="e.g. 250g"
+                              value={v.weight}
+                              onChange={(e) => updateVariant(idx, "weight", e.target.value)}
+                              className={inputCls}
+                            />
+                          </div>
+
+                          {/* Low Stock Alert */}
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                              Low Stock Threshold
+                            </label>
+                            <input
+                              type="number"
+                              placeholder="5"
+                              value={v.low_stock_threshold}
+                              onChange={(e) => updateVariant(idx, "low_stock_threshold", e.target.value)}
+                              className={inputCls}
+                            />
+                          </div>
+
                           {/* Size */}
                           <div>
                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                              Size
+                              Size (Optional)
                             </label>
                             <input
                               placeholder="e.g. S, M, L, XL"
@@ -898,7 +1051,7 @@ export default function ProductsPage() {
                           {/* Color */}
                           <div>
                             <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
-                              Color
+                              Color (Optional)
                             </label>
                             <div className="flex items-center gap-2">
                               <input
@@ -1027,7 +1180,7 @@ export default function ProductsPage() {
               </div>
 
               {/* ── Section: Status ── */}
-              <div className="flex gap-6">
+              <div className="flex flex-wrap gap-6">
                 <label className="flex items-center gap-2.5 cursor-pointer select-none">
                   <div
                     onClick={() => setForm({ ...form, is_active: !form.is_active })}
@@ -1047,16 +1200,36 @@ export default function ProductsPage() {
                   </div>
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Featured</span>
                 </label>
+
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <div
+                    onClick={() => setForm({ ...form, is_bestseller: !form.is_bestseller })}
+                    className={`w-10 h-5 rounded-full transition-colors relative ${form.is_bestseller ? "bg-purple-500" : "bg-gray-200 dark:bg-gray-600"}`}
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_bestseller ? "translate-x-5" : "translate-x-0.5"}`} />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Bestseller</span>
+                </label>
+
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <div
+                    onClick={() => setForm({ ...form, is_new: !form.is_new })}
+                    className={`w-10 h-5 rounded-full transition-colors relative ${form.is_new ? "bg-blue-400" : "bg-gray-200 dark:bg-gray-600"}`}
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_new ? "translate-x-5" : "translate-x-0.5"}`} />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">New Arrival</span>
+                </label>
               </div>
 
             </div>
 
             {/* Modal Footer */}
-            <div className="flex gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30 rounded-b-xl sticky bottom-0">
+            <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30 rounded-b-xl shrink-0 z-20">
               <button
                 onClick={handleSubmit}
                 disabled={submitting || uploading}
-                className="flex-1 flex items-center justify-center gap-2 bg-[#155dfc] hover:bg-[#1246cc] disabled:opacity-60 text-white py-2.5 rounded-xl text-sm font-semibold transition"
+                className=" flex items-center justify-center gap-2 bg-[#155dfc] hover:bg-[#1246cc] disabled:opacity-60 text-white px-2 py-2.5 rounded-xl text-sm font-semibold transition"
               >
                 {(submitting || uploading) && <Loader2 size={15} className="animate-spin" />}
                 {uploading ? "Uploading images..." : submitting ? "Saving..." : editId ? "Update Product" : "Create Product"}
