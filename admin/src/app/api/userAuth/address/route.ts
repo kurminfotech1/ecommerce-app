@@ -18,7 +18,24 @@ export async function GET(req: Request) {
       where: { userId },
     });
 
-    return NextResponse.json(addresses, { status: 200 });
+    if (!addresses || addresses.length === 0) {
+      return NextResponse.json(
+        {
+          message: "No addresses found",
+          addresses: [],
+        },
+        { status: 200 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        message: "Addresses fetched successfully",
+        addresses,
+      },
+      { status: 200 }
+    );
+
   } catch (error) {
     console.error("GET address error:", error);
 

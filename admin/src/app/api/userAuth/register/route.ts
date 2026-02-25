@@ -24,7 +24,13 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json(user, { status: 201 });
+    return NextResponse.json(
+  {
+    message: "Registered successfully",
+    user,
+  },
+  { status: 201 }
+);
 
   } catch (error: any) {
     if (error.code === "P2002") {
