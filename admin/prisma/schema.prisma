@@ -177,8 +177,6 @@ model Address {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
 
-  full_name String
-  phone     String
   line1     String
   line2     String?
   city      String
@@ -263,30 +261,6 @@ model Wishlist {
   product Product @relation(fields: [product_id], references: [id])
 }
 
-model BlogCategory {
-  id          String   @id @default(uuid())
-  name        String
-  slug        String   @unique
-  description String?
-
-  created_at  DateTime @default(now())
-
-  blogs       Blog[]
-
-  @@index([slug])
-}
-
-model BlogAuthor {
-  id          String   @id @default(uuid())
-  name        String
-  bio         String?
-  avatar      String?
-  social_link String?
-
-  created_at  DateTime @default(now())
-
-  blogs       Blog[]
-}
 
 model BlogTag {
   id        String   @id @default(uuid())
@@ -301,12 +275,19 @@ model BlogTag {
 model Blog {
   id              String   @id @default(uuid())
 
+  // Core Content
   title           String
   slug            String   @unique
   excerpt         String?
-  content         String   // HTML or Markdown
+  content         String   
 
   featured_image  String?
+
+  // Author & Category
+  category        String
+  author          String
+
+  tags            BlogTag[] 
 
   // SEO
   meta_title      String?
@@ -317,21 +298,15 @@ model Blog {
   is_published    Boolean  @default(false)
   is_featured     Boolean  @default(false)
 
-  // Relations
-  category_id     String
-  category        BlogCategory @relation(fields: [category_id], references: [id])
-
-  author_id       String
-  author          BlogAuthor @relation(fields: [author_id], references: [id])
-
-  tags            BlogTag[]
+  // Publishing
+  published_at    DateTime?
 
   // System
-  published_at    DateTime?
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
   @@index([slug])
   @@index([is_published])
   @@index([published_at])
+  @@index([category])
 }

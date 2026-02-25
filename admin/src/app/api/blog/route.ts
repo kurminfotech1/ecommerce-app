@@ -2,10 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 
-/** Standard blog include — used across all APIs */
+/** Standard blog include — pulls in tags */
 const blogInclude = {
-  category: true,
-  author: true,
   tags: true,
 } as const;
 
@@ -14,9 +12,9 @@ const blogInclude = {
 //   ?id=<uuid>              → single blog
 //   ?page=1&limit=10        → paginated list
 //   ?search=keyword         → search by title
-//   ?category=<uuid>        → filter by category_id
-//   ?author=<uuid>          → filter by author_id
-//   ?tag=<uuid>             → filter by tag_id
+//   ?category=<string>      → filter by category
+//   ?author=<string>        → filter by author
+//   ?tag=<uuid>             → filter by tag id
 //   ?published=true|false   → filter by is_published
 //   ?featured=true          → filter only featured blogs
 // ─────────────────────────────────────────────────────────────────
@@ -43,8 +41,8 @@ export async function GET(req: Request) {
     const page = Math.max(1, Number(searchParams.get("page") || 1));
     const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") || 10)));
     const search = searchParams.get("search")?.trim() || "";
-    const category = searchParams.get("category");
-    const author = searchParams.get("author");
+    const category = searchParams.get("category")?.trim() || "";
+    const author = searchParams.get("author")?.trim() || "";
     const tag = searchParams.get("tag");
     const publishedParam = searchParams.get("published");
     const featuredParam = searchParams.get("featured");
@@ -56,8 +54,8 @@ export async function GET(req: Request) {
       ...(featuredParam === "true" ? { is_featured: true } : {}),
       AND: [
         search ? { title: { contains: search, mode: "insensitive" } } : {},
-        category ? { category_id: category } : {},
-        author ? { author_id: author } : {},
+        category ? { category: { contains: category, mode: "insensitive" } } : {},
+        author ? { author: { contains: author, mode: "insensitive" } } : {},
         tag ? { tags: { some: { id: tag } } } : {},
       ],
     };
@@ -103,9 +101,9 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
-    if (!body.title || !body.slug || !body.content || !body.category_id || !body.author_id) {
+    if (!body.title || !body.slug || !body.content || !body.category || !body.author) {
       return NextResponse.json(
-        { error: "Missing required fields (title, slug, content, category_id, author_id)" },
+        { error: "Missing required fields (title, slug, content, category, author)" },
         { status: 400 }
       );
     }
@@ -117,16 +115,16 @@ export async function POST(req: Request) {
         excerpt: body.excerpt ?? null,
         content: body.content,
         featured_image: body.featured_image ?? null,
+        category: body.category,
+        author: body.author,
         meta_title: body.meta_title ?? null,
         meta_desc: body.meta_desc ?? null,
         canonical_url: body.canonical_url ?? null,
         is_published: body.is_published ?? false,
         is_featured: body.is_featured ?? false,
         published_at: body.is_published ? new Date() : null,
-        category: { connect: { id: body.category_id } },
-        author: { connect: { id: body.author_id } },
-        tags: body.tag_ids?.length > 0 
-          ? { connect: body.tag_ids.map((id: string) => ({ id })) } 
+        tags: body.tag_ids?.length > 0
+          ? { connect: body.tag_ids.map((id: string) => ({ id })) }
           : undefined,
       },
       include: blogInclude,
@@ -181,19 +179,18 @@ export async function PUT(req: Request) {
         excerpt: body.excerpt,
         content: body.content,
         featured_image: body.featured_image,
+        category: body.category,
+        author: body.author,
         meta_title: body.meta_title,
         meta_desc: body.meta_desc,
         canonical_url: body.canonical_url,
         is_published: body.is_published,
         is_featured: body.is_featured,
-        
+
         ...(body.is_published !== undefined && body.is_published !== existingBlog.is_published && {
           published_at: body.is_published ? new Date() : null
         }),
 
-        ...(body.category_id && { category: { connect: { id: body.category_id } } }),
-        ...(body.author_id && { author: { connect: { id: body.author_id } } }),
-        
         ...(body.tag_ids !== undefined && {
           tags: {
             set: body.tag_ids.map((id: string) => ({ id }))
