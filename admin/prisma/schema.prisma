@@ -299,6 +299,7 @@ model Blog {
   canonical_url   String?
 
   // Status
+  is_draft    Boolean  @default(false)
   is_published    Boolean  @default(false)
   is_featured     Boolean  @default(false)
 
@@ -311,6 +312,8 @@ model Blog {
 
   @@index([slug])
   @@index([is_published])
+  @@index([is_draft])
+  @@index([is_featured])
   @@index([published_at])
   @@index([category])
 }
