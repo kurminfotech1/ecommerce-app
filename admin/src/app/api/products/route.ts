@@ -80,6 +80,9 @@ export async function GET(req: Request) {
     const category = searchParams.get("category");
     const activeParam = searchParams.get("active");    // "true" | "false" | null
     const featuredParam = searchParams.get("featured");  // "true" | null
+    const bestsellerParam = searchParams.get("bestseller"); // "true" | null
+    const isNewParam = searchParams.get("is_new");       // "true" | null
+    const isUpcomingParam = searchParams.get("is_upcoming"); // "true" | null
     const size = searchParams.get("size")?.trim();
     const minPrice = searchParams.get("min_price");
     const maxPrice = searchParams.get("max_price");
@@ -99,8 +102,9 @@ export async function GET(req: Request) {
     const where: any = {
       ...(activeParam !== null ? { is_active: activeParam === "true" } : {}),
       ...(featuredParam === "true" ? { is_featured: true } : {}),
-      ...(searchParams.get("bestseller") === "true" ? { is_bestseller: true } : {}),
-      ...(searchParams.get("new") === "true" ? { is_new: true } : {}),
+      ...(bestsellerParam === "true" ? { is_bestseller: true } : {}),
+      ...(isNewParam === "true" ? { is_new: true } : {}),
+      ...(isUpcomingParam === "true" ? { is_upcoming: true } : {}),
       AND: [
         search ? { product_name: { contains: search, mode: "insensitive" } } : {},
         category ? { category_id: category } : {},
@@ -188,6 +192,7 @@ export async function POST(req: Request) {
         is_featured: body.is_featured ?? false,
         is_bestseller: body.is_bestseller ?? false,
         is_new: body.is_new ?? false,
+        is_upcoming: body.is_upcoming ?? false,
 
         meta_title: body.meta_title ?? null,
         meta_desc: body.meta_desc ?? null,
@@ -303,7 +308,7 @@ export async function PUT(req: Request) {
         ...(body.slug !== undefined && { slug: body.slug }),
         ...(body.description !== undefined && { description: body.description }),
         ...(body.short_desc !== undefined && { short_desc: body.short_desc }),
-        ...(body.category_id !== undefined && { category_id: body.category_id }),
+        ...(body.category_id !== undefined && { category: { connect: { id: body.category_id } } }),
 
         ...(body.ingredient !== undefined && { ingredient: body.ingredient }),
         ...(body.benefits !== undefined && { benefits: body.benefits }),
@@ -317,6 +322,7 @@ export async function PUT(req: Request) {
         ...(body.is_featured !== undefined && { is_featured: body.is_featured }),
         ...(body.is_bestseller !== undefined && { is_bestseller: body.is_bestseller }),
         ...(body.is_new !== undefined && { is_new: body.is_new }),
+        ...(body.is_upcoming !== undefined && { is_upcoming: body.is_upcoming }),
 
         ...(body.meta_title !== undefined && { meta_title: body.meta_title }),
         ...(body.meta_desc !== undefined && { meta_desc: body.meta_desc }),

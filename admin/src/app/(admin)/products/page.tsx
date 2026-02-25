@@ -155,7 +155,7 @@ export default function ProductsPage() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [activeFilter, setActiveFilter] = useState("");
-  const [featuredFilter, setFeaturedFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
   const [sizeFilter, setSizeFilter] = useState("");
   const [minPriceFilter, setMinPriceFilter] = useState("");
   const [maxPriceFilter, setMaxPriceFilter] = useState("");
@@ -175,7 +175,7 @@ export default function ProductsPage() {
     ingredient: "", benefits: [] as string[], certifications: [] as string[],
     country_of_origin: "", expiry_months: "", storage_info: "", allergen_info: "",
     meta_title: "", meta_desc: "",
-    is_active: true, is_featured: false, is_bestseller: false, is_new: false,
+    is_active: true, is_featured: false, is_bestseller: false, is_new: false, is_upcoming: false,
   };
 
   type VariantRow = {
@@ -229,12 +229,15 @@ export default function ProductsPage() {
       search,
       category: categoryFilter,
       active: activeFilter === "true" ? true : activeFilter === "false" ? false : undefined,
-      featured: featuredFilter === "true" ? true : undefined,
+      featured: typeFilter === "featured" ? true : undefined,
+      bestseller: typeFilter === "bestseller" ? true : undefined,
+      is_new: typeFilter === "new" ? true : undefined,
+      is_upcoming: typeFilter === "upcoming" ? true : undefined,
       size: sizeFilter || undefined,
       min_price: minPriceFilter ? Number(minPriceFilter) : undefined,
       max_price: maxPriceFilter ? Number(maxPriceFilter) : undefined,
     }));
-  }, [page, search, categoryFilter, activeFilter, featuredFilter, sizeFilter, minPriceFilter, maxPriceFilter, dispatch]);
+  }, [page, search, categoryFilter, activeFilter, typeFilter, sizeFilter, minPriceFilter, maxPriceFilter, dispatch]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
   useEffect(() => { dispatch(getCategories()); }, [dispatch]);
@@ -288,6 +291,7 @@ export default function ProductsPage() {
       is_featured: p.is_featured,
       is_bestseller: p.is_bestseller ?? false,
       is_new: p.is_new ?? false,
+      is_upcoming: p.is_upcoming ?? false,
     });
     // Pre-fill variants — including their existing images
     if (p.variants && p.variants.length > 0) {
@@ -407,6 +411,7 @@ export default function ProductsPage() {
       is_featured: form.is_featured,
       is_bestseller: form.is_bestseller,
       is_new: form.is_new,
+      is_upcoming: form.is_upcoming,
 
       meta_title: form.meta_title || null,
       meta_desc: form.meta_desc || null,
@@ -471,6 +476,11 @@ export default function ProductsPage() {
               {product.is_new && (
                 <Badge color="blue">
                   ✨ New
+                </Badge>
+              )}
+              {product.is_upcoming && (
+                <Badge color="gray">
+                  🕐 Coming Soon
                 </Badge>
               )}
             </div>
@@ -640,14 +650,17 @@ export default function ProductsPage() {
               <option value="false">Inactive</option>
             </select>
 
-            {/* Featured Filter */}
+            {/* Product Type Filter */}
             <select
-              value={featuredFilter}
-              onChange={(e) => { setFeaturedFilter(e.target.value); setPage(1); }}
+              value={typeFilter}
+              onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
               className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
             >
-              <option value="">Featured: All</option>
-              <option value="true">Featured Only</option>
+              <option value="">Type: All</option>
+              <option value="featured">Featured Only</option>
+              <option value="bestseller">Bestseller Only</option>
+              <option value="new">New Arrivals Only</option>
+              <option value="upcoming">Coming Soon Only</option>
             </select>
           </div>
         </div>
@@ -1219,6 +1232,16 @@ export default function ProductsPage() {
                     <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_new ? "translate-x-5" : "translate-x-0.5"}`} />
                   </div>
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">New Arrival</span>
+                </label>
+
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <div
+                    onClick={() => setForm({ ...form, is_upcoming: !form.is_upcoming })}
+                    className={`w-10 h-5 rounded-full transition-colors relative ${form.is_upcoming ? "bg-gray-500" : "bg-gray-200 dark:bg-gray-600"}`}
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_upcoming ? "translate-x-5" : "translate-x-0.5"}`} />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Coming Soon</span>
                 </label>
               </div>
 

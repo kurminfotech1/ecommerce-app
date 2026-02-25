@@ -329,6 +329,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                 {product.is_featured && <Badge color="amber"><Star size={10} fill="currentColor" /> Featured</Badge>}
                 {product.is_bestseller && <Badge color="purple">🔥 Bestseller</Badge>}
                 {product.is_new && <Badge color="blue">✨ New Arrival</Badge>}
+                {product.is_upcoming && <Badge color="gray">🕐 Coming Soon</Badge>}
                 <Badge color="purple"><Tag size={10} /> {product.category?.name || "—"}</Badge>
               </div>
               

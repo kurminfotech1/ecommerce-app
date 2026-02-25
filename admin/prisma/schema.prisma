@@ -77,6 +77,7 @@ model Product {
   is_featured   Boolean @default(false)
   is_bestseller Boolean @default(false)
   is_new        Boolean @default(false)
+  is_upcoming   Boolean @default(false)
 
   // SEO
   meta_title    String?
@@ -95,6 +96,9 @@ model Product {
   @@index([slug])
   @@index([is_active])
   @@index([is_featured])
+  @@index([is_bestseller])
+  @@index([is_new])
+  @@index([is_upcoming])
 }
 
 model ProductVariant {
