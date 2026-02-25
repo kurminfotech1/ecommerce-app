@@ -47,65 +47,85 @@ export async function GET(req: Request) {
 }
 
 
-// ✅ CREATE address
-export async function POST(req: Request) {
+
+export async function PATCH(req: Request) {
   try {
     const body = await req.json();
 
-    const address = await prisma.address.create({
-      data: body,
-    });
+    const {
+      userId,
+      line1,
+      line2,
+      city,
+      state,
+      pincode,
+      country,
+    } = body;
 
-    return NextResponse.json(
-      { message: "Address created successfully", address },
-      { status: 201 }
-    );
-  } catch (error) {
-    console.error("Create address error:", error);
-
-    return NextResponse.json(
-      { error: "Unable to create address" },
-      { status: 500 }
-    );
-  }
-}
-
-
-// ✅ UPDATE address
-export async function PUT(req: Request) {
-  try {
-    const body = await req.json();
-
-    if (!body.id) {
+    // ✅ Validation
+    if (
+      !userId ||
+      !line1 ||
+      !city ||
+      !state ||
+      !pincode ||
+      !country
+    ) {
       return NextResponse.json(
-        { error: "Address ID is required for update" },
+        { error: "All required fields must be provided" },
         { status: 400 }
       );
     }
 
-    const address = await prisma.address.update({
-      where: { id: body.id },
-      data: {
-        full_name: body.full_name,
-        phone: body.phone,
-        line1: body.line1,
-        line2: body.line2,
-        city: body.city,
-        state: body.state,
-        pincode: body.pincode,
-        country: body.country,
-      },
+    // 🔍 Check if address already exists for this user
+    const existingAddress = await prisma.address.findFirst({
+      where: { userId },
     });
 
-    return NextResponse.json(
-      { message: "Address updated successfully", address },
-      { status: 200 }
-    );
+    let address;
+
+    if (existingAddress) {
+      // ✅ UPDATE
+      address = await prisma.address.update({
+        where: { id: existingAddress.id },
+        data: {
+          line1,
+          line2,
+          city,
+          state,
+          pincode,
+          country,
+        },
+      });
+
+      return NextResponse.json(
+        { message: "Address updated successfully", address },
+        { status: 200 }
+      );
+    } else {
+      // ✅ CREATE
+      address = await prisma.address.create({
+        data: {
+          userId,
+          line1,
+          line2,
+          city,
+          state,
+          pincode,
+          country,
+        },
+      });
+
+      return NextResponse.json(
+        { message: "Address created successfully", address },
+        { status: 201 }
+      );
+    }
   } catch (error) {
-    console.error("Update address error:", error);
+    console.error("PATCH address error:", error);
 
     return NextResponse.json(
-      { error: "Failed to update address" },
+      { error: "Failed to process address" },
       { status: 500 }
     );
   }

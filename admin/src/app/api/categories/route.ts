@@ -38,10 +38,10 @@ function filterTree(nodes: CategoryNode[], search: string): CategoryNode[] {
 
 export async function GET(req: Request) {
   try {
-    const user = await verifyToken();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // const user = await verifyToken();
+    // if (!user) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
