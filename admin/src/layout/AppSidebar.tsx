@@ -11,7 +11,7 @@ import {
   ListIcon,
   UserCircleIcon,
 } from "../icons/index";
-import { ShoppingCart, StarIcon,Tags } from "lucide-react";
+import { NewspaperIcon, ShoppingCart, StarIcon,Tags } from "lucide-react";
 
 type NavItem = {
   name: string;
@@ -51,6 +51,11 @@ const navItems: NavItem[] = [
     icon: <StarIcon />, // or any icon you like
     name: "Reviews",
     path: "/reviews",
+  },
+  {
+    icon: <NewspaperIcon  />, // or any icon you like
+    name: "Blog",
+    path: "/blog",
   },
   // {
   //   icon: <CalenderIcon />,
