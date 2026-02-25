@@ -590,13 +590,13 @@ export default function ProductsPage() {
           {/* ── Filters Bar ── */}
           <div className="flex gap-2 flex-wrap items-center bg-white dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
             {/* Search */}
-            <div className="relative">
+            <div className="relative flex-1 min-w-[280px]">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 placeholder="Search products..."
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                className="pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[#155dfc] w-56 transition"
+                className="pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[#155dfc] w-full transition"
               />
             </div>
 
@@ -604,7 +604,7 @@ export default function ProductsPage() {
             <select
               value={categoryFilter}
               onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
-              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
+              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition min-w-[200px]"
             >
               <option value="">All categories</option>
               {categories.map((c: any) => (
@@ -614,10 +614,10 @@ export default function ProductsPage() {
 
             {/* Size filter */}
             <input
-              placeholder="Size (e.g. M)"
+              placeholder="Size (e.g. M, L, XL)"
               value={sizeFilter}
               onChange={(e) => { setSizeFilter(e.target.value); setPage(1); }}
-              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl w-28 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
+              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl w-44 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
             />
 
             {/* Price filter */}
@@ -627,7 +627,7 @@ export default function ProductsPage() {
                 placeholder="Min ₹"
                 value={minPriceFilter}
                 onChange={(e) => { setMinPriceFilter(e.target.value); setPage(1); }}
-                className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl w-24 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
+                className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl w-32 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
               />
               <span className="text-gray-400 dark:text-gray-500">-</span>
               <input
@@ -635,7 +635,7 @@ export default function ProductsPage() {
                 placeholder="Max ₹"
                 value={maxPriceFilter}
                 onChange={(e) => { setMaxPriceFilter(e.target.value); setPage(1); }}
-                className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl w-24 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
+                className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl w-32 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
               />
             </div>
 
@@ -657,10 +657,10 @@ export default function ProductsPage() {
               className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
             >
               <option value="">Type: All</option>
-              <option value="featured">Featured Only</option>
-              <option value="bestseller">Bestseller Only</option>
-              <option value="new">New Arrivals Only</option>
-              <option value="upcoming">Coming Soon Only</option>
+              <option value="featured">Featured</option>
+              <option value="bestseller">Bestseller</option>
+              <option value="new">New Arrivals</option>
+              <option value="upcoming">Coming Soon</option>
             </select>
           </div>
         </div>
