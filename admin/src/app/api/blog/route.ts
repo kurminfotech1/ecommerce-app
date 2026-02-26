@@ -46,12 +46,14 @@ export async function GET(req: Request) {
     const tag = searchParams.get("tag");
     const publishedParam = searchParams.get("published");
     const featuredParam = searchParams.get("featured");
+    const draftParam = searchParams.get("draft");
 
     const skip = (page - 1) * limit;
 
     const where: any = {
       ...(publishedParam !== null ? { is_published: publishedParam === "true" } : {}),
       ...(featuredParam === "true" ? { is_featured: true } : {}),
+      ...(draftParam === "true" ? { is_draft: true } : {}),
       AND: [
         search ? { title: { contains: search, mode: "insensitive" } } : {},
         category ? { category: { contains: category, mode: "insensitive" } } : {},
@@ -120,6 +122,7 @@ export async function POST(req: Request) {
         meta_title: body.meta_title ?? null,
         meta_desc: body.meta_desc ?? null,
         canonical_url: body.canonical_url ?? null,
+        is_draft: body.is_draft ?? false,
         is_published: body.is_published ?? false,
         is_featured: body.is_featured ?? false,
         published_at: body.is_published ? new Date() : null,
@@ -184,6 +187,7 @@ export async function PUT(req: Request) {
         meta_title: body.meta_title,
         meta_desc: body.meta_desc,
         canonical_url: body.canonical_url,
+        is_draft: body.is_draft,
         is_published: body.is_published,
         is_featured: body.is_featured,
 

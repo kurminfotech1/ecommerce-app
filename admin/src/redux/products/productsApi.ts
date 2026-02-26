@@ -66,6 +66,7 @@ export interface Product {
   is_featured: boolean;
   is_bestseller: boolean;
   is_new: boolean;
+  is_upcoming: boolean;
 
   meta_title?: string | null;
   meta_desc?: string | null;
@@ -89,6 +90,9 @@ export interface GetProductsParams {
   category?: string;
   active?: boolean;
   featured?: boolean;
+  bestseller?: boolean;
+  is_new?: boolean;
+  is_upcoming?: boolean;
   size?: string;
   min_price?: number;
   max_price?: number;

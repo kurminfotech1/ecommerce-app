@@ -149,6 +149,7 @@ export default function BlogPage() {
   // ── List state ─────────────────────────────────────────────────
   const [search, setSearch] = useState("");
   const [publishedFilter, setPublishedFilter] = useState("");
+  const [draftFilter, setDraftFilter] = useState("");
   const [featuredFilter, setFeaturedFilter] = useState("");
   const [page, setPage] = useState(1);
 
@@ -173,7 +174,7 @@ export default function BlogPage() {
     category: "", author: "",
     blog_tags: [] as string[],  // tag name strings
     meta_title: "", meta_desc: "", canonical_url: "",
-    is_published: false, is_featured: false,
+    is_published: false, is_draft: false, is_featured: false,
   };
 
   const [form, setForm] = useState(emptyForm);
@@ -186,9 +187,10 @@ export default function BlogPage() {
       limit: 10,
       search,
       published: publishedFilter || undefined,
+      draft: draftFilter || undefined,
       featured: featuredFilter || undefined,
     }));
-  }, [page, search, publishedFilter, featuredFilter, dispatch]);
+  }, [page, search, publishedFilter, draftFilter, featuredFilter, dispatch]);
 
   useEffect(() => { fetchBlogs(); }, [fetchBlogs]);
 
@@ -274,6 +276,7 @@ export default function BlogPage() {
       meta_desc: blog.meta_desc ?? "",
       canonical_url: blog.canonical_url ?? "",
       is_published: blog.is_published,
+      is_draft: blog.is_draft,
       is_featured: blog.is_featured,
     });
     setModalOpen(true);
@@ -329,6 +332,7 @@ export default function BlogPage() {
       meta_desc: form.meta_desc || null,
       canonical_url: form.canonical_url || null,
       is_published: form.is_published,
+      is_draft: form.is_draft,
       is_featured: form.is_featured,
       // Tags are passed as names (strings) — the API can handle tag_ids but
       // since we're using an expanded input with tag names, we send them directly.
@@ -360,6 +364,7 @@ export default function BlogPage() {
   const resetFilters = () => {
     setSearch("");
     setPublishedFilter("");
+    setDraftFilter("");
     setFeaturedFilter("");
     setSortField("created_at");
     setSortDir("desc");
@@ -411,7 +416,16 @@ export default function BlogPage() {
             >
               <option value="">Status: All</option>
               <option value="true">Published</option>
-              <option value="false">Draft</option>
+              <option value="false">Not Published</option>
+            </select>
+
+            <select
+              value={draftFilter}
+              onChange={(e) => { setDraftFilter(e.target.value); setPage(1); }}
+              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm px-3 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition text-gray-900 dark:text-white cursor-pointer"
+            >
+              <option value="">Draft: All</option>
+              <option value="true">Drafts Only</option>
             </select>
 
             <select
@@ -857,10 +871,19 @@ export default function BlogPage() {
                     <input
                       type="checkbox"
                       checked={form.is_published}
-                      onChange={(e) => setForm({ ...form, is_published: e.target.checked })}
+                      onChange={(e) => setForm({ ...form, is_published: e.target.checked, is_draft: e.target.checked ? false : form.is_draft })}
                       className="w-4 h-4 rounded border-gray-300 text-[#155dfc] focus:ring-[#155dfc]"
                     />
                     <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">Published</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={form.is_draft}
+                      onChange={(e) => setForm({ ...form, is_draft: e.target.checked, is_published: e.target.checked ? false : form.is_published })}
+                      className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
+                    />
+                    <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">Draft</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input

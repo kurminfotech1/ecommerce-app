@@ -77,6 +77,7 @@ model Product {
   is_featured   Boolean @default(false)
   is_bestseller Boolean @default(false)
   is_new        Boolean @default(false)
+  is_upcoming   Boolean @default(false)
 
   // SEO
   meta_title    String?
@@ -95,6 +96,9 @@ model Product {
   @@index([slug])
   @@index([is_active])
   @@index([is_featured])
+  @@index([is_bestseller])
+  @@index([is_new])
+  @@index([is_upcoming])
 }
 
 model ProductVariant {
@@ -295,6 +299,7 @@ model Blog {
   canonical_url   String?
 
   // Status
+  is_draft    Boolean  @default(false)
   is_published    Boolean  @default(false)
   is_featured     Boolean  @default(false)
 
@@ -307,6 +312,8 @@ model Blog {
 
   @@index([slug])
   @@index([is_published])
+  @@index([is_draft])
+  @@index([is_featured])
   @@index([published_at])
   @@index([category])
 }

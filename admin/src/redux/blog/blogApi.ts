@@ -32,6 +32,7 @@ export interface Blog {
   canonical_url?: string | null;
 
   // Status
+  is_draft: boolean;
   is_published: boolean;
   is_featured: boolean;
 
@@ -52,6 +53,7 @@ export interface GetBlogsParams {
   tag?: string;
   published?: string;
   featured?: string;
+  draft?: string;
 }
 
 // ── GET all (paginated) ──────────────────────────────────────────

@@ -145,12 +145,11 @@ export default function BlogDetailPage() {
               {/* Featured Image */}
               {blog.featured_image ? (
                 <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <Image
+                  <img
                     src={blog.featured_image}
                     alt={blog.title}
-                    className=" object-cover"
-                    width={500}
-                    height={500}
+                    className="h-100 w-full object-cover "
+
                   />
                 </div>
               ) : (
@@ -169,7 +168,10 @@ export default function BlogDetailPage() {
                   {blog.is_published ? (
                     <Badge color="green"><CheckCircle2 size={10} /> Published</Badge>
                   ) : (
-                    <Badge color="gray"><XCircle size={10} /> Draft</Badge>
+                    <Badge color="gray"><XCircle size={10} /> Not Published</Badge>
+                  )}
+                  {blog.is_draft && (
+                    <Badge color="amber">✏️ Draft</Badge>
                   )}
                   {blog.is_featured && (
                     <Badge color="amber"><Star size={10} fill="currentColor" /> Featured</Badge>
