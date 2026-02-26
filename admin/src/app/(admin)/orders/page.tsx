@@ -22,170 +22,85 @@ import {
   MapPin,
   Calendar,
   User,
+  ShieldCheck,
+  AlertCircle,
+  Loader2
 } from "lucide-react";
 import { DeleteModal } from "@/components/common/DeleteModal";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 // ── Types ──────────────────────────────────────────────────────────
-type OrderStatus = "Pending" | "Processing" | "Shipped" | "Completed" | "Cancelled" | "Refunded";
+type OrderStatus = "PLACED" | "CONFIRMED" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
 
 interface OrderItem {
   id: string;
-  name: string;
-  image: string;
-  sku: string;
+  variant: {
+    product: {
+      product_name: string;
+      images: { image_url: string }[];
+    };
+    weight?: string;
+    size?: string;
+    sku: string;
+  };
   quantity: number;
   price: number;
 }
 
 interface Order {
   id: string;
-  customer: {
-    name: string;
+  order_number: string;
+  user: {
+    full_name: string;
     email: string;
-    avatar: string;
   };
-  status: OrderStatus;
-  date: string;
-  amount: number;
-  address: string;
+  order_status: OrderStatus;
+  created_at: string;
+  total_amount: number;
+  shipping_address: string;
+  shipping_city: string;
+  shipping_state: string;
+  shipping_pincode: string;
+  shipping_country: string;
   items: OrderItem[];
-  deliveryFee: number;
-  tax: number;
+  payment?: {
+    payment_method: string;
+    status: string;
+  };
 }
 
-// ── Mock Data ──────────────────────────────────────────────────────
-const MOCK_ORDERS: Order[] = [
-  {
-    id: "ORD-001",
-    customer: { name: "John Doe", email: "john@example.com", avatar: "JD" },
-    status: "Pending",
-    date: "2025-06-10T10:31:00Z",
-    amount: 235,
-    address: "123 Main St, New York, NY",
-    deliveryFee: 10,
-    tax: 5,
-    items: [
-      { id: "i1", name: "Wireless Headphones", image: "🎧", sku: "58988", quantity: 1, price: 120 },
-      { id: "i2", name: "Bluetooth Speaker", image: "🔊", sku: "52988", quantity: 2, price: 90 },
-    ],
-  },
-  {
-    id: "ORD-002",
-    customer: { name: "Jane Smith", email: "jane@example.com", avatar: "JS" },
-    status: "Completed",
-    date: "2025-06-08T14:20:00Z",
-    amount: 540,
-    address: "456 Oak Ave, Los Angeles, CA",
-    deliveryFee: 0,
-    tax: 40,
-    items: [
-      { id: "i3", name: "Mechanical Keyboard", image: "⌨️", sku: "78123", quantity: 1, price: 250 },
-      { id: "i4", name: "Gaming Mouse", image: "🖱️", sku: "78124", quantity: 1, price: 85 },
-      { id: "i5", name: "Monitor Stand", image: "🖥️", sku: "78125", quantity: 1, price: 165 },
-    ],
-  },
-  {
-    id: "ORD-003",
-    customer: { name: "Mike Johnson", email: "mike@example.com", avatar: "MJ" },
-    status: "Shipped",
-    date: "2025-06-09T09:15:00Z",
-    amount: 189,
-    address: "789 Pine Rd, Chicago, IL",
-    deliveryFee: 15,
-    tax: 14,
-    items: [
-      { id: "i6", name: "Running Shoes", image: "👟", sku: "91001", quantity: 1, price: 160 },
-    ],
-  },
-  {
-    id: "ORD-004",
-    customer: { name: "Emily Davis", email: "emily@example.com", avatar: "ED" },
-    status: "Cancelled",
-    date: "2025-06-07T16:45:00Z",
-    amount: 320,
-    address: "321 Elm St, Houston, TX",
-    deliveryFee: 20,
-    tax: 0,
-    items: [
-      { id: "i7", name: "Smart Watch", image: "⌚", sku: "44321", quantity: 1, price: 299 },
-    ],
-  },
-  {
-    id: "ORD-005",
-    customer: { name: "Robert Wilson", email: "robert@example.com", avatar: "RW" },
-    status: "Processing",
-    date: "2025-06-10T08:00:00Z",
-    amount: 875,
-    address: "654 Maple Dr, Phoenix, AZ",
-    deliveryFee: 25,
-    tax: 50,
-    items: [
-      { id: "i8", name: "Laptop Bag", image: "💼", sku: "30201", quantity: 2, price: 75 },
-      { id: "i9", name: "Noise Cancelling Earbuds", image: "🎵", sku: "30202", quantity: 1, price: 199 },
-      { id: "i10", name: "Portable Charger", image: "🔋", sku: "30203", quantity: 3, price: 45 },
-    ],
-  },
-  {
-    id: "ORD-006",
-    customer: { name: "Sarah Connor", email: "sarah@example.com", avatar: "SC" },
-    status: "Completed",
-    date: "2025-06-05T11:30:00Z",
-    amount: 115,
-    address: "987 Cedar Blvd, San Antonio, TX",
-    deliveryFee: 10,
-    tax: 5,
-    items: [
-      { id: "i11", name: "Yoga Mat", image: "🧘", sku: "80111", quantity: 1, price: 100 },
-    ],
-  },
-  {
-    id: "ORD-007",
-    customer: { name: "Chris Evans", email: "chris@example.com", avatar: "CE" },
-    status: "Refunded",
-    date: "2025-06-04T13:00:00Z",
-    amount: 450,
-    address: "159 Willow Ln, San Diego, CA",
-    deliveryFee: 0,
-    tax: 30,
-    items: [
-      { id: "i12", name: "Coffee Machine", image: "☕", sku: "55432", quantity: 1, price: 420 },
-    ],
-  },
-  {
-    id: "ORD-008",
-    customer: { name: "Lisa Park", email: "lisa@example.com", avatar: "LP" },
-    status: "Pending",
-    date: "2025-06-10T12:00:00Z",
-    amount: 680,
-    address: "753 Birch Way, Dallas, TX",
-    deliveryFee: 30,
-    tax: 50,
-    items: [
-      { id: "i13", name: "Desk Lamp", image: "💡", sku: "66001", quantity: 2, price: 60 },
-      { id: "i14", name: "Monitor 27\"", image: "🖥️", sku: "66002", quantity: 1, price: 480 },
-    ],
-  },
-];
 
 // ── Status config ──────────────────────────────────────────────────
 const STATUS_CONFIG: Record<
   OrderStatus,
-  { color: string; bg: string; border: string; IconComp: React.FC<{ size?: number }> }
+  { label: string; color: string; bg: string; border: string; IconComp: React.FC<{ size?: number }> }
 > = {
-  Pending:    { color: "text-amber-700",   bg: "bg-amber-50",   border: "border-amber-200",   IconComp: Clock },
-  Processing: { color: "text-blue-700",    bg: "bg-blue-50",    border: "border-blue-200",    IconComp: RefreshCw },
-  Shipped:    { color: "text-purple-700",  bg: "bg-purple-50",  border: "border-purple-200",  IconComp: TruckIcon },
-  Completed:  { color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200", IconComp: CheckCircle2 },
-  Cancelled:  { color: "text-red-600",     bg: "bg-red-50",     border: "border-red-200",     IconComp: XCircle },
-  Refunded:   { color: "text-gray-600",    bg: "bg-gray-100",   border: "border-gray-300",    IconComp: RefreshCw },
+  PLACED: { label: "Placed", color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200", IconComp: Clock },
+  CONFIRMED: { label: "Confirmed", color: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200", IconComp: ShieldCheck },
+  PROCESSING: { label: "Processing", color: "text-indigo-700", bg: "bg-indigo-50", border: "border-indigo-200", IconComp: RefreshCw },
+  SHIPPED: { label: "Shipped", color: "text-purple-700", bg: "bg-purple-50", border: "border-purple-200", IconComp: TruckIcon },
+  DELIVERED: { label: "Delivered", color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200", IconComp: CheckCircle2 },
+  CANCELLED: { label: "Cancelled", color: "text-red-600", bg: "bg-red-50", border: "border-red-200", IconComp: XCircle },
 };
 
 // ── Helpers ────────────────────────────────────────────────────────
 const formatDate = (iso: string) => {
+  if (!iso) return { date: "N/A", time: "" };
   const d = new Date(iso);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+
+  let hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+
   return {
-    date: d.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }).replace(/\//g, "-"),
-    time: d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }),
+    date: `${day}-${month}-${year}`,
+    time: `${hours}:${minutes} ${ampm}`,
   };
 };
 
@@ -212,10 +127,10 @@ const StatusBadge = ({ status }: { status: OrderStatus }) => {
   const Icon = cfg.IconComp;
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border ${cfg.color} ${cfg.bg} ${cfg.border}`}
+      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${cfg.color} ${cfg.bg} ${cfg.border}`}
     >
-      <Icon size={11} />
-      {status}
+      <Icon size={10} />
+      {cfg.label}
     </span>
   );
 };
@@ -265,19 +180,27 @@ const StatCard = ({ label, value, sub, icon, gradient, iconBg }: StatCardProps) 
 );
 
 // ── Row detail (collapsed content) ────────────────────────────────
-const OrderRowDetail = ({ order }: { order: Order }) => {
-  const subTotal = order.items.reduce((s, i) => s + i.price * i.quantity, 0);
-  const total = subTotal + order.deliveryFee + order.tax;
-
+const OrderRowDetail = ({ order, onStatusUpdate }: { order: Order, onStatusUpdate: (id: string, st: OrderStatus) => void }) => {
   return (
     <tr>
       <td colSpan={7} className="px-0 pb-1 pt-0">
         <div className="mx-4 mb-3 bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
           {/* Inner header */}
-          <div className="px-5 py-3 border-b border-gray-100">
+          <div className="px-5 py-3 border-b border-gray-100 flex justify-between items-center">
             <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">
-              Customer Orders:
+              Items Summary:
             </p>
+            <div className="flex gap-2">
+              {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
+                <button
+                  key={key}
+                  onClick={() => onStatusUpdate(order.id, key as OrderStatus)}
+                  className={`text-[10px] px-2 py-1 rounded-md border transition ${order.order_status === key ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                >
+                  Mark {cfg.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Items table */}
@@ -285,7 +208,7 @@ const OrderRowDetail = ({ order }: { order: Order }) => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs font-semibold text-gray-500 border-b border-gray-100">
-                  <th className="px-5 py-2.5 text-left">Name</th>
+                  <th className="px-5 py-2.5 text-left">Product</th>
                   <th className="px-5 py-2.5 text-left">SKU</th>
                   <th className="px-5 py-2.5 text-left">Quantity</th>
                   <th className="px-5 py-2.5 text-right">Price</th>
@@ -296,15 +219,22 @@ const OrderRowDetail = ({ order }: { order: Order }) => {
                   <tr key={item.id} className="hover:bg-gray-100/60 transition">
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-lg shrink-0 shadow-sm">
-                          {item.image}
+                        <div className="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                          {item.variant.product.images[0]?.image_url ? (
+                            <img src={item.variant.product.images[0].image_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <Package size={16} className="text-gray-400" />
+                          )}
                         </div>
-                        <span className="font-medium text-gray-800">{item.name}</span>
+                        <div>
+                          <p className="font-medium text-gray-800">{item.variant.product.product_name}</p>
+                          <p className="text-[10px] text-gray-400">{item.variant.weight || item.variant.size || "Standard"}</p>
+                        </div>
                       </div>
                     </td>
                     <td className="px-5 py-3">
                       <code className="text-xs bg-white text-gray-500 px-2 py-0.5 rounded-md border border-gray-200 font-mono">
-                        {item.sku}
+                        {item.variant.sku}
                       </code>
                     </td>
                     <td className="px-5 py-3 text-gray-600">{item.quantity}</td>
@@ -319,36 +249,16 @@ const OrderRowDetail = ({ order }: { order: Order }) => {
 
           {/* Totals + Actions */}
           <div className="flex flex-wrap justify-between items-end px-5 py-4 border-t border-gray-100 gap-4">
-            {/* Left: action buttons */}
-            <div className="flex gap-2">
-              <button className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold border border-gray-200 rounded-xl bg-white hover:bg-gray-50 text-gray-700 transition shadow-sm">
-                <Eye size={13} />
-                View
-              </button>
-              <button className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-violet-600 hover:bg-violet-700 text-white transition shadow-sm">
-                <FileText size={13} />
-                Invoice
-              </button>
+            <div className="text-xs text-gray-500 italic">
+              Payment via {order.payment?.payment_method || "N/A"} ({order.payment?.status || "PENDING"})
             </div>
 
             {/* Right: price summary */}
             <div className="text-right space-y-1">
-              <div className="flex items-center justify-end gap-8">
-                <span className="text-xs text-gray-500">Delivery Fee:</span>
-                <span className="text-xs font-semibold text-gray-700 min-w-[64px] text-right">
-                  {formatCurrency(order.deliveryFee)}
-                </span>
-              </div>
-              <div className="flex items-center justify-end gap-8">
-                <span className="text-xs text-gray-500">Tax:</span>
-                <span className="text-xs font-semibold text-gray-700 min-w-[64px] text-right">
-                  {formatCurrency(order.tax)}
-                </span>
-              </div>
-              <div className="flex items-center justify-end gap-8 pt-1 border-t border-gray-200 mt-1">
-                <span className="text-sm font-bold text-violet-600">Total:</span>
+              <div className="flex items-center justify-end gap-8 pt-1">
+                <span className="text-sm font-bold text-violet-600">Total Amount:</span>
                 <span className="text-sm font-bold text-violet-600 min-w-[64px] text-right">
-                  {formatCurrency(total)}
+                  {formatCurrency(order.total_amount)}
                 </span>
               </div>
             </div>
@@ -400,9 +310,7 @@ const RowMenu = ({ order, onDelete, onView }: RowMenuProps) => {
 
 // ── Order Detail Modal ─────────────────────────────────────────────
 const OrderDetailModal = ({ order, onClose }: { order: Order; onClose: () => void }) => {
-  const subTotal = order.items.reduce((s, i) => s + i.price * i.quantity, 0);
-  const total = subTotal + order.deliveryFee + order.tax;
-  const { date, time } = formatDate(order.date);
+  const { date, time } = formatDate(order.created_at);
   return (
     <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
@@ -415,11 +323,11 @@ const OrderDetailModal = ({ order, onClose }: { order: Order; onClose: () => voi
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Order {order.id}</h2>
+            <h2 className="text-lg font-bold text-gray-900">Order #{order.order_number}</h2>
             <p className="text-xs text-gray-400 mt-0.5">Placed on {date} at {time}</p>
           </div>
           <div className="flex items-center gap-3">
-            <StatusBadge status={order.status} />
+            <StatusBadge status={order.order_status} />
             <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 transition text-gray-500">
               <XCircle size={18} />
             </button>
@@ -429,15 +337,15 @@ const OrderDetailModal = ({ order, onClose }: { order: Order; onClose: () => voi
         <div className="p-6 space-y-5">
           {/* Customer info */}
           <div className="flex items-start gap-4 bg-gray-50 rounded-xl p-4">
-            <div className={`w-11 h-11 rounded-full ${avatarColor(order.customer.name)} flex items-center justify-center text-white text-sm font-bold shrink-0`}>
-              {initials(order.customer.name)}
+            <div className={`w-11 h-11 rounded-full ${avatarColor(order.user?.full_name || "Guest")} flex items-center justify-center text-white text-sm font-bold shrink-0`}>
+              {initials(order.user?.full_name || "Guest")}
             </div>
             <div>
-              <p className="font-semibold text-gray-800">{order.customer.name}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{order.customer.email}</p>
+              <p className="font-semibold text-gray-800">{order.user?.full_name || "Guest User"}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{order.user?.email || "No email provided"}</p>
               <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
                 <MapPin size={11} />
-                {order.address}
+                {order.shipping_address}, {order.shipping_city}, {order.shipping_state} - {order.shipping_pincode}
               </div>
             </div>
           </div>
@@ -459,14 +367,21 @@ const OrderDetailModal = ({ order, onClose }: { order: Order; onClose: () => voi
                   <tr key={item.id}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-base">
-                          {item.image}
+                        <div className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden text-base shrink-0">
+                          {item.variant.product.images[0]?.image_url ? (
+                            <img src={item.variant.product.images[0].image_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <Package size={14} className="text-gray-400" />
+                          )}
                         </div>
-                        <span className="font-medium text-gray-800">{item.name}</span>
+                        <div>
+                          <p className="font-medium text-gray-800 text-xs">{item.variant.product.product_name}</p>
+                          <p className="text-[10px] text-gray-400">{item.variant.weight || item.variant.size || "Standard"}</p>
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <code className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-mono">{item.sku}</code>
+                      <code className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-mono">{item.variant.sku}</code>
                     </td>
                     <td className="px-4 py-3 text-center text-gray-600">{item.quantity}</td>
                     <td className="px-4 py-3 text-right text-gray-700">{formatCurrency(item.price)}</td>
@@ -481,19 +396,12 @@ const OrderDetailModal = ({ order, onClose }: { order: Order; onClose: () => voi
 
           {/* Summary */}
           <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-            {[
-              { label: "Subtotal", value: formatCurrency(subTotal) },
-              { label: "Delivery Fee", value: formatCurrency(order.deliveryFee) },
-              { label: "Tax", value: formatCurrency(order.tax) },
-            ].map(({ label, value }) => (
-              <div key={label} className="flex justify-between text-sm text-gray-600">
-                <span>{label}</span>
-                <span className="font-medium">{value}</span>
-              </div>
-            ))}
-            <div className="flex justify-between text-base font-bold text-violet-700 pt-2 border-t border-gray-200 mt-2">
-              <span>Total</span>
-              <span>{formatCurrency(total)}</span>
+            <div className="flex justify-between text-base font-bold text-violet-700">
+              <span>Grand Total</span>
+              <span>{formatCurrency(order.total_amount)}</span>
+            </div>
+            <div className="text-[10px] text-gray-400 pt-2 border-t border-gray-200">
+              Payment Method: {order.payment?.payment_method || "N/A"} | Status: {order.payment?.status || "PENDING"}
             </div>
           </div>
         </div>
@@ -514,13 +422,36 @@ const OrderDetailModal = ({ order, onClose }: { order: Order; onClose: () => voi
 // ════════════════════════════════════════════════════════════════════
 // MAIN PAGE
 // ════════════════════════════════════════════════════════════════════
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 7;
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
+  const [orders, setOrders] = React.useState<Order[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [page, setPage] = useState(1);
+
+  // ── Fetch Data ───────────────────────────────────────────────
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get("/api/orders");
+      setOrders(res.data);
+      setError(null);
+    } catch (err: any) {
+      console.error("Fetch orders failed:", err);
+      setError("Failed to load orders. Please try again.");
+      toast.error("Failed to load orders.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchOrders();
+  }, []);
 
   // ── Collapse/expand state ──────────────────────────────────────
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
@@ -538,30 +469,31 @@ export default function OrdersPage() {
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
 
   // ── Stats ──────────────────────────────────────────────────────
-  const stats = useMemo(() => {
+  const stats = React.useMemo(() => {
     const totalIncome = orders
-      .filter((o) => o.status === "Completed")
-      .reduce((s, o) => s + o.amount, 0);
+      .filter((o) => o.order_status === "DELIVERED")
+      .reduce((s, o) => s + o.total_amount, 0);
+
     return {
       total: orders.length,
       totalIncome,
-      pending: orders.filter((o) => o.status === "Pending").length,
-      processing: orders.filter((o) => o.status === "Processing").length,
-      shipped: orders.filter((o) => o.status === "Shipped").length,
-      completed: orders.filter((o) => o.status === "Completed").length,
-      cancelled: orders.filter((o) => o.status === "Cancelled").length,
-      refunded: orders.filter((o) => o.status === "Refunded").length,
+      placed: orders.filter((o) => o.order_status === "PLACED").length,
+      confirmed: orders.filter((o) => o.order_status === "CONFIRMED").length,
+      processing: orders.filter((o) => o.order_status === "PROCESSING").length,
+      shipped: orders.filter((o) => o.order_status === "SHIPPED").length,
+      delivered: orders.filter((o) => o.order_status === "DELIVERED").length,
+      cancelled: orders.filter((o) => o.order_status === "CANCELLED").length,
     };
   }, [orders]);
 
   // ── Filtered + paginated ───────────────────────────────────────
-  const filtered = useMemo(() => {
+  const filtered = React.useMemo(() => {
     return orders.filter((o) => {
       const matchSearch =
-        o.id.toLowerCase().includes(search.toLowerCase()) ||
-        o.customer.name.toLowerCase().includes(search.toLowerCase()) ||
-        o.address.toLowerCase().includes(search.toLowerCase());
-      const matchStatus = statusFilter === "All" || o.status === statusFilter;
+        o.order_number.toLowerCase().includes(search.toLowerCase()) ||
+        (o.user?.full_name || "").toLowerCase().includes(search.toLowerCase()) ||
+        o.shipping_address.toLowerCase().includes(search.toLowerCase());
+      const matchStatus = statusFilter === "All" || o.order_status === statusFilter;
       return matchSearch && matchStatus;
     });
   }, [orders, search, statusFilter]);
@@ -569,10 +501,28 @@ export default function OrdersPage() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
   const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!deleteOrder) return;
-    setOrders((prev) => prev.filter((o) => o.id !== deleteOrder.id));
-    setDeleteOrder(null);
+    try {
+      await axios.delete(`/api/orders/${deleteOrder.id}`);
+      setOrders((prev) => prev.filter((o) => o.id !== deleteOrder.id));
+      toast.success("Order deleted successfully");
+      setDeleteOrder(null);
+    } catch (err: any) {
+      console.error("Delete failed:", err);
+      toast.error(err.response?.data?.error || "Failed to delete order");
+    }
+  };
+
+  const handleStatusUpdate = async (id: string, newStatus: OrderStatus) => {
+    try {
+      const res = await axios.patch(`/api/orders/${id}`, { order_status: newStatus });
+      setOrders((prev) => prev.map(o => o.id === id ? { ...o, order_status: res.data.order_status } : o));
+      toast.success(`Order marked as ${newStatus}`);
+    } catch (err: any) {
+      console.error("Status update failed:", err);
+      toast.error("Failed to update status");
+    }
   };
 
   const handleFilterChange = (value: string) => {
@@ -585,7 +535,7 @@ export default function OrdersPage() {
     setPage(1);
   };
 
-  const ALL_STATUSES: string[] = ["All", "Pending", "Processing", "Shipped", "Completed", "Cancelled", "Refunded"];
+  const ALL_STATUSES: string[] = ["All", ...Object.keys(STATUS_CONFIG)];
 
   return (
     <>
@@ -627,9 +577,9 @@ export default function OrdersPage() {
           {/* ── Stats Cards ── */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
             <StatCard
-              label="Total Income"
-              value={`$${stats.totalIncome.toLocaleString()}`}
-              sub={`From ${stats.completed} completed orders`}
+              label="Total Revenue"
+              value={formatCurrency(stats.totalIncome)}
+              sub={`From ${stats.delivered} delivered orders`}
               icon={<DollarSign size={18} />}
               gradient="bg-gradient-to-br from-violet-600 to-violet-800"
               iconBg="bg-white/20"
@@ -643,9 +593,9 @@ export default function OrdersPage() {
               iconBg="bg-white/20"
             />
             <StatCard
-              label="Pending"
-              value={String(stats.pending)}
-              sub={`${stats.processing} processing`}
+              label="New Paced"
+              value={String(stats.placed)}
+              sub={`${stats.confirmed} confirmed`}
               icon={<Clock size={18} />}
               gradient="bg-gradient-to-br from-amber-500 to-amber-700"
               iconBg="bg-white/20"
@@ -659,9 +609,9 @@ export default function OrdersPage() {
               iconBg="bg-white/20"
             />
             <StatCard
-              label="Completed"
-              value={String(stats.completed)}
-              sub="Successfully delivered"
+              label="Delivered"
+              value={String(stats.delivered)}
+              sub="Successfully sent"
               icon={<CheckCircle2 size={18} />}
               gradient="bg-gradient-to-br from-emerald-500 to-emerald-700"
               iconBg="bg-white/20"
@@ -669,21 +619,21 @@ export default function OrdersPage() {
             <StatCard
               label="Cancelled"
               value={String(stats.cancelled)}
-              sub="Orders cancelled"
+              sub="Orders lost"
               icon={<XCircle size={18} />}
               gradient="bg-gradient-to-br from-red-500 to-red-700"
               iconBg="bg-white/20"
             />
             <StatCard
-              label="Refunded"
-              value={String(stats.refunded)}
-              sub="Returned & refunded"
+              label="Processing"
+              value={String(stats.processing)}
+              sub="In preparation"
               icon={<RefreshCw size={18} />}
-              gradient="bg-gradient-to-br from-gray-500 to-gray-700"
+              gradient="bg-gradient-to-br from-indigo-500 to-indigo-700"
               iconBg="bg-white/20"
             />
             <StatCard
-              label="Total Items Sold"
+              label="Items Sold"
               value={String(orders.reduce((s, o) => s + o.items.reduce((is, i) => is + i.quantity, 0), 0))}
               sub="Across all orders"
               icon={<Package size={18} />}
@@ -693,7 +643,20 @@ export default function OrdersPage() {
           </div>
 
           {/* ── Table ── */}
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-32 text-center bg-white rounded-2xl border border-gray-100 shadow-sm">
+              <Loader2 className="w-10 h-10 text-violet-600 animate-spin mb-4" />
+              <p className="text-gray-500 font-medium">Loading orders details...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl border border-dashed border-red-200">
+              <AlertCircle size={40} className="text-red-400 mb-4" />
+              <p className="text-lg font-semibold text-gray-700 mb-1">{error}</p>
+              <button onClick={fetchOrders} className="mt-4 px-6 py-2 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700 transition">
+                Try Again
+              </button>
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl border border-dashed border-gray-200">
               <div className="w-16 h-16 bg-violet-50 rounded-2xl flex items-center justify-center mb-4">
                 <ShoppingBag size={28} className="text-violet-400" />
@@ -707,28 +670,28 @@ export default function OrdersPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                      <th className="px-4 py-3 text-left">ID</th>
+                      <th className="px-4 py-3 text-left">Order #</th>
                       <th className="px-4 py-3 text-left">Customer</th>
                       <th className="px-4 py-3 text-left">Status</th>
                       <th className="px-4 py-3 text-left">Date</th>
                       <th className="px-4 py-3 text-left">Amount</th>
-                      <th className="px-4 py-3 text-left">Address</th>
+                      <th className="px-4 py-3 text-left">Location</th>
                       <th className="px-4 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {paginated.map((order) => {
                       const isExpanded = expandedRows.has(order.id);
-                      const { date, time } = formatDate(order.date);
+                      const { date, time } = formatDate(order.created_at);
                       return (
                         <React.Fragment key={order.id}>
                           <tr
                             className="hover:bg-violet-50/30 transition group"
                           >
-                            {/* ID */}
+                            {/* Order Number */}
                             <td className="px-4 py-3">
-                              <span className="font-mono text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded-lg">
-                                {order.id}
+                              <span className="font-mono text-[10px] font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded-lg">
+                                {order.order_number}
                               </span>
                             </td>
 
@@ -736,22 +699,22 @@ export default function OrdersPage() {
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-2.5">
                                 <div
-                                  className={`w-8 h-8 rounded-full ${avatarColor(order.customer.name)} flex items-center justify-center text-white text-xs font-bold shrink-0`}
+                                  className={`w-8 h-8 rounded-full ${avatarColor(order.user?.full_name || "Guest")} flex items-center justify-center text-white text-xs font-bold shrink-0`}
                                 >
-                                  {initials(order.customer.name)}
+                                  {initials(order.user?.full_name || "Guest")}
                                 </div>
                                 <div>
-                                  <p className="font-semibold text-gray-800 leading-tight text-xs">
-                                    {order.customer.name}
+                                  <p className="font-semibold text-gray-800 leading-tight text-[11px]">
+                                    {order.user?.full_name || "Guest User"}
                                   </p>
-                                  <p className="text-[10px] text-gray-400">{order.customer.email}</p>
+                                  <p className="text-[9px] text-gray-400">{order.user?.email || "N/A"}</p>
                                 </div>
                               </div>
                             </td>
 
                             {/* Status */}
                             <td className="px-4 py-3">
-                              <StatusBadge status={order.status} />
+                              <StatusBadge status={order.order_status} />
                             </td>
 
                             {/* Date */}
@@ -759,25 +722,25 @@ export default function OrdersPage() {
                               <div className="flex items-start gap-1.5">
                                 <Calendar size={12} className="text-gray-400 mt-0.5 shrink-0" />
                                 <div>
-                                  <p className="text-xs font-medium text-gray-700">{date}</p>
-                                  <p className="text-[10px] text-gray-400">{time}</p>
+                                  <p className="text-[11px] font-medium text-gray-700">{date}</p>
+                                  <p className="text-[9px] text-gray-400">{time}</p>
                                 </div>
                               </div>
                             </td>
 
                             {/* Amount */}
                             <td className="px-4 py-3">
-                              <span className="font-semibold text-gray-800">
-                                {formatCurrency(order.amount)}
+                              <span className="font-semibold text-gray-800 text-xs">
+                                {formatCurrency(order.total_amount)}
                               </span>
                             </td>
 
                             {/* Address */}
                             <td className="px-4 py-3">
-                              <div className="flex items-start gap-1.5 max-w-[200px]">
+                              <div className="flex items-start gap-1.5 max-w-[180px]">
                                 <MapPin size={12} className="text-gray-400 mt-0.5 shrink-0" />
-                                <span className="text-xs text-gray-600 leading-snug line-clamp-2">
-                                  {order.address}
+                                <span className="text-[10px] text-gray-600 leading-snug line-clamp-2">
+                                  {order.shipping_city}, {order.shipping_state}
                                 </span>
                               </div>
                             </td>
@@ -789,9 +752,9 @@ export default function OrdersPage() {
                                 <button
                                   onClick={() => toggleRow(order.id)}
                                   title={isExpanded ? "Collapse" : "Expand"}
-                                  className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition"
+                                  className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition"
                                 >
-                                  {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                                  {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                                 </button>
                                 {/* 3-dot menu */}
                                 <RowMenu
@@ -804,7 +767,7 @@ export default function OrdersPage() {
                           </tr>
 
                           {/* ── Expanded Row ── */}
-                          {isExpanded && <OrderRowDetail key={`${order.id}-detail`} order={order} />}
+                          {isExpanded && <OrderRowDetail key={`${order.id}-detail`} order={order} onStatusUpdate={handleStatusUpdate} />}
                         </React.Fragment>
                       );
                     })}
@@ -833,8 +796,8 @@ export default function OrdersPage() {
                     key={pg}
                     onClick={() => setPage(pg)}
                     className={`px-3 py-1.5 text-sm border rounded-lg transition ${pg === page
-                        ? "bg-violet-600 border-violet-600 text-white font-semibold"
-                        : "border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
+                      ? "bg-violet-600 border-violet-600 text-white font-semibold"
+                      : "border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
                       }`}
                   >
                     {pg}
@@ -858,8 +821,8 @@ export default function OrdersPage() {
         open={!!deleteOrder}
         onClose={() => setDeleteOrder(null)}
         onConfirm={handleDelete}
-        parentTitle={`Delete Order ${deleteOrder?.id}?`}
-        childTitle={`This will permanently delete the order from ${deleteOrder?.customer.name}. This action cannot be undone.`}
+        parentTitle={`Delete Order #${deleteOrder?.order_number}?`}
+        childTitle={`Are you sure you want to delete this order? This will also revert stock for any items if the order was not already cancelled.`}
       />
 
       {/* ── Order Detail Modal ── */}

@@ -20,13 +20,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${outfit.className} dark:bg-gray-900`}>
         <Provider store={store}>
-        <ThemeProvider>
-           <ToastContainer />
-          <SidebarProvider>{children}</SidebarProvider>
-        </ThemeProvider>
+          <ThemeProvider>
+            <ToastContainer />
+            <SidebarProvider>{children}</SidebarProvider>
+          </ThemeProvider>
         </Provider>
       </body>
     </html>

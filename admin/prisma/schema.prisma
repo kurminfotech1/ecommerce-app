@@ -14,6 +14,30 @@ enum Role {
   SUPERADMIN
 }
 
+enum OrderStatus {
+  PLACED
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum ReturnStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+
 model Admin {
   id          String   @id @default(uuid())
   email       String   @unique
@@ -130,9 +154,20 @@ model ProductVariant {
   images         VariantImage[]
   cartItems      Cart[]
   orderItems     OrderItem[]
+  stockLogs      StockLog[]
 
   @@index([price])
   @@index([stock])
+}
+
+model StockLog {
+  id          String   @id @default(uuid())
+  variant_id  String
+  change      Int
+  reason      String
+  created_at  DateTime @default(now())
+
+  variant ProductVariant @relation(fields: [variant_id], references: [id], onDelete: Cascade)
 }
 
 model ProductImage {
@@ -174,6 +209,7 @@ model User {
   orders      Order[]
   reviews     Review[]
   wishlist    Wishlist[]
+  returns     ReturnRequest[]
 }
 
 model Address {
@@ -201,19 +237,34 @@ model Cart {
 
   user    User           @relation(fields: [user_id], references: [id])
   variant ProductVariant @relation(fields: [variant_id], references: [id])
+
+  @@unique([user_id, variant_id])
 }
 
 model Order {
   id           String   @id @default(uuid())
   order_number String   @unique
   user_id      String
+
   total_amount Float
-  order_status String
+  order_status OrderStatus @default(PLACED)
+
+  shipping_name    String
+  shipping_phone   String
+  shipping_address String
+  shipping_city    String
+  shipping_state   String
+  shipping_pincode String
+  shipping_country String
+
   created_at   DateTime @default(now())
 
   user    User        @relation(fields: [user_id], references: [id])
   items   OrderItem[]
   payment Payment?
+  returnRequests ReturnRequest[]
+
+  @@index([order_status])
 }
 
 model OrderItem {
@@ -223,7 +274,7 @@ model OrderItem {
   quantity   Int
   price      Float
 
-  order   Order          @relation(fields: [order_id], references: [id])
+  order   Order          @relation(fields: [order_id], references: [id], onDelete: Cascade)
   variant ProductVariant @relation(fields: [variant_id], references: [id])
 }
 
@@ -233,10 +284,23 @@ model Payment {
   payment_method String
   transaction_id String
   amount         Float
-  status         String
+  status         PaymentStatus @default(PENDING)
   created_at     DateTime @default(now())
 
-  order Order @relation(fields: [order_id], references: [id])
+  order Order @relation(fields: [order_id], references: [id], onDelete: Cascade)
+}
+
+model ReturnRequest {
+  id          String   @id @default(uuid())
+  order_id    String
+  user_id     String
+  reason      String
+  status      ReturnStatus @default(REQUESTED)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  order Order @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [user_id], references: [id])
 }
 
 model Review {

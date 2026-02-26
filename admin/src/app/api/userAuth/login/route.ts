@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     // Email validation
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "Email does not exist" },
+        { success: false, message: "User not found" },
         { status: 404 }
       );
     }

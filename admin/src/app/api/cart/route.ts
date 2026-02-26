@@ -60,35 +60,26 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Product variant not found" }, { status: 404 });
         }
 
-        // Check if the item is already in the cart
-        const existingCartItem = await prisma.cart.findFirst({
+        // Use upsert to either create a new cart item or increment quantity of existing one
+        const cartItem = await prisma.cart.upsert({
             where: {
+                user_id_variant_id: {
+                    user_id,
+                    variant_id
+                }
+            },
+            update: {
+                quantity: {
+                    increment: quantity
+                }
+            },
+            create: {
                 user_id,
-                variant_id
+                variant_id,
+                quantity,
+                price: variant.price
             }
         });
-
-        let cartItem;
-
-        if (existingCartItem) {
-            // Update quantity
-            cartItem = await prisma.cart.update({
-                where: { id: existingCartItem.id },
-                data: {
-                    quantity: existingCartItem.quantity + quantity
-                }
-            });
-        } else {
-            // Create new cart item
-            cartItem = await prisma.cart.create({
-                data: {
-                    user_id,
-                    variant_id,
-                    quantity,
-                    price: variant.price
-                }
-            });
-        }
 
         return NextResponse.json(cartItem, { status: 201 });
     } catch (error: any) {
