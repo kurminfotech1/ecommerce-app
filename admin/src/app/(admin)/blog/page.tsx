@@ -871,7 +871,14 @@ export default function BlogPage() {
                     <input
                       type="checkbox"
                       checked={form.is_published}
-                      onChange={(e) => setForm({ ...form, is_published: e.target.checked, is_draft: e.target.checked ? false : form.is_draft })}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          is_published: e.target.checked,
+                          is_draft: e.target.checked ? false : form.is_draft,
+                          ...(!e.target.checked && { is_featured: false }), // If unpublishing, remove featured
+                        })
+                      }
                       className="w-4 h-4 rounded border-gray-300 text-[#155dfc] focus:ring-[#155dfc]"
                     />
                     <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">Published</span>
@@ -880,7 +887,14 @@ export default function BlogPage() {
                     <input
                       type="checkbox"
                       checked={form.is_draft}
-                      onChange={(e) => setForm({ ...form, is_draft: e.target.checked, is_published: e.target.checked ? false : form.is_published })}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          is_draft: e.target.checked,
+                          is_published: e.target.checked ? false : form.is_published,
+                          ...(e.target.checked && { is_featured: false }), // Drafts cannot be featured
+                        })
+                      }
                       className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
                     />
                     <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">Draft</span>
@@ -889,7 +903,13 @@ export default function BlogPage() {
                     <input
                       type="checkbox"
                       checked={form.is_featured}
-                      onChange={(e) => setForm({ ...form, is_featured: e.target.checked })}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          is_featured: e.target.checked,
+                          ...(e.target.checked && { is_published: true, is_draft: false }), // Featured implies published
+                        })
+                      }
                       className="w-4 h-4 rounded border-gray-300 text-[#155dfc] focus:ring-[#155dfc]"
                     />
                     <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">Featured</span>

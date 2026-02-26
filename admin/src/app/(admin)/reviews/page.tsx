@@ -1,6 +1,10 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { RootState } from "@/redux/rootReducer";
+import { getReviews, updateReviewStatus, deleteReview, Review, ReviewStatus } from "@/redux/reviews/reviewApi";
 import {
   Search,
   Star,
@@ -14,8 +18,6 @@ import {
   MoreVertical,
   Trash2,
   MessageSquare,
-  ThumbsUp,
-  ThumbsDown,
   BarChart2,
   ShoppingBag,
   AlertCircle,
@@ -23,192 +25,11 @@ import {
 } from "lucide-react";
 import { DeleteModal } from "@/components/common/DeleteModal";
 
-// ── Types ──────────────────────────────────────────────────────────
-type ReviewStatus = "Pending" | "Approved" | "Rejected";
 
-interface Review {
-  id: string;
-  customer: {
-    name: string;
-    email: string;
-  };
-  product: {
-    name: string;
-    image: string;
-    category: string;
-  };
-  rating: number; // 1–5
-  title: string;
-  body: string;
-  status: ReviewStatus;
-  date: string;
-  helpful: number;
-  notHelpful: number;
-  verified: boolean;
-}
-
-// ── Mock Data ──────────────────────────────────────────────────────
-const MOCK_REVIEWS: Review[] = [
-  {
-    id: "REV-001",
-    customer: { name: "John Doe", email: "john@example.com" },
-    product: { name: "Wireless Headphones", image: "🎧", category: "Electronics" },
-    rating: 5,
-    title: "Absolutely amazing sound quality!",
-    body: "These headphones completely blew me away. The noise cancellation is top-notch, battery life is incredible, and the sound is crystal clear. Highly recommend to anyone who loves music.",
-    status: "Approved",
-    date: "2025-06-10T10:31:00Z",
-    helpful: 42,
-    notHelpful: 3,
-    verified: true,
-  },
-  {
-    id: "REV-002",
-    customer: { name: "Jane Smith", email: "jane@example.com" },
-    product: { name: "Mechanical Keyboard", image: "⌨️", category: "Accessories" },
-    rating: 4,
-    title: "Great keyboard, minor issues",
-    body: "The typing experience is fantastic and the RGB is beautiful. Only minor complaint is that the software can be a bit finicky on initial setup, but after that it works perfectly.",
-    status: "Approved",
-    date: "2025-06-08T14:20:00Z",
-    helpful: 28,
-    notHelpful: 2,
-    verified: true,
-  },
-  {
-    id: "REV-003",
-    customer: { name: "Mike Johnson", email: "mike@example.com" },
-    product: { name: "Running Shoes", image: "👟", category: "Footwear" },
-    rating: 2,
-    title: "Disappointed with the quality",
-    body: "The shoes look great in the photos but the actual product feels very cheap. The sole started peeling after just two weeks of moderate use. Not worth the price at all.",
-    status: "Pending",
-    date: "2025-06-09T09:15:00Z",
-    helpful: 15,
-    notHelpful: 1,
-    verified: true,
-  },
-  {
-    id: "REV-004",
-    customer: { name: "Emily Davis", email: "emily@example.com" },
-    product: { name: "Smart Watch", image: "⌚", category: "Electronics" },
-    rating: 5,
-    title: "Best smartwatch I've ever owned",
-    body: "Everything about this watch is premium. The display is gorgeous, the fitness tracking is accurate, and battery lasts 3 full days. The integration with my phone is seamless.",
-    status: "Approved",
-    date: "2025-06-07T16:45:00Z",
-    helpful: 67,
-    notHelpful: 5,
-    verified: false,
-  },
-  {
-    id: "REV-005",
-    customer: { name: "Robert Wilson", email: "robert@example.com" },
-    product: { name: "Noise Cancelling Earbuds", image: "🎵", category: "Electronics" },
-    rating: 3,
-    title: "Decent but overpriced",
-    body: "Sound quality is good but not exceptional for this price range. The ANC works well in quiet environments but struggles with loud noise. Fit could be better for long listening sessions.",
-    status: "Pending",
-    date: "2025-06-10T08:00:00Z",
-    helpful: 9,
-    notHelpful: 4,
-    verified: true,
-  },
-  {
-    id: "REV-006",
-    customer: { name: "Sarah Connor", email: "sarah@example.com" },
-    product: { name: "Yoga Mat", image: "🧘", category: "Fitness" },
-    rating: 5,
-    title: "Perfect for daily yoga practice",
-    body: "This mat is thick, grippy, and easy to clean. I use it every day and it still looks brand new after 3 months. The carrying strap is a nice bonus. Totally worth every penny!",
-    status: "Approved",
-    date: "2025-06-05T11:30:00Z",
-    helpful: 33,
-    notHelpful: 0,
-    verified: true,
-  },
-  {
-    id: "REV-007",
-    customer: { name: "Chris Evans", email: "chris@example.com" },
-    product: { name: "Coffee Machine", image: "☕", category: "Kitchen" },
-    rating: 1,
-    title: "Terrible - broke after 2 weeks",
-    body: "This coffee machine stopped working after just two weeks. The water pump made a terrible noise and then completely died. Customer service was unhelpful. Avoid at all costs!",
-    status: "Rejected",
-    date: "2025-06-04T13:00:00Z",
-    helpful: 22,
-    notHelpful: 8,
-    verified: true,
-  },
-  {
-    id: "REV-008",
-    customer: { name: "Lisa Park", email: "lisa@example.com" },
-    product: { name: "Monitor 27\"", image: "🖥️", category: "Electronics" },
-    rating: 4,
-    title: "Sharp display, great for work",
-    body: "Colors are vivid and accurate straight out of the box. The 4K resolution makes text incredibly sharp for long work sessions. Only wish it had built-in speakers.",
-    status: "Pending",
-    date: "2025-06-10T12:00:00Z",
-    helpful: 5,
-    notHelpful: 1,
-    verified: true,
-  },
-  {
-    id: "REV-009",
-    customer: { name: "Tom Brady", email: "tom@example.com" },
-    product: { name: "Portable Charger", image: "🔋", category: "Accessories" },
-    rating: 5,
-    title: "Lifesaver on long trips!",
-    body: "This power bank has saved me countless times during travel. It charged my phone 4 times on a single charge and is slim enough to fit in my pocket. Highly recommended.",
-    status: "Approved",
-    date: "2025-06-03T09:45:00Z",
-    helpful: 51,
-    notHelpful: 2,
-    verified: false,
-  },
-  {
-    id: "REV-010",
-    customer: { name: "Mia Stone", email: "mia@example.com" },
-    product: { name: "Desk Lamp", image: "💡", category: "Home & Office" },
-    rating: 4,
-    title: "Great lamp, stylish design",
-    body: "The adjustable brightness and color temperature are perfect for late-night work. The build quality feels solid and the minimalist design looks great on my desk.",
-    status: "Approved",
-    date: "2025-06-01T17:20:00Z",
-    helpful: 19,
-    notHelpful: 1,
-    verified: true,
-  },
-  {
-    id: "REV-011",
-    customer: { name: "Jake Turner", email: "jake@example.com" },
-    product: { name: "Bluetooth Speaker", image: "🔊", category: "Electronics" },
-    rating: 3,
-    title: "Good for outdoors, lacks bass",
-    body: "Waterproof and durable — perfect for outdoor use. However, the bass is quite weak for indoor listening. The 10-hour battery life is a plus though.",
-    status: "Rejected",
-    date: "2025-05-30T11:00:00Z",
-    helpful: 7,
-    notHelpful: 3,
-    verified: true,
-  },
-  {
-    id: "REV-012",
-    customer: { name: "Anna Kim", email: "anna@example.com" },
-    product: { name: "Gaming Mouse", image: "🖱️", category: "Accessories" },
-    rating: 5,
-    title: "Precision gaming perfection",
-    body: "The sensor is incredibly accurate even at high DPI settings. Buttons have a satisfying click and the ergonomic shape is comfortable for hours of gaming. Best mouse I've used.",
-    status: "Approved",
-    date: "2025-05-28T15:30:00Z",
-    helpful: 88,
-    notHelpful: 4,
-    verified: true,
-  },
-];
 
 // ── Helpers ────────────────────────────────────────────────────────
 const formatDate = (iso: string) => {
+  if (!iso) return "N/A";
   const d = new Date(iso);
   return d.toLocaleDateString("en-GB", {
     day: "2-digit",
@@ -221,11 +42,15 @@ const AVATAR_COLORS = [
   "bg-violet-500", "bg-blue-500", "bg-emerald-500",
   "bg-amber-500", "bg-rose-500", "bg-purple-500", "bg-teal-500",
 ];
-const avatarColor = (name: string) =>
-  AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
+const avatarColor = (name: string) => {
+  if (!name) return AVATAR_COLORS[0];
+  return AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
+};
 
-const initials = (name: string) =>
-  name.split(" ").map((p) => p[0]).join("").toUpperCase().slice(0, 2);
+const initials = (name: string) => {
+  if (!name) return "U";
+  return name.split(" ").map((p) => p[0]).join("").toUpperCase().slice(0, 2);
+};
 
 // ── Star Rating ────────────────────────────────────────────────────
 const StarRating = ({ rating, size = 14 }: { rating: number; size?: number }) => (
@@ -385,7 +210,7 @@ const ReviewDetailModal = ({ review, onClose, onApprove, onReject }: {
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
         <div>
           <h2 className="text-lg font-bold text-gray-900">Review Details</h2>
-          <p className="text-xs text-gray-400 mt-0.5">{review.id} · {formatDate(review.date)}</p>
+          <p className="text-xs text-gray-400 mt-0.5">Submitted on {formatDate(review.date)}</p>
         </div>
         <div className="flex items-center gap-2">
           <StatusBadge status={review.status} />
@@ -396,10 +221,13 @@ const ReviewDetailModal = ({ review, onClose, onApprove, onReject }: {
       </div>
 
       <div className="p-6 space-y-5">
-        {/* Product */}
         <div className="flex items-center gap-4 bg-gray-50 rounded-xl p-4">
-          <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-2xl shadow-sm shrink-0">
-            {review.product.image}
+          <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-xs overflow-hidden shadow-sm shrink-0">
+            {review.product.image ? (
+              <img src={review.product.image} alt={review.product.name} className="w-full h-full object-cover" />
+            ) : (
+              <ShoppingBag size={20} className="text-gray-400" />
+            )}
           </div>
           <div>
             <p className="font-semibold text-gray-800">{review.product.name}</p>
@@ -407,11 +235,6 @@ const ReviewDetailModal = ({ review, onClose, onApprove, onReject }: {
               <ShoppingBag size={9} />{review.product.category}
             </span>
           </div>
-          {review.verified && (
-            <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-emerald-600 font-semibold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-              <CheckCircle2 size={9} /> Verified Purchase
-            </span>
-          )}
         </div>
 
         {/* Customer */}
@@ -430,21 +253,8 @@ const ReviewDetailModal = ({ review, onClose, onApprove, onReject }: {
 
         {/* Review content */}
         <div className="space-y-3">
-          <h3 className="font-bold text-gray-900">"{review.title}"</h3>
+          <h3 className="font-bold text-gray-900">&quot;{review.title}&quot;</h3>
           <p className="text-sm text-gray-600 leading-relaxed">{review.body}</p>
-        </div>
-
-        {/* Helpful */}
-        <div className="flex items-center gap-4 pt-2 border-t border-gray-100">
-          <span className="text-xs text-gray-500">Was this review helpful?</span>
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
-              <ThumbsUp size={12} /> {review.helpful}
-            </span>
-            <span className="flex items-center gap-1 text-xs text-red-500 font-medium">
-              <ThumbsDown size={12} /> {review.notHelpful}
-            </span>
-          </div>
         </div>
       </div>
 
@@ -485,26 +295,9 @@ const ReviewRowDetail = ({ review }: { review: Review }) => (
         <div className="flex items-start gap-3">
           <MessageSquare size={14} className="text-violet-500 mt-0.5 shrink-0" />
           <div className="flex-1">
-            <p className="text-xs font-bold text-gray-700 mb-1">"{review.title}"</p>
+            <p className="text-xs font-bold text-gray-700 mb-1">&quot;{review.title}&quot;</p>
             <p className="text-sm text-gray-600 leading-relaxed">{review.body}</p>
           </div>
-        </div>
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5 text-xs text-gray-500">
-              <ThumbsUp size={12} className="text-emerald-500" />
-              <span className="font-semibold text-emerald-600">{review.helpful}</span> helpful
-            </span>
-            <span className="flex items-center gap-1.5 text-xs text-gray-500">
-              <ThumbsDown size={12} className="text-red-400" />
-              <span className="font-semibold text-red-500">{review.notHelpful}</span> not helpful
-            </span>
-          </div>
-          {review.verified && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-              <CheckCircle2 size={9} /> Verified Purchase
-            </span>
-          )}
         </div>
       </div>
     </td>
@@ -519,11 +312,34 @@ const ALL_STATUSES: Array<ReviewStatus | "All"> = ["All", "Pending", "Approved",
 const ALL_RATINGS = ["All", "5", "4", "3", "2", "1"];
 
 export default function ReviewsPage() {
-  const [reviews, setReviews] = useState<Review[]>(MOCK_REVIEWS);
+  const dispatch = useDispatch<AppDispatch>();
+  const { reviews, totalRecords, currentPage, totalPages, pageSize, loading } = useSelector((state: RootState) => state.reviews);
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [ratingFilter, setRatingFilter] = useState<string>("All");
   const [page, setPage] = useState(1);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    dispatch(getReviews({ 
+      page, 
+      limit: 10, 
+      search, 
+      status: statusFilter, 
+      rating: ratingFilter 
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, page, statusFilter, ratingFilter]);
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setPage(1);
+      dispatch(getReviews({ page: 1, limit: 10, search: value, status: statusFilter, rating: ratingFilter }));
+    }, 400);
+  };
 
   // Expand row
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
@@ -535,27 +351,21 @@ export default function ReviewsPage() {
     });
 
   // Modals
-  const [deleteReview, setDeleteReview] = useState<Review | null>(null);
+  const [deleteReviewState, setDeleteReviewState] = useState<Review | null>(null);
   const [viewReview, setViewReview] = useState<Review | null>(null);
 
   // Actions
-  const handleApprove = (id: string) =>
-    setReviews((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: "Approved" as ReviewStatus } : r))
-    );
-  const handleReject = (id: string) =>
-    setReviews((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: "Rejected" as ReviewStatus } : r))
-    );
+  const handleApprove = (id: string) => dispatch(updateReviewStatus({ id, status: "Approved" }));
+  const handleReject = (id: string) => dispatch(updateReviewStatus({ id, status: "Rejected" }));
   const handleDelete = () => {
-    if (!deleteReview) return;
-    setReviews((prev) => prev.filter((r) => r.id !== deleteReview.id));
-    setDeleteReview(null);
+    if (!deleteReviewState) return;
+    dispatch(deleteReview(deleteReviewState.id));
+    setDeleteReviewState(null);
   };
 
   // Stats
   const stats = useMemo(() => {
-    const total = reviews.length;
+    const total = reviews.length; // Actually totalRecords is better, but this gives current page stats. Let's just use it on the current payload or an overview api.
     const approved = reviews.filter((r) => r.status === "Approved").length;
     const pending = reviews.filter((r) => r.status === "Pending").length;
     const rejected = reviews.filter((r) => r.status === "Rejected").length;
@@ -567,28 +377,12 @@ export default function ReviewsPage() {
       star,
       count: reviews.filter((r) => r.rating === star).length,
     }));
-    return { total, approved, pending, rejected, avgRating, byRating };
-  }, [reviews]);
+    return { total: totalRecords || 0, approved, pending, rejected, avgRating, byRating };
+  }, [reviews, totalRecords]);
 
-  // Filtered + paginated
-  const filtered = useMemo(() => {
-    return reviews.filter((r) => {
-      const matchSearch =
-        r.customer.name.toLowerCase().includes(search.toLowerCase()) ||
-        r.product.name.toLowerCase().includes(search.toLowerCase()) ||
-        r.title.toLowerCase().includes(search.toLowerCase()) ||
-        r.id.toLowerCase().includes(search.toLowerCase());
-      const matchStatus = statusFilter === "All" || r.status === statusFilter;
-      const matchRating = ratingFilter === "All" || r.rating === Number(ratingFilter);
-      return matchSearch && matchStatus && matchRating;
-    });
-  }, [reviews, search, statusFilter, ratingFilter]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
-  const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
-
-  const handleFilter = (setter: (v: string) => void) => (v: string) => {
-    setter(v); setPage(1);
+  const handleFilter = (setter: React.Dispatch<React.SetStateAction<string>>) => (v: string) => {
+    setter(v);
+    setPage(1);
   };
 
   return (
@@ -601,7 +395,7 @@ export default function ReviewsPage() {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Manage Reviews</h1>
               <p className="text-sm text-gray-500 mt-0.5">
-                {filtered.length} review{filtered.length !== 1 ? "s" : ""} found
+                {totalRecords} review{totalRecords !== 1 ? "s" : ""} found
               </p>
             </div>
             <div className="flex gap-2 flex-wrap items-center">
@@ -695,7 +489,7 @@ export default function ReviewsPage() {
           </div>
 
           {/* ── Table ── */}
-          {filtered.length === 0 ? (
+          {reviews.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl border border-dashed border-gray-200">
               <div className="w-16 h-16 bg-violet-50 rounded-2xl flex items-center justify-center mb-4">
                 <MessageSquare size={28} className="text-violet-400" />
@@ -704,12 +498,12 @@ export default function ReviewsPage() {
               <p className="text-sm text-gray-400">Try adjusting your search or filters.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm text-sm">
+              <div className="w-full">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                      <th className="px-4 py-3 text-left">ID</th>
+                      <th className="px-4 py-3 text-left">#</th>
                       <th className="px-4 py-3 text-left">Customer</th>
                       <th className="px-4 py-3 text-left">Product</th>
                       <th className="px-4 py-3 text-left">Rating</th>
@@ -720,15 +514,15 @@ export default function ReviewsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {paginated.map((review) => {
+                    {reviews.map((review, index) => {
                       const isExpanded = expandedRows.has(review.id);
                       return (
                         <React.Fragment key={review.id}>
                           <tr className="hover:bg-violet-50/30 transition group">
-                            {/* ID */}
+                            {/* Number */}
                             <td className="px-4 py-3">
                               <span className="font-mono text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded-lg">
-                                {review.id}
+                                {(page - 1) * 10 + index + 1}
                               </span>
                             </td>
 
@@ -752,7 +546,13 @@ export default function ReviewsPage() {
                             {/* Product */}
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-2">
-                                <span className="text-xl">{review.product.image}</span>
+                                <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden shrink-0 border border-gray-200">
+                                  {review.product.image ? (
+                                    <img src={review.product.image} alt={review.product.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <ShoppingBag size={14} className="text-gray-400" />
+                                  )}
+                                </div>
                                 <div>
                                   <p className="text-xs font-medium text-gray-800 leading-tight max-w-[120px] truncate">
                                     {review.product.name}
@@ -766,11 +566,6 @@ export default function ReviewsPage() {
                             <td className="px-4 py-3">
                               <div className="flex flex-col gap-1">
                                 <StarRating rating={review.rating} />
-                                {review.verified && (
-                                  <span className="text-[10px] text-emerald-600 font-medium flex items-center gap-0.5">
-                                    <CheckCircle2 size={9} /> Verified
-                                  </span>
-                                )}
                               </div>
                             </td>
 
@@ -779,14 +574,6 @@ export default function ReviewsPage() {
                               <p className="text-xs text-gray-700 font-medium max-w-[160px] truncate">
                                 {review.title}
                               </p>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="flex items-center gap-0.5 text-[10px] text-emerald-600">
-                                  <ThumbsUp size={9} /> {review.helpful}
-                                </span>
-                                <span className="flex items-center gap-0.5 text-[10px] text-red-400">
-                                  <ThumbsDown size={9} /> {review.notHelpful}
-                                </span>
-                              </div>
                             </td>
 
                             {/* Status */}
@@ -834,7 +621,7 @@ export default function ReviewsPage() {
                                   review={review}
                                   onApprove={() => handleApprove(review.id)}
                                   onReject={() => handleReject(review.id)}
-                                  onDelete={() => setDeleteReview(review)}
+                                  onDelete={() => setDeleteReviewState(review)}
                                   onView={() => setViewReview(review)}
                                 />
                               </div>
@@ -858,12 +645,12 @@ export default function ReviewsPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-500">
-                Page {page} of {totalPages}&nbsp;·&nbsp;{filtered.length} reviews
+                Page {page} of {totalPages}&nbsp;·&nbsp;{totalRecords} reviews
               </p>
               <div className="flex gap-2">
                 <button
                   disabled={page === 1}
-                  onClick={() => setPage((p) => p - 1)}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
                   className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40 transition"
                 >
                   <ChevronLeft size={14} /> Prev
@@ -882,7 +669,7 @@ export default function ReviewsPage() {
                 ))}
                 <button
                   disabled={page === totalPages}
-                  onClick={() => setPage((p) => p + 1)}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40 transition"
                 >
                   Next <ChevronRight size={14} />
@@ -895,11 +682,11 @@ export default function ReviewsPage() {
 
       {/* ── Delete Modal ── */}
       <DeleteModal
-        open={!!deleteReview}
-        onClose={() => setDeleteReview(null)}
+        open={!!deleteReviewState}
+        onClose={() => setDeleteReviewState(null)}
         onConfirm={handleDelete}
-        parentTitle={`Delete Review ${deleteReview?.id}?`}
-        childTitle={`This will permanently delete the review by ${deleteReview?.customer.name} for "${deleteReview?.product.name}". This action cannot be undone.`}
+        parentTitle="Delete Review?"
+        childTitle={`This will permanently delete the review by ${deleteReviewState?.customer.name} for "${deleteReviewState?.product.name}". This action cannot be undone.`}
       />
 
       {/* ── Detail Modal ── */}

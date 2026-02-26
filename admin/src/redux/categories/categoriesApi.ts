@@ -11,6 +11,8 @@ export interface Category {
   parentId: string | null;
   is_active: boolean;
   children?: Category[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CreateCategoryPayload {
