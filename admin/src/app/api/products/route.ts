@@ -106,7 +106,7 @@ export async function GET(req: Request) {
       ...(isNewParam === "true" ? { is_new: true } : {}),
       ...(isUpcomingParam === "true" ? { is_upcoming: true } : {}),
       AND: [
-        search ? { slug: { contains: search, mode: "insensitive" } } : {},
+        search ? { product_name: { contains: search, mode: "insensitive" } } : {},
         category ? { category_id: category } : {},
       ],
       ...(Object.keys(variantFilters).length > 0 ? { variants: { some: variantFilters } } : {}),

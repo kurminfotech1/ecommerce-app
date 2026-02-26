@@ -17,10 +17,14 @@ export async function GET(req: Request) {
     const limit = limitParam ? parseInt(limitParam) : null;
     const status = searchParams.get("status") || "All"; // All | Pending | Approved | Rejected
     const ratingParam = searchParams.get("rating") || "All"; // All | 5 | 4 | 3 | 2 | 1
+    const product_id = searchParams.get("product_id");
 
     const skip = limit ? (page - 1) * limit : 0;
 
     const where: any = {};
+    if (product_id) {
+      where.product_id = product_id;
+    }
     if (status !== "All") {
       where.status = status;
     }
@@ -102,13 +106,16 @@ export async function GET(req: Request) {
 /* ================= POST ================= */
 export async function POST(req: Request) {
   try {
-    // const user = await verifyToken();
-    // if (!user) {
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    // }
+    const { searchParams } = new URL(req.url);
+    const queryProductId = searchParams.get("product_id");
 
-    const body = await req.json();
-    const { user_id, product_id, rating, title, body: reviewBody } = body;
+    // Try token, otherwise require user_id in body
+    const user = await verifyToken();
+
+    const body = await req.json().catch(() => ({}));
+    const product_id = queryProductId || body.product_id;
+    const user_id = user?.id || body.user_id;
+    const { rating, title, body: reviewBody } = body;
 
     if (!user_id || !product_id || !rating) {
       return NextResponse.json({ error: "User ID, Product ID, and rating are required" }, { status: 400 });
@@ -124,6 +131,8 @@ export async function POST(req: Request) {
         status: "Pending", 
       },
     });
+
+    // We only update rating when it's Approved, so no need to recalculate here unless default status changes.
 
     return NextResponse.json(
       { review: newReview, message: "Review submitted successfully" },

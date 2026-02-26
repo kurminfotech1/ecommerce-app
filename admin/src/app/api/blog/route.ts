@@ -7,6 +7,23 @@ const blogInclude = {
   tags: true,
 } as const;
 
+/** Upsert tags by name → returns array of { id } for Prisma connect */
+async function upsertTags(names: string[]): Promise<{ id: string }[]> {
+  const results: { id: string }[] = [];
+  for (const rawName of names) {
+    const name = rawName.trim();
+    if (!name) continue;
+    const slug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    const tag = await prisma.blogTag.upsert({
+      where: { slug },
+      update: {},
+      create: { name, slug },
+    });
+    results.push({ id: tag.id });
+  }
+  return results;
+}
+
 // ─────────────────────────────────────────────────────────────────
 // GET  /api/blog
 //   ?id=<uuid>              → single blog
@@ -110,6 +127,14 @@ export async function POST(req: Request) {
       );
     }
 
+    // Resolve tags: accept either tag_ids (UUIDs) or blog_tags (name strings)
+    let tagConnects: { id: string }[] = [];
+    if (Array.isArray(body.tag_ids) && body.tag_ids.length > 0) {
+      tagConnects = body.tag_ids.map((id: string) => ({ id }));
+    } else if (Array.isArray(body.blog_tags) && body.blog_tags.length > 0) {
+      tagConnects = await upsertTags(body.blog_tags);
+    }
+
     const blog = await prisma.blog.create({
       data: {
         title: body.title,
@@ -126,9 +151,7 @@ export async function POST(req: Request) {
         is_published: body.is_published ?? false,
         is_featured: body.is_featured ?? false,
         published_at: body.is_published ? new Date() : null,
-        tags: body.tag_ids?.length > 0
-          ? { connect: body.tag_ids.map((id: string) => ({ id })) }
-          : undefined,
+        tags: tagConnects.length > 0 ? { connect: tagConnects } : undefined,
       },
       include: blogInclude,
     });
@@ -174,6 +197,18 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Blog not found" }, { status: 404 });
     }
 
+    // Resolve tags: accept either tag_ids (UUIDs) or blog_tags (name strings)
+    let tagConnects: { id: string }[] | undefined;
+    if (body.tag_ids !== undefined) {
+      if (Array.isArray(body.tag_ids) && body.tag_ids.length > 0) {
+        tagConnects = body.tag_ids.map((id: string) => ({ id }));
+      } else {
+        tagConnects = []; // explicit empty → clear all tags
+      }
+    } else if (Array.isArray(body.blog_tags)) {
+      tagConnects = await upsertTags(body.blog_tags);
+    }
+
     const updatedBlog = await prisma.blog.update({
       where: { id },
       data: {
@@ -195,10 +230,8 @@ export async function PUT(req: Request) {
           published_at: body.is_published ? new Date() : null
         }),
 
-        ...(body.tag_ids !== undefined && {
-          tags: {
-            set: body.tag_ids.map((id: string) => ({ id }))
-          }
+        ...(tagConnects !== undefined && {
+          tags: { set: tagConnects },
         }),
       },
       include: blogInclude,
