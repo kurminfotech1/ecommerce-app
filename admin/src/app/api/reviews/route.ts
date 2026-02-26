@@ -45,9 +45,15 @@ export async function GET(req: Request) {
           product: {
             include: {
               category: true,
-              images: {
-                orderBy: { sort_order: "asc" },
+              variants: {
+                orderBy: { created_at: "asc" },
                 take: 1,
+                include: {
+                  images: {
+                    orderBy: { sort_order: "asc" },
+                    take: 1,
+                  },
+                },
               },
             },
           },
@@ -67,17 +73,14 @@ export async function GET(req: Request) {
       },
       product: {
         name: r.product.product_name,
-        image: r.product.images[0]?.image_url || "📦",
-        category: r.product.category?.name || "Uncategorized",
+        image: r.product.variants?.[0]?.images?.[0]?.image_url || null,
+        category: r.product.category?.name,
       },
       rating: r.rating,
       title: r.title || "Review",
       body: r.body || "",
       status: r.status,
       date: r.created_at,
-      helpful: r.helpful,
-      notHelpful: r.notHelpful,
-      verified: r.verified,
     }));
 
     return NextResponse.json({
@@ -99,36 +102,26 @@ export async function GET(req: Request) {
 /* ================= POST ================= */
 export async function POST(req: Request) {
   try {
-    const user = await verifyToken();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // const user = await verifyToken();
+    // if (!user) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
 
     const body = await req.json();
-    const { product_id, rating, title, body: reviewBody } = body;
+    const { user_id, product_id, rating, title, body: reviewBody } = body;
 
-    if (!product_id || !rating) {
-      return NextResponse.json({ error: "Product ID and rating are required" }, { status: 400 });
+    if (!user_id || !product_id || !rating) {
+      return NextResponse.json({ error: "User ID, Product ID, and rating are required" }, { status: 400 });
     }
-
-    // Determine if verified purchase
-    // A simple check if user has bought this product
-    const hasBought = await prisma.orderItem.findFirst({
-      where: {
-        order: { user_id: user.id },
-        variant: { product_id: product_id },
-      },
-    });
 
     const newReview = await prisma.review.create({
       data: {
-        user_id: user.id,
+        user_id,
         product_id,
         rating: Number(rating),
         title,
         body: reviewBody,
-        status: "Pending", // Admin moderation by default
-        verified: !!hasBought,
+        status: "Pending", 
       },
     });
 
