@@ -102,7 +102,7 @@ export async function GET(req: Request) {
       ...(searchParams.get("bestseller") === "true" ? { is_bestseller: true } : {}),
       ...(searchParams.get("new") === "true" ? { is_new: true } : {}),
       AND: [
-        search ? { product_name: { contains: search, mode: "insensitive" } } : {},
+        search ? { slug: { contains: search, mode: "insensitive" } } : {},
         category ? { category_id: category } : {},
       ],
       ...(Object.keys(variantFilters).length > 0 ? { variants: { some: variantFilters } } : {}),
