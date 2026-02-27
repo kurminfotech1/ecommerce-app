@@ -5,7 +5,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const images = await prisma.product_images.createMany({
+    const images = await prisma.productImage.createMany({
       data: body.images, // [{ product_id, image_url }]
     });
 
@@ -20,8 +20,8 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   const id = new URL(req.url).searchParams.get("id");
 
-  await prisma.product_images.delete({
-    where: { id: Number(id) },
+  await prisma.productImage.delete({
+    where: { id: id ?? "" },
   });
 
   return NextResponse.json({ message: "Deleted" });
