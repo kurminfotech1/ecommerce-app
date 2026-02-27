@@ -184,7 +184,7 @@ export default function BlogPage() {
   const fetchBlogs = useCallback(() => {
     dispatch(getBlogs({
       page,
-      limit: 10,
+      limit: 5,
       search,
       published: publishedFilter || undefined,
       draft: draftFilter || undefined,
@@ -334,9 +334,7 @@ export default function BlogPage() {
       is_published: form.is_published,
       is_draft: form.is_draft,
       is_featured: form.is_featured,
-      // Tags are passed as names (strings) — the API can handle tag_ids but
-      // since we're using an expanded input with tag names, we send them directly.
-      // The blog_tags field stores tag names entered by the user.
+      blog_tags: form.blog_tags, // tag name strings — API upserts & connects them
     };
 
     let result: any;
@@ -358,7 +356,13 @@ export default function BlogPage() {
     await dispatch(deleteBlog(deleteBlogItem.id));
     setDeleteLoading(false);
     setDeleteBlogItem(null);
-    fetchBlogs();
+    // If this was the last item on the current page, go back one page
+    const remainingOnPage = (blogs?.length ?? 0) - 1;
+    if (remainingOnPage === 0 && page > 1) {
+      setPage((p) => p - 1);
+    } else {
+      fetchBlogs();
+    }
   };
 
   const resetFilters = () => {
@@ -586,24 +590,65 @@ export default function BlogPage() {
 
           {/* ── Pagination ── */}
           {!loading && totalPages > 1 && (
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-3">
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Page {page} of {totalPages}
+                Page <span className="font-semibold text-gray-700 dark:text-gray-300">{page}</span> of{" "}
+                <span className="font-semibold text-gray-700 dark:text-gray-300">{totalPages}</span>
               </p>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-1">
+                {/* Prev */}
                 <button
                   disabled={page === 1}
                   onClick={() => setPage((p) => p - 1)}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl disabled:opacity-40 transition cursor-pointer"
+                  className="p-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 transition cursor-pointer"
                 >
-                  <ChevronLeft size={14} /> Prev
+                  <ChevronLeft size={15} />
                 </button>
+
+                {/* Page numbers with ellipsis */}
+                {(() => {
+                  const delta = 1; // pages around current
+                  const pages: (number | "...")[] = [];
+                  const left = page - delta;
+                  const right = page + delta;
+
+                  for (let i = 1; i <= totalPages; i++) {
+                    if (i === 1 || i === totalPages || (i >= left && i <= right)) {
+                      pages.push(i);
+                    } else if (
+                      (i === left - 1 && left - 1 > 1) ||
+                      (i === right + 1 && right + 1 < totalPages)
+                    ) {
+                      pages.push("...");
+                    }
+                  }
+
+                  return pages.map((p, idx) =>
+                    p === "..." ? (
+                      <span key={`ellipsis-${idx}`} className="px-1.5 py-1 text-sm text-gray-400 select-none">…</span>
+                    ) : (
+                      <button
+                        key={p}
+                        onClick={() => setPage(p as number)}
+                        className={`min-w-[34px] h-[34px] text-sm rounded-xl border transition cursor-pointer ${
+                          page === p
+                            ? "bg-[#155dfc] text-white border-[#155dfc] font-semibold shadow-sm"
+                            : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    )
+                  );
+                })()}
+
+                {/* Next */}
                 <button
                   disabled={page === totalPages}
                   onClick={() => setPage((p) => p + 1)}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl disabled:opacity-40 transition cursor-pointer"
+                  className="p-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 transition cursor-pointer"
                 >
-                  Next <ChevronRight size={14} />
+                  <ChevronRight size={15} />
                 </button>
               </div>
             </div>

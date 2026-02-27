@@ -538,12 +538,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                 >
                   Certifications
                 </button>
-                <button
-                  className={`py-4 px-6 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'reviews' ? 'text-[#155dfc] border-b-2 border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
-                  onClick={() => setActiveTab('reviews')}
-                >
-                  Reviews
-                </button>
+               
               </nav>
             </div>
             
@@ -641,66 +636,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                 </div>
               )}
               
-              {activeTab === 'reviews' && (
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Customer Reviews</h2>
-                  {product.rating_avg !== undefined ? (
-                    <div className="mb-6">
-                      <div className="flex items-center gap-2 mb-4">
-                        <div className="flex items-center">
-                          {[...Array(5)].map((_, i) => (
-                            <Star 
-                              key={i} 
-                              size={20} 
-                              className={`${i < Math.floor(product.rating_avg!) ? 'text-amber-400 fill-amber-400' : 'text-gray-300 dark:text-gray-500'} `} 
-                            />
-                          ))}
-                        </div>
-                        <span className="font-semibold text-gray-900 dark:text-white">{product.rating_avg?.toFixed(1)} out of 5</span>
-                        <span className="text-gray-500 dark:text-gray-400">({product.rating_count || 0} reviews)</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-gray-500 dark:text-gray-400 mb-4">No reviews yet</p>
-                  )}
-                  
-                  <div className="space-y-4">
-                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h4 className="font-medium text-gray-900 dark:text-white">John Doe</h4>
-                          <div className="flex items-center gap-1 mt-1">
-                            <Star size={14} className="text-amber-400 fill-amber-400" />
-                            <Star size={14} className="text-amber-400 fill-amber-400" />
-                            <Star size={14} className="text-amber-400 fill-amber-400" />
-                            <Star size={14} className="text-amber-400 fill-amber-400" />
-                            <Star size={14} className="text-gray-300 dark:text-gray-500" />
-                          </div>
-                        </div>
-                        <span className="text-sm text-gray-500 dark:text-gray-400">2 days ago</span>
-                      </div>
-                      <p className="mt-3 text-gray-600 dark:text-gray-300">Great product! Very satisfied with the quality and fast delivery.</p>
-                    </div>
-                    
-                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h4 className="font-medium text-gray-900 dark:text-white">Jane Smith</h4>
-                          <div className="flex items-center gap-1 mt-1">
-                            <Star size={14} className="text-amber-400 fill-amber-400" />
-                            <Star size={14} className="text-amber-400 fill-amber-400" />
-                            <Star size={14} className="text-amber-400 fill-amber-400" />
-                            <Star size={14} className="text-amber-400 fill-amber-400" />
-                            <Star size={14} className="text-amber-400 fill-amber-400" />
-                          </div>
-                        </div>
-                        <span className="text-sm text-gray-500 dark:text-gray-400">1 week ago</span>
-                      </div>
-                      <p className="mt-3 text-gray-600 dark:text-gray-300">Excellent quality and exactly as described. Will buy again!</p>
-                    </div>
-                  </div>
-                </div>
-              )}
+         
             </div>
           </div>
           
