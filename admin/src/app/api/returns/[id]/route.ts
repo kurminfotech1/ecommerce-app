@@ -15,9 +15,51 @@ export async function PATCH(
             return NextResponse.json({ error: "Return status is required" }, { status: 400 });
         }
 
-        const updatedReturn = await prisma.returnRequest.update({
-            where: { id },
-            data: { status }
+        // Use a transaction if status is COMPLETED to handle restocking
+        const updatedReturn = await prisma.$transaction(async (tx) => {
+            const currentReturn = await tx.returnRequest.findUnique({
+                where: { id },
+                include: {
+                    order: {
+                        include: {
+                            items: true
+                        }
+                    }
+                }
+            });
+
+            if (!currentReturn) {
+                throw new Error("Return request not found");
+            }
+
+            // Only restock if moving TO completed and it wasn't already completed
+            if (status === "COMPLETED" && currentReturn.status !== "COMPLETED") {
+                // Restock each item
+                for (const item of currentReturn.order.items) {
+                    await tx.productVariant.update({
+                        where: { id: item.variant_id },
+                        data: {
+                            stock: {
+                                increment: item.quantity
+                            }
+                        }
+                    });
+
+                    // Log the stock change
+                    await tx.stockLog.create({
+                        data: {
+                            variant_id: item.variant_id,
+                            change: item.quantity,
+                            reason: `Order Return: ${currentReturn.order.order_number}`
+                        }
+                    });
+                }
+            }
+
+            return await tx.returnRequest.update({
+                where: { id },
+                data: { status }
+            });
         });
 
         return NextResponse.json(updatedReturn, { status: 200 });
