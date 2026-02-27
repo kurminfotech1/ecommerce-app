@@ -1,14 +1,14 @@
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 
 export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+context : { params: Promise<{ id: string }> }
 ) {
     
   try {
-    const user = verifyToken(req);
+    const user =await verifyToken();
 
     if (!user) {
       return NextResponse.json(
@@ -17,7 +17,7 @@ export async function PUT(
       );
     }
     const body = await req.json();
-    const { id } = await params;
+    const { id } = await context.params;
 
     if (!id) {
       return NextResponse.json(
