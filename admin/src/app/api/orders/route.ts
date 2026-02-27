@@ -1,42 +1,73 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-// GET: Get all orders (optionally filter by userId)
+// GET: Get all orders with server-side search, status filter & pagination
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
-        const userId = searchParams.get("userId");
 
-        const orders = await prisma.order.findMany({
-            where: userId ? { user_id: userId } : {},
-            include: {
-                items: {
-                    include: {
-                        variant: {
-                            include: {
-                                product: {
-                                    include: {
-                                        images: {
-                                            take: 1,
-                                            orderBy: { sort_order: 'asc' }
-                                        }
-                                    }
+        const userId = searchParams.get("userId") ?? undefined;
+        const search = searchParams.get("search")?.trim() ?? "";
+        const status = searchParams.get("status") ?? "";   // e.g. "PLACED"
+        const page = Math.max(1, Number(searchParams.get("page") || 1));
+        const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") || 20)));
+        const skip = (page - 1) * limit;
+
+        // ── Build where clause ──────────────────────────────────────
+        const where: any = {};
+
+        if (userId) where.user_id = userId;
+
+        if (status && status !== "All") {
+            where.order_status = status;
+        }
+
+        if (search) {
+            where.OR = [
+                { order_number: { contains: search, mode: "insensitive" } },
+                { shipping_address: { contains: search, mode: "insensitive" } },
+                { shipping_city: { contains: search, mode: "insensitive" } },
+                { user: { full_name: { contains: search, mode: "insensitive" } } },
+                { user: { email: { contains: search, mode: "insensitive" } } },
+            ];
+        }
+
+        // ── Count + paginated fetch (parallel) ──────────────────────
+        const [total, orders] = await Promise.all([
+            prisma.order.count({ where }),
+            prisma.order.findMany({
+                where,
+                skip,
+                take: limit,
+                include: {
+                    items: {
+                        include: {
+                            variant: {
+                                include: {
+                                    product: {
+                                        include: {
+                                            images: { take: 1, orderBy: { sort_order: "asc" } },
+                                        },
+                                    },
+                                    images: { take: 1, orderBy: { sort_order: "asc" } },
                                 },
-                                images: {
-                                    take: 1,
-                                    orderBy: { sort_order: 'asc' }
-                                }
-                            }
-                        }
-                    }
+                            },
+                        },
+                    },
+                    payment: true,
+                    user: { select: { id: true, full_name: true, email: true } },
                 },
-                payment: true,
-                user: true
-            },
-            orderBy: { created_at: 'desc' }
-        });
+                orderBy: { created_at: "desc" },
+            }),
+        ]);
 
-        return NextResponse.json(orders, { status: 200 });
+        return NextResponse.json({
+            data: orders,
+            total,
+            page,
+            totalPages: Math.max(1, Math.ceil(total / limit)),
+        }, { status: 200 });
+
     } catch (error: any) {
         console.error("GET_ORDERS_ERROR", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

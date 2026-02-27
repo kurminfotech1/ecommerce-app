@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo } from "react";
 import {
@@ -24,7 +24,8 @@ import {
   User,
   ShieldCheck,
   AlertCircle,
-  Loader2
+  Loader2,
+  Printer,
 } from "lucide-react";
 import { DeleteModal } from "@/components/common/DeleteModal";
 import axios from "axios";
@@ -104,7 +105,7 @@ const formatDate = (iso: string) => {
   };
 };
 
-const formatCurrency = (v: number) => `$${v.toFixed(2)}`;
+const formatCurrency = (v: number) => `₹${v.toFixed(2)}`;
 
 const initials = (name: string) =>
   name
@@ -115,7 +116,7 @@ const initials = (name: string) =>
     .slice(0, 2);
 
 const AVATAR_COLORS = [
-  "bg-violet-500", "bg-blue-500", "bg-emerald-500",
+  "bg-blue-500", "bg-[#155dfc]", "bg-emerald-500",
   "bg-amber-500", "bg-rose-500", "bg-purple-500", "bg-teal-500",
 ];
 const avatarColor = (name: string) =>
@@ -195,7 +196,7 @@ const OrderRowDetail = ({ order, onStatusUpdate }: { order: Order, onStatusUpdat
                 <button
                   key={key}
                   onClick={() => onStatusUpdate(order.id, key as OrderStatus)}
-                  className={`text-[10px] px-2 py-1 rounded-md border transition ${order.order_status === key ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                  className={`text-[10px] px-2 py-1 rounded-md border transition ${order.order_status === key ? 'bg-[#155dfc] text-white border-[#155dfc]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
                 >
                   Mark {cfg.label}
                 </button>
@@ -238,7 +239,7 @@ const OrderRowDetail = ({ order, onStatusUpdate }: { order: Order, onStatusUpdat
                       </code>
                     </td>
                     <td className="px-5 py-3 text-gray-600">{item.quantity}</td>
-                    <td className="px-5 py-3 text-right font-semibold text-violet-600">
+                    <td className="px-5 py-3 text-right font-semibold text-gray-900">
                       {formatCurrency(item.price)}
                     </td>
                   </tr>
@@ -256,8 +257,8 @@ const OrderRowDetail = ({ order, onStatusUpdate }: { order: Order, onStatusUpdat
             {/* Right: price summary */}
             <div className="text-right space-y-1">
               <div className="flex items-center justify-end gap-8 pt-1">
-                <span className="text-sm font-bold text-violet-600">Total Amount:</span>
-                <span className="text-sm font-bold text-violet-600 min-w-[64px] text-right">
+                <span className="text-sm font-bold text-gray-900">Total Amount:</span>
+                <span className="text-sm font-bold text-gray-900 min-w-[64px] text-right">
                   {formatCurrency(order.total_amount)}
                 </span>
               </div>
@@ -269,6 +270,145 @@ const OrderRowDetail = ({ order, onStatusUpdate }: { order: Order, onStatusUpdat
   );
 };
 
+// ── Generate Invoice ───────────────────────────────────────────────
+const generateInvoice = (order: Order) => {
+  const { date } = formatDate(order.created_at);
+  const subtotal = order.items.reduce((s, i) => s + i.price * i.quantity, 0);
+  const tax = Math.round(subtotal * 0.18 * 100) / 100; // 18% GST
+  const shipping = 0; // free shipping
+  const total = order.total_amount;
+
+  const itemRows = order.items
+    .map(
+      (item) => `
+      <tr>
+        <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0">
+          <div style="font-weight:600;color:#1a1a2e">${item.variant.product.product_name}</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">${item.variant.weight || item.variant.size || "Standard"} &nbsp;|&nbsp; SKU: ${item.variant.sku}</div>
+        </td>
+        <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;text-align:center;color:#555">${item.quantity}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;text-align:right;color:#555">&#8377;${item.price.toFixed(2)}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:600;color:#4f46e5">&#8377;${(item.price * item.quantity).toFixed(2)}</td>
+      </tr>`
+    )
+    .join("");
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Invoice – ${order.order_number}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #fff; color: #333; font-size: 13px; }
+    .page { max-width: 780px; margin: 0 auto; padding: 48px 40px; }
+    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .no-print { display: none !important; } }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:36px">
+    <div>
+      <div style="font-size:26px;font-weight:800;color:#4f46e5;letter-spacing:-0.5px">&#9670; KurmInfo</div>
+      <div style="font-size:12px;color:#888;margin-top:4px">Your trusted e-commerce store</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:22px;font-weight:700;color:#1a1a2e">INVOICE</div>
+      <div style="margin-top:6px;font-size:12px;color:#666">
+        <div><strong>Invoice #:</strong> ${order.order_number}</div>
+        <div><strong>Date:</strong> ${date}</div>
+        <div><strong>Status:</strong>
+          <span style="background:#e0e7ff;color:#4f46e5;padding:1px 8px;border-radius:20px;font-size:11px;font-weight:600">${order.order_status}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Divider -->
+  <div style="height:3px;background:linear-gradient(90deg,#4f46e5,#818cf8,transparent);border-radius:4px;margin-bottom:32px"></div>
+
+  <!-- Bill To + Ship To -->
+  <div style="display:flex;gap:40px;margin-bottom:32px">
+    <div style="flex:1">
+      <div style="font-size:11px;font-weight:700;color:#4f46e5;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Bill To</div>
+      <div style="font-weight:600;font-size:14px;color:#1a1a2e">${order.user?.full_name || 'Guest'}</div>
+      <div style="color:#666;margin-top:2px">${order.user?.email || ''}</div>
+    </div>
+    <div style="flex:1">
+      <div style="font-size:11px;font-weight:700;color:#4f46e5;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Ship To</div>
+      <div style="color:#555;line-height:1.6">
+        ${order.shipping_address}<br/>
+        ${order.shipping_city}, ${order.shipping_state} – ${order.shipping_pincode}<br/>
+        ${order.shipping_country}
+      </div>
+    </div>
+    <div style="flex:1">
+      <div style="font-size:11px;font-weight:700;color:#4f46e5;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Payment</div>
+      <div style="color:#555;line-height:1.6">
+        <div>Method: <strong>${order.payment?.payment_method || 'N/A'}</strong></div>
+        <div>Status: <strong>${order.payment?.status || 'PENDING'}</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Items Table -->
+  <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
+    <thead>
+      <tr style="background:#4f46e5;color:#fff">
+        <th style="padding:12px;text-align:left;border-radius:8px 0 0 0;font-size:12px">Item</th>
+        <th style="padding:12px;text-align:center;font-size:12px">Qty</th>
+        <th style="padding:12px;text-align:right;font-size:12px">Unit Price</th>
+        <th style="padding:12px;text-align:right;border-radius:0 8px 0 0;font-size:12px">Total</th>
+      </tr>
+    </thead>
+    <tbody>${itemRows}</tbody>
+  </table>
+
+  <!-- Totals -->
+  <div style="display:flex;justify-content:flex-end">
+    <div style="width:280px">
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;color:#555">
+        <span>Subtotal</span><span>&#8377;${subtotal.toFixed(2)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;color:#555">
+        <span>GST (18%)</span><span>&#8377;${tax.toFixed(2)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;color:#555">
+        <span>Shipping</span><span>${shipping === 0 ? 'Free' : '&#8377;' + shipping}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-weight:700;color:#4f46e5">
+        <span>Total</span><span>&#8377;${total.toFixed(2)}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="margin-top:48px;padding-top:20px;border-top:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center">
+    <div style="font-size:11px;color:#aaa">Thank you for shopping with us!</div>
+    <div style="font-size:11px;color:#aaa">Generated on ${new Date().toLocaleDateString('en-IN')}</div>
+  </div>
+
+  <!-- Print Button -->
+  <div class="no-print" style="text-align:center;margin-top:32px">
+    <button onclick="window.print()" style="background:#4f46e5;color:#fff;border:none;padding:12px 32px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">&#128438; Print / Save as PDF</button>
+  </div>
+
+</div>
+</body></html>`;
+
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `Invoice-${order.order_number}.html`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
 // ── Context Menu (3-dot) ───────────────────────────────────────────
 interface RowMenuProps {
   order: Order;
@@ -277,24 +417,49 @@ interface RowMenuProps {
 }
 const RowMenu = ({ order, onDelete, onView }: RowMenuProps) => {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ top: 0, right: 0 });
+  const btnRef = React.useRef<HTMLButtonElement>(null);
+
+  const handleOpen = () => {
+    if (!open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setPos({
+        top: rect.bottom + window.scrollY + 4,
+        right: window.innerWidth - rect.right,
+      });
+    }
+    setOpen((p) => !p);
+  };
+
   return (
-    <div className="relative">
+    <div>
       <button
-        onClick={() => setOpen((p) => !p)}
+        ref={btnRef}
+        onClick={handleOpen}
         className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition"
       >
         <MoreVertical size={15} />
       </button>
       {open && (
         <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-8 z-20 bg-white rounded-xl border border-gray-100 shadow-xl py-1 min-w-[140px]">
+          <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
+          <div
+            style={{ top: pos.top, right: pos.right }}
+            className="fixed z-[9999] bg-white rounded-xl border border-gray-100 shadow-2xl py-1 min-w-[170px]"
+          >
             <button
               onClick={() => { onView(order); setOpen(false); }}
-              className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition"
+              className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition"
             >
               <Eye size={13} /> View Details
             </button>
+            <button
+              onClick={() => { generateInvoice(order); setOpen(false); }}
+              className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition"
+            >
+              <Printer size={13} /> Generate Invoice
+            </button>
+            <div className="my-1 border-t border-gray-100" />
             <button
               onClick={() => { onDelete(order); setOpen(false); }}
               className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50 transition"
@@ -396,7 +561,7 @@ const OrderDetailModal = ({ order, onClose }: { order: Order; onClose: () => voi
 
           {/* Summary */}
           <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-            <div className="flex justify-between text-base font-bold text-violet-700">
+            <div className="flex justify-between text-base font-bold text-gray-900">
               <span>Grand Total</span>
               <span>{formatCurrency(order.total_amount)}</span>
             </div>
@@ -407,7 +572,7 @@ const OrderDetailModal = ({ order, onClose }: { order: Order; onClose: () => voi
         </div>
 
         <div className="flex gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
-          <button className="flex-1 flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 text-white py-2.5 rounded-xl text-sm font-semibold transition">
+          <button className="flex-1 flex items-center justify-center gap-2 bg-[#155dfc] hover:bg-[#1246cc] text-white py-2.5 rounded-xl text-sm font-semibold transition">
             <FileText size={15} /> Download Invoice
           </button>
           <button onClick={onClose} className="px-6 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-sm font-semibold transition">
@@ -432,13 +597,31 @@ export default function OrdersPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
-  // ── Fetch Data ───────────────────────────────────────────────
-  const fetchOrders = async () => {
+  // ── Separate all-orders fetch for stat cards (unfiltered) ─────────
+  const [allOrders, setAllOrders] = React.useState<Order[]>([]);
+  React.useEffect(() => {
+    axios.get("/api/orders?limit=1000").then((res) => {
+      setAllOrders(res.data?.data ?? []);
+    }).catch(() => { });
+  }, []);
+
+  // ── Fetch Data (server-side filtered + paginated) ─────────────────
+  const fetchOrders = React.useCallback(async () => {
     try {
       setLoading(true);
-      const res = await axios.get("/api/orders");
-      setOrders(res.data);
+      const params = new URLSearchParams();
+      if (search) params.set("search", search);
+      if (statusFilter && statusFilter !== "All") params.set("status", statusFilter);
+      params.set("page", String(page));
+      params.set("limit", String(ITEMS_PER_PAGE));
+
+      const res = await axios.get(`/api/orders?${params.toString()}`);
+      setOrders(res.data?.data ?? []);
+      setTotalPages(res.data?.totalPages ?? 1);
+      setTotalCount(res.data?.total ?? 0);
       setError(null);
     } catch (err: any) {
       console.error("Fetch orders failed:", err);
@@ -447,11 +630,9 @@ export default function OrdersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, statusFilter, page]);
 
-  React.useEffect(() => {
-    fetchOrders();
-  }, []);
+  React.useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
   // ── Collapse/expand state ──────────────────────────────────────
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
@@ -468,44 +649,32 @@ export default function OrdersPage() {
   // ── View detail modal ──────────────────────────────────────────
   const [viewOrder, setViewOrder] = useState<Order | null>(null);
 
-  // ── Stats ──────────────────────────────────────────────────────
+  // ── Stats (always from full unfiltered list) ───────────────────
   const stats = React.useMemo(() => {
-    const totalIncome = orders
+    const totalIncome = allOrders
       .filter((o) => o.order_status === "DELIVERED")
       .reduce((s, o) => s + o.total_amount, 0);
-
     return {
-      total: orders.length,
+      total: allOrders.length,
       totalIncome,
-      placed: orders.filter((o) => o.order_status === "PLACED").length,
-      confirmed: orders.filter((o) => o.order_status === "CONFIRMED").length,
-      processing: orders.filter((o) => o.order_status === "PROCESSING").length,
-      shipped: orders.filter((o) => o.order_status === "SHIPPED").length,
-      delivered: orders.filter((o) => o.order_status === "DELIVERED").length,
-      cancelled: orders.filter((o) => o.order_status === "CANCELLED").length,
+      placed: allOrders.filter((o) => o.order_status === "PLACED").length,
+      confirmed: allOrders.filter((o) => o.order_status === "CONFIRMED").length,
+      processing: allOrders.filter((o) => o.order_status === "PROCESSING").length,
+      shipped: allOrders.filter((o) => o.order_status === "SHIPPED").length,
+      delivered: allOrders.filter((o) => o.order_status === "DELIVERED").length,
+      cancelled: allOrders.filter((o) => o.order_status === "CANCELLED").length,
     };
-  }, [orders]);
+  }, [allOrders]);
 
-  // ── Filtered + paginated ───────────────────────────────────────
-  const filtered = React.useMemo(() => {
-    return orders.filter((o) => {
-      const matchSearch =
-        o.order_number.toLowerCase().includes(search.toLowerCase()) ||
-        (o.user?.full_name || "").toLowerCase().includes(search.toLowerCase()) ||
-        o.shipping_address.toLowerCase().includes(search.toLowerCase());
-      const matchStatus = statusFilter === "All" || o.order_status === statusFilter;
-      return matchSearch && matchStatus;
-    });
-  }, [orders, search, statusFilter]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
-  const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+  // ── paginated is just `orders` now (API already paginated) ────
+  const paginated = orders;
 
   const handleDelete = async () => {
     if (!deleteOrder) return;
     try {
       await axios.delete(`/api/orders/${deleteOrder.id}`);
       setOrders((prev) => prev.filter((o) => o.id !== deleteOrder.id));
+      setAllOrders((prev) => prev.filter((o) => o.id !== deleteOrder.id));
       toast.success("Order deleted successfully");
       setDeleteOrder(null);
     } catch (err: any) {
@@ -517,7 +686,9 @@ export default function OrdersPage() {
   const handleStatusUpdate = async (id: string, newStatus: OrderStatus) => {
     try {
       const res = await axios.patch(`/api/orders/${id}`, { order_status: newStatus });
-      setOrders((prev) => prev.map(o => o.id === id ? { ...o, order_status: res.data.order_status } : o));
+      const updatedStatus = res.data.order_status;
+      setOrders((prev) => prev.map(o => o.id === id ? { ...o, order_status: updatedStatus } : o));
+      setAllOrders((prev) => prev.map(o => o.id === id ? { ...o, order_status: updatedStatus } : o));
       toast.success(`Order marked as ${newStatus}`);
     } catch (err: any) {
       console.error("Status update failed:", err);
@@ -547,7 +718,7 @@ export default function OrdersPage() {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Manage Orders</h1>
               <p className="text-sm text-gray-500 mt-0.5">
-                {filtered.length} order{filtered.length !== 1 ? "s" : ""} found
+                {totalCount} order{totalCount !== 1 ? "s" : ""} found
               </p>
             </div>
             <div className="flex gap-2 flex-wrap items-center">
@@ -558,14 +729,14 @@ export default function OrdersPage() {
                   placeholder="Search by ID, customer, address..."
                   value={search}
                   onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-violet-400 w-64 transition"
+                  className="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 w-64 transition"
                 />
               </div>
               {/* Status filter */}
               <select
                 value={statusFilter}
                 onChange={(e) => handleFilterChange(e.target.value)}
-                className="border border-gray-200 bg-white text-sm px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
+                className="border border-gray-200 bg-white text-sm px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
               >
                 {ALL_STATUSES.map((s) => (
                   <option key={s} value={s}>{s === "All" ? "All Statuses" : s}</option>
@@ -581,7 +752,7 @@ export default function OrdersPage() {
               value={formatCurrency(stats.totalIncome)}
               sub={`From ${stats.delivered} delivered orders`}
               icon={<DollarSign size={18} />}
-              gradient="bg-gradient-to-br from-violet-600 to-violet-800"
+              gradient="bg-gradient-to-br from-[#155dfc] to-[#1246cc]"
               iconBg="bg-white/20"
             />
             <StatCard
@@ -656,7 +827,7 @@ export default function OrdersPage() {
                 Try Again
               </button>
             </div>
-          ) : filtered.length === 0 ? (
+          ) : orders.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl border border-dashed border-gray-200">
               <div className="w-16 h-16 bg-violet-50 rounded-2xl flex items-center justify-center mb-4">
                 <ShoppingBag size={28} className="text-violet-400" />
@@ -686,7 +857,7 @@ export default function OrdersPage() {
                       return (
                         <React.Fragment key={order.id}>
                           <tr
-                            className="hover:bg-violet-50/30 transition group"
+                            className="hover:bg-blue-50/30 transition group"
                           >
                             {/* Order Number */}
                             <td className="px-4 py-3">
@@ -730,7 +901,7 @@ export default function OrdersPage() {
 
                             {/* Amount */}
                             <td className="px-4 py-3">
-                              <span className="font-semibold text-gray-800 text-xs">
+                              <span className="font-semibold text-gray-900 text-xs">
                                 {formatCurrency(order.total_amount)}
                               </span>
                             </td>
@@ -778,35 +949,66 @@ export default function OrdersPage() {
           )}
 
           {/* ── Pagination ── */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between">
+          {totalCount > ITEMS_PER_PAGE && (
+            <div className="flex items-center justify-between flex-wrap gap-3">
               <p className="text-sm text-gray-500">
-                Page {page} of {totalPages} &nbsp;·&nbsp; {filtered.length} orders
+                Showing{" "}
+                <span className="font-semibold text-gray-700">
+                  {Math.min((page - 1) * ITEMS_PER_PAGE + 1, totalCount)}–
+                  {Math.min(page * ITEMS_PER_PAGE, totalCount)}
+                </span>{" "}
+                of <span className="font-semibold text-gray-700">{totalCount}</span> orders
               </p>
-              <div className="flex gap-2">
+
+              <div className="flex items-center gap-1">
+                {/* Prev */}
                 <button
                   disabled={page === 1}
                   onClick={() => setPage((p) => p - 1)}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40 transition"
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
                 >
                   <ChevronLeft size={14} /> Prev
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => (
-                  <button
-                    key={pg}
-                    onClick={() => setPage(pg)}
-                    className={`px-3 py-1.5 text-sm border rounded-lg transition ${pg === page
-                      ? "bg-violet-600 border-violet-600 text-white font-semibold"
-                      : "border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
-                      }`}
-                  >
-                    {pg}
-                  </button>
-                ))}
+
+                {/* Smart page buttons with ellipsis */}
+                {(() => {
+                  const pages: (number | "...")[] = [];
+                  const delta = 2; // neighbours around current page
+
+                  const rangeStart = Math.max(2, page - delta);
+                  const rangeEnd = Math.min(totalPages - 1, page + delta);
+
+                  pages.push(1);
+                  if (rangeStart > 2) pages.push("...");
+                  for (let i = rangeStart; i <= rangeEnd; i++) pages.push(i);
+                  if (rangeEnd < totalPages - 1) pages.push("...");
+                  if (totalPages > 1) pages.push(totalPages);
+
+                  return pages.map((pg, idx) =>
+                    pg === "..." ? (
+                      <span key={`ellipsis-${idx}`} className="px-2 py-1.5 text-sm text-gray-400 select-none">
+                        …
+                      </span>
+                    ) : (
+                      <button
+                        key={pg}
+                        onClick={() => setPage(pg as number)}
+                        className={`min-w-[34px] px-2.5 py-1.5 text-sm border rounded-lg transition font-medium ${pg === page
+                          ? "bg-violet-600 border-violet-600 text-white shadow-sm"
+                          : "border-gray-200 bg-white hover:bg-violet-50 hover:border-violet-300 text-gray-700"
+                          }`}
+                      >
+                        {pg}
+                      </button>
+                    )
+                  );
+                })()}
+
+                {/* Next */}
                 <button
                   disabled={page === totalPages}
                   onClick={() => setPage((p) => p + 1)}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40 transition"
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
                 >
                   Next <ChevronRight size={14} />
                 </button>

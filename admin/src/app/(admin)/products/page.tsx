@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { DeleteModal } from "@/components/common/DeleteModal";
 
-// ── Badge ────────────────────────────────────────────────────────
+// ── Badge ──────────────────────────────────────────────────────────
 const Badge = ({ children, color = "gray" }: { children: React.ReactNode; color?: string }) => {
   const colors: Record<string, string> = {
     green: "bg-success-50 text-success-700 border-success-200 dark:bg-success-500/20 dark:text-success-400 dark:border-success-500/30",
@@ -43,7 +43,7 @@ const Badge = ({ children, color = "gray" }: { children: React.ReactNode; color?
   );
 };
 
-// ── Image Preview Modal ──────────────────────────────────────────
+// â”€â”€ Image Preview Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ImagePreview = ({ url, onClose }: { url: string; onClose: () => void }) => (
   <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100]" onClick={onClose}>
     <button className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition" onClick={onClose}>
@@ -53,7 +53,7 @@ const ImagePreview = ({ url, onClose }: { url: string; onClose: () => void }) =>
   </div>
 );
 
-// ── Form Field ───────────────────────────────────────────────────
+// â”€â”€ Form Field â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const Field = ({ label, children, span = 1 }: { label: string; children: React.ReactNode; span?: number }) => (
   <div className={span === 2 ? "col-span-2" : ""}>
     <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">{label}</label>
@@ -75,16 +75,16 @@ const TagInput = ({ tags, setTags, placeholder }: { tags: string[], setTags: (t:
   return (
     <div className="space-y-2">
       <div className="flex gap-2">
-        <input 
-          value={val} 
+        <input
+          value={val}
           onChange={e => setVal(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), add())}
           placeholder={placeholder}
           className={inputCls}
         />
-        <button 
+        <button
           type="button"
-          onClick={e => { e.preventDefault(); add(); }} 
+          onClick={e => { e.preventDefault(); add(); }}
           className="px-4 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition text-gray-500"
         >
           <Plus size={16} />
@@ -92,9 +92,9 @@ const TagInput = ({ tags, setTags, placeholder }: { tags: string[], setTags: (t:
       </div>
       <div className="flex flex-wrap gap-2">
         {tags.map((t, i) => (
-          <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1 bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-lg text-[13px] font-medium border border-violet-100 dark:border-violet-500/20">
+          <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 dark:bg-blue-500/10 text-[#155dfc] dark:text-violet-400 rounded-lg text-[13px] font-medium border border-violet-100 dark:border-violet-500/20">
             {t}
-            <button type="button" onClick={() => setTags(tags.filter((_, idx) => idx !== i))} className="hover:text-violet-800 dark:hover:text-white transition">
+            <button type="button" onClick={() => setTags(tags.filter((_, idx) => idx !== i))} className="hover:text-[#0d3fa6] dark:hover:text-white transition">
               <X size={12} />
             </button>
           </span>
@@ -104,7 +104,7 @@ const TagInput = ({ tags, setTags, placeholder }: { tags: string[], setTags: (t:
   );
 };
 
-// ── Utility: find category node anywhere in the tree ─────────────
+// â”€â”€ Utility: find category node anywhere in the tree â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function findCatNode(nodes: Category[], id: string): Category | null {
   for (const n of nodes) {
     if (n.id === id) return n;
@@ -114,7 +114,7 @@ function findCatNode(nodes: Category[], id: string): Category | null {
   return null;
 }
 
-// ── Resolve L1/L2/L3 from a leaf category_id (bottom-up) ─────────
+// â”€â”€ Resolve L1/L2/L3 from a leaf category_id (bottom-up) â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function resolveCatSelections(categories: Category[], id: string) {
   if (!id) return { l1: "", l2: "", l3: "" };
   const node = findCatNode(categories, id);
@@ -128,7 +128,7 @@ function resolveCatSelections(categories: Category[], id: string) {
   return { l1: grand.id, l2: parent.id, l3: id };
 }
 
-// ── Empty state ──────────────────────────────────────────────────
+// â”€â”€ Empty state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const EmptyState = ({ onAdd }: { onAdd: () => void }) => (
   <div className="flex flex-col items-center justify-center py-20 text-center bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
     <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center mb-4">
@@ -142,33 +142,33 @@ const EmptyState = ({ onAdd }: { onAdd: () => void }) => (
   </div>
 );
 
-// ────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 // Main Page
-// ────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 export default function ProductsPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { products, totalPages, totalRecords, loading, submitting, uploading } =
     useSelector((s: RootState) => s.products);
   const { categories } = useSelector((s: RootState) => s.categories);
   console.log(categories);
-  // ── List state ─────────────────────────────────────────────────
+  // â”€â”€ List state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [activeFilter, setActiveFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
-  const [sizeFilter, setSizeFilter] = useState("");
+  const [weightFilter, setWeightFilter] = useState("");
   const [minPriceFilter, setMinPriceFilter] = useState("");
   const [maxPriceFilter, setMaxPriceFilter] = useState("");
   const [page, setPage] = useState(1);
 
-  // ── Modal state ────────────────────────────────────────────────
+  // â”€â”€ Modal state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
 
-  // ── Preview ────────────────────────────────────────────────────
+  // â”€â”€ Preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // ── Form ───────────────────────────────────────────────────────
+  // â”€â”€ Form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const emptyForm = {
     product_name: "", slug: "", short_desc: "", description: "",
     category_id: "",
@@ -182,7 +182,7 @@ export default function ProductsPage() {
     size: string; color: string;
     weight: string;
     price: string; compare_price: string;
-    stock: string; 
+    stock: string;
     low_stock_threshold: string;
     sku: string;
     uploadedImages: string[]; // already-uploaded URLs
@@ -196,7 +196,7 @@ export default function ProductsPage() {
   const [form, setForm] = useState<any>(emptyForm);
   const [variants, setVariants] = useState<VariantRow[]>([emptyVariantRow()]); // multi-variant rows
 
-  // ── Cascading category state (L1 = main, L2 = child, L3 = sub) ─
+  // â”€â”€ Cascading category state (L1 = main, L2 = child, L3 = sub) â”€
   const [catL1, setCatL1] = useState("");
   const [catL2, setCatL2] = useState("");
   const [catL3, setCatL3] = useState("");
@@ -221,7 +221,7 @@ export default function ProductsPage() {
     setForm((f: any) => ({ ...f, category_id: id || catL2 || catL1 }));
   };
 
-  // ── Fetch ──────────────────────────────────────────────────────
+  // â”€â”€ Fetch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const fetchProducts = useCallback(() => {
     dispatch(getProducts({
       page,
@@ -233,16 +233,16 @@ export default function ProductsPage() {
       bestseller: typeFilter === "bestseller" ? true : undefined,
       is_new: typeFilter === "new" ? true : undefined,
       is_upcoming: typeFilter === "upcoming" ? true : undefined,
-      size: sizeFilter || undefined,
+      weight: weightFilter || undefined,
       min_price: minPriceFilter ? Number(minPriceFilter) : undefined,
       max_price: maxPriceFilter ? Number(maxPriceFilter) : undefined,
     }));
-  }, [page, search, categoryFilter, activeFilter, typeFilter, sizeFilter, minPriceFilter, maxPriceFilter, dispatch]);
+  }, [page, search, categoryFilter, activeFilter, typeFilter, weightFilter, minPriceFilter, maxPriceFilter, dispatch]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
   useEffect(() => { dispatch(getCategories()); }, [dispatch]);
 
-  // ── Keyboard / scroll lock ─────────────────────────────────────
+  // â”€â”€ Keyboard / scroll lock â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -259,7 +259,7 @@ export default function ProductsPage() {
     return () => { document.body.style.overflow = ""; };
   }, [previewImage, modalOpen]);
 
-  // ── Helpers ────────────────────────────────────────────────────
+  // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const openCreate = () => {
     setForm(emptyForm);
     setVariants([emptyVariantRow()]);
@@ -293,7 +293,7 @@ export default function ProductsPage() {
       is_new: p.is_new ?? false,
       is_upcoming: p.is_upcoming ?? false,
     });
-    // Pre-fill variants — including their existing images
+    // Pre-fill variants â€” including their existing images
     if (p.variants && p.variants.length > 0) {
       setVariants(p.variants.map((v) => ({
         size: v.size ?? "",
@@ -326,9 +326,9 @@ export default function ProductsPage() {
     }));
   };
 
-  // ── File selection (local preview) ────────────────────────────
+  // â”€â”€ File selection (local preview) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  // ── Variant field helpers ─────────────────────────────────────
+  // â”€â”€ Variant field helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const updateVariant = (idx: number, field: string, value: string) =>
     setVariants((prev) => prev.map((v, i) => i === idx ? { ...v, [field]: value } : v));
 
@@ -357,7 +357,7 @@ export default function ProductsPage() {
       i === variantIdx ? { ...v, uploadedImages: v.uploadedImages.filter((_, ii) => ii !== imgIdx) } : v
     ));
 
-  // ── Submit ─────────────────────────────────────────────────────
+  // â”€â”€ Submit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleSubmit = async () => {
     if (!form.product_name || !form.category_id) {
       alert("Product name and category are required.");
@@ -433,14 +433,14 @@ export default function ProductsPage() {
     }
   };
 
-  // ── Stock badge ────────────────────────────────────────────────
+  // â”€â”€ Stock badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const stockBadge = (stock: number) => {
     if (stock === 0) return <Badge color="red">Out of stock</Badge>;
     if (stock < 10) return <Badge color="amber">{stock} left</Badge>;
     return <Badge color="green">{stock} in stock</Badge>;
   };
 
-  // ── Product Card Component ─────────────────────────────────────
+  // â”€â”€ Product Card Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const ProductCard = ({ product }: { product: Product }) => {
     const firstVariant = product.variants?.[0];
     const firstImage = firstVariant?.images?.[0]?.image_url;
@@ -451,8 +451,8 @@ export default function ProductsPage() {
           <div className="relative">
             <div className="aspect-square bg-gray-100 flex items-center justify-center">
               {firstImage ? (
-                <img 
-                  src={firstImage} 
+                <img
+                  src={firstImage}
                   alt={product.product_name}
                   className="w-full h-full object-cover"
                 />
@@ -460,7 +460,7 @@ export default function ProductsPage() {
                 <ImageOff size={32} className="text-gray-300" />
               )}
             </div>
-            
+
             {/* Featured badge */}
             <div className="absolute top-3 left-3 flex flex-col gap-1">
               {product.is_featured && (
@@ -480,11 +480,11 @@ export default function ProductsPage() {
               )}
               {product.is_upcoming && (
                 <Badge color="gray">
-                  🕐 Coming Soon
+                  ⏳ Coming Soon
                 </Badge>
               )}
             </div>
-            
+
             {/* Status badge */}
             <div className="absolute top-3 right-3">
               {product.is_active ? (
@@ -495,20 +495,20 @@ export default function ProductsPage() {
             </div>
           </div>
         </Link>
-        
+
         <div className="p-4">
           <Link href={`/products/${product.id}`} className="block">
-            <h3 className="font-semibold text-gray-800 mb-1 line-clamp-2 group-hover:text-violet-600 transition-colors">
+            <h3 className="font-semibold text-gray-800 mb-1 line-clamp-2 group-hover:text-[#155dfc] transition-colors">
               {product.product_name}
             </h3>
           </Link>
-          
+
           {product.short_desc && (
             <p className="text-xs text-gray-500 mb-3 line-clamp-2">
               {product.short_desc}
             </p>
           )}
-          
+
           <div className="flex items-center justify-between mb-3">
             <div>
               {firstVariant ? (
@@ -522,18 +522,18 @@ export default function ProductsPage() {
                 <span className="text-gray-400">No price</span>
               )}
             </div>
-            
+
             <div>
               {firstVariant ? stockBadge(firstVariant.stock) : <span className="text-gray-400">—</span>}
             </div>
           </div>
-          
+
           <div className="flex items-center justify-between pt-3 border-t border-gray-100">
             <Badge color="purple">
               <Tag size={10} />
               {product.category?.name || "—"}
             </Badge>
-            
+
             {product.variants && product.variants.length > 0 && (
               <Badge color="blue">
                 <Layers size={10} />
@@ -541,12 +541,12 @@ export default function ProductsPage() {
               </Badge>
             )}
           </div>
-          
+
           {/* Action Buttons */}
           <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100">
             <button
               onClick={() => openEdit(product)}
-              className="flex-1 flex items-center justify-center gap-1.5 bg-violet-50 hover:bg-violet-100 text-violet-600 py-2 rounded-lg text-sm font-medium transition"
+              className="flex-1 flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-[#155dfc] py-2 rounded-lg text-sm font-medium transition"
             >
               <Pencil size={14} />
               Edit
@@ -562,14 +562,14 @@ export default function ProductsPage() {
     );
   };
 
-  // ────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────
   // RENDER
-  // ────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
 
-        {/* ── Header ── */}
+        {/* â”€â”€ Header â”€â”€ */}
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap gap-3 justify-between items-center">
             <div>
@@ -587,7 +587,7 @@ export default function ProductsPage() {
             </button>
           </div>
 
-          {/* ── Filters Bar ── */}
+          {/* â”€â”€ Filters Bar â”€â”€ */}
           <div className="flex gap-2 flex-wrap items-center bg-white dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
             {/* Search */}
             <div className="relative flex-1 min-w-[280px]">
@@ -612,11 +612,11 @@ export default function ProductsPage() {
               ))}
             </select>
 
-            {/* Size filter */}
+            {/* Weight filter */}
             <input
-              placeholder="Size (e.g. M, L, XL)"
-              value={sizeFilter}
-              onChange={(e) => { setSizeFilter(e.target.value); setPage(1); }}
+              placeholder="Weight (e.g. 100g, 250g)"
+              value={weightFilter}
+              onChange={(e) => { setWeightFilter(e.target.value); setPage(1); }}
               className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl w-44 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
             />
 
@@ -665,7 +665,7 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        {/* ── Product Cards Grid ── */}
+        {/* â”€â”€ Product Cards Grid â”€â”€ */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -689,7 +689,7 @@ export default function ProductsPage() {
           </div>
         )}
 
-        {/* ── Pagination ── */}
+        {/* â”€â”€ Pagination â”€â”€ */}
         {!loading && totalPages > 1 && (
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -717,14 +717,14 @@ export default function ProductsPage() {
 
 
 
-      {/* ══════════════════════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           Image Preview
-      ══════════════════════════════════════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {previewImage && <ImagePreview url={previewImage} onClose={() => setPreviewImage(null)} />}
 
-      {/* ══════════════════════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           Create / Edit Modal
-      ══════════════════════════════════════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 w-full max-w-2xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
@@ -746,7 +746,7 @@ export default function ProductsPage() {
 
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 custom-scrollbar">
 
-              {/* ── Section: Basic ── */}
+              {/* â”€â”€ Section: Basic â”€â”€ */}
               <div>
                 <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                   <Package size={12} /> Basic Info
@@ -770,7 +770,7 @@ export default function ProductsPage() {
                     />
                   </Field>
 
-                  {/* ── Cascading Category: Level 1 (Main) ── */}
+                  {/* â”€â”€ Cascading Category: Level 1 (Main) â”€â”€ */}
                   <Field label="Category *">
                     <select
                       value={catL1}
@@ -784,7 +784,7 @@ export default function ProductsPage() {
                     </select>
                   </Field>
 
-                  {/* ── Cascading Category: Level 2 (Child) — only if L1 has children ── */}
+                  {/* â”€â”€ Cascading Category: Level 2 (Child) â€” only if L1 has children â”€â”€ */}
                   {catL2List.length > 0 ? (
                     <Field label="Sub-Category">
                       <select
@@ -800,7 +800,7 @@ export default function ProductsPage() {
                     </Field>
                   ) : <div />}
 
-                  {/* ── Cascading Category: Level 3 (Sub-child) — only if L2 has children ── */}
+                  {/* â”€â”€ Cascading Category: Level 3 (Sub-child) â€” only if L2 has children â”€â”€ */}
                   {catL2 && catL3List.length > 0 && (
                     <Field label="Sub-Sub-Category">
                       <select
@@ -821,11 +821,11 @@ export default function ProductsPage() {
                     <div className="col-span-2 -mt-1">
                       <p className="text-[11px] text-gray-400">
                         Selected:{" "}
-                        <span className="font-semibold text-violet-600">
+                        <span className="font-semibold text-[#155dfc]">
                           {[catL1, catL2, catL3]
                             .filter(Boolean)
                             .map((id) => findCatNode(categories as Category[], id)?.name)
-                            .join(" › ")}
+                            .join(" â€º ")}
                         </span>
                       </p>
                     </div>
@@ -852,72 +852,72 @@ export default function ProductsPage() {
                 </div>
               </div>
 
-              {/* ── Section: Lifestyle/Organic ── */}
+              {/* â”€â”€ Section: Lifestyle/Organic â”€â”€ */}
               <div>
                 <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                  🌱 Wellness & Organic Details
+                  ðŸŒ± Wellness & Organic Details
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Ingredients" span={2}>
-                    <textarea 
+                    <textarea
                       placeholder="e.g. Organic Hemp, Raw Honey..."
                       value={form.ingredient}
-                      onChange={e => setForm({...form, ingredient: e.target.value})}
+                      onChange={e => setForm({ ...form, ingredient: e.target.value })}
                       className={inputCls}
                       rows={2}
                     />
                   </Field>
                   <Field label="Country of Origin">
-                    <input 
+                    <input
                       placeholder="e.g. India"
                       value={form.country_of_origin}
-                      onChange={e => setForm({...form, country_of_origin: e.target.value})}
+                      onChange={e => setForm({ ...form, country_of_origin: e.target.value })}
                       className={inputCls}
                     />
                   </Field>
                   <Field label="Expiry (Months)">
-                    <input 
+                    <input
                       type="number"
                       placeholder="e.g. 12"
                       value={form.expiry_months}
-                      onChange={e => setForm({...form, expiry_months: e.target.value})}
+                      onChange={e => setForm({ ...form, expiry_months: e.target.value })}
                       className={inputCls}
                     />
                   </Field>
                   <Field label="Storage Info">
-                    <input 
+                    <input
                       placeholder="e.g. Store in cool dry place"
                       value={form.storage_info}
-                      onChange={e => setForm({...form, storage_info: e.target.value})}
+                      onChange={e => setForm({ ...form, storage_info: e.target.value })}
                       className={inputCls}
                     />
                   </Field>
                   <Field label="Allergen Info">
-                    <input 
+                    <input
                       placeholder="e.g. Contains Nuts"
                       value={form.allergen_info}
-                      onChange={e => setForm({...form, allergen_info: e.target.value})}
+                      onChange={e => setForm({ ...form, allergen_info: e.target.value })}
                       className={inputCls}
                     />
                   </Field>
                   <Field label="Benefits" span={2}>
-                    <TagInput 
+                    <TagInput
                       placeholder="Add a benefit (e.g. Energy Boost)"
                       tags={form.benefits}
-                      setTags={t => setForm({...form, benefits: t})}
+                      setTags={t => setForm({ ...form, benefits: t })}
                     />
                   </Field>
                   <Field label="Certifications" span={2}>
-                    <TagInput 
+                    <TagInput
                       placeholder="Add a certification (e.g. USDA Organic)"
                       tags={form.certifications}
-                      setTags={t => setForm({...form, certifications: t})}
+                      setTags={t => setForm({ ...form, certifications: t })}
                     />
                   </Field>
                 </div>
               </div>
 
-              {/* ── Section: Variants ── */}
+              {/* â”€â”€ Section: Variants â”€â”€ */}
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest flex items-center gap-2">
@@ -947,7 +947,7 @@ export default function ProductsPage() {
                           Variant#{idx + 1}
                           {(v.size || v.color) && (
                             <span className="ml-2 font-normal text-gray-400 dark:text-gray-500 capitalize">
-                              {[v.size, v.color].filter(Boolean).join(" · ")}
+                              {[v.size, v.color].filter(Boolean).join(" Â· ")}
                             </span>
                           )}
                         </span>
@@ -969,7 +969,7 @@ export default function ProductsPage() {
                           {/* Price */}
                           <div>
                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                              Price (₹) *
+                              Price (â‚¹) *
                             </label>
                             <input
                               type="number"
@@ -983,7 +983,7 @@ export default function ProductsPage() {
                           {/* Compare Price */}
                           <div>
                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                              Compare Price (₹)
+                              Compare Price (â‚¹)
                             </label>
                             <input
                               type="number"
@@ -1085,7 +1085,7 @@ export default function ProductsPage() {
                           </div>
                         </div>
 
-                        {/* ── Variant Images ── */}
+                        {/* â”€â”€ Variant Images â”€â”€ */}
                         <div>
                           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
                             <Upload size={11} /> Variant Images
@@ -1119,10 +1119,10 @@ export default function ProductsPage() {
                                     <img
                                       src={objUrl}
                                       onClick={() => setPreviewImage(objUrl)}
-                                      className="w-16 h-16 object-cover rounded-lg border-2 border-dashed border-violet-300 cursor-zoom-in"
+                                      className="w-16 h-16 object-cover rounded-lg border-2 border-dashed border-[#155dfc]/40 cursor-zoom-in"
                                     />
-                                    <div className="absolute inset-0 bg-violet-500/10 rounded-lg flex items-end justify-center pb-1 pointer-events-none">
-                                      <span className="text-[9px] text-violet-700 font-bold bg-white/80 px-1 rounded">Pending</span>
+                                    <div className="absolute inset-0 bg-blue-500/10 rounded-lg flex items-end justify-center pb-1 pointer-events-none">
+                                      <span className="text-[9px] text-[#155dfc] font-bold bg-white/80 px-1 rounded">Pending</span>
                                     </div>
                                     <button
                                       type="button"
@@ -1169,7 +1169,7 @@ export default function ProductsPage() {
                 </button>
               </div>
 
-              {/* ── Section: SEO ── */}
+              {/* â”€â”€ Section: SEO â”€â”€ */}
               <div>
                 <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">SEO</p>
                 <div className="grid grid-cols-2 gap-3">
@@ -1192,7 +1192,7 @@ export default function ProductsPage() {
                 </div>
               </div>
 
-              {/* ── Section: Status ── */}
+              {/* â”€â”€ Section: Status â”€â”€ */}
               <div className="flex flex-wrap gap-6">
                 <label className="flex items-center gap-2.5 cursor-pointer select-none">
                   <div

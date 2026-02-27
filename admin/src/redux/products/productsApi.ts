@@ -93,7 +93,7 @@ export interface GetProductsParams {
   bestseller?: boolean;
   is_new?: boolean;
   is_upcoming?: boolean;
-  size?: string;
+  weight?: string;
   min_price?: number;
   max_price?: number;
 }

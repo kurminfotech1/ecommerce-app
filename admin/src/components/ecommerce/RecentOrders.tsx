@@ -1,3 +1,4 @@
+"use client";
 import {
   Table,
   TableBody,
@@ -7,69 +8,56 @@ import {
 } from "../ui/table";
 import Badge from "../ui/badge/Badge";
 import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
-// Define the TypeScript interface for the table rows
-interface Product {
-  id: number; // Unique identifier for each product
-  name: string; // Product name
-  variants: string; // Number of variants (e.g., "1 Variant", "2 Variants")
-  category: string; // Category of the product
-  price: string; // Price of the product (as a string with currency symbol)
-  // status: string; // Status of the product
-  image: string; // URL or path to the product image
-  status: "Delivered" | "Pending" | "Canceled"; // Status of the product
+interface RecentOrder {
+  id: string;
+  order_number: string;
+  customer: string;
+  email: string;
+  product_name: string;
+  product_image: string | null;
+  category: string;
+  total_amount: number;
+  status: string;
+  created_at: string;
+  items_count: number;
 }
 
-// Define the table data using the interface
-const tableData: Product[] = [
-  {
-    id: 1,
-    name: "MacBook Pro 13”",
-    variants: "2 Variants",
-    category: "Laptop",
-    price: "$2399.00",
-    status: "Delivered",
-    image: "/images/product/product-01.jpg", // Replace with actual image URL
-  },
-  {
-    id: 2,
-    name: "Apple Watch Ultra",
-    variants: "1 Variant",
-    category: "Watch",
-    price: "$879.00",
-    status: "Pending",
-    image: "/images/product/product-02.jpg", // Replace with actual image URL
-  },
-  {
-    id: 3,
-    name: "iPhone 15 Pro Max",
-    variants: "2 Variants",
-    category: "SmartPhone",
-    price: "$1869.00",
-    status: "Delivered",
-    image: "/images/product/product-03.jpg", // Replace with actual image URL
-  },
-  {
-    id: 4,
-    name: "iPad Pro 3rd Gen",
-    variants: "2 Variants",
-    category: "Electronics",
-    price: "$1699.00",
-    status: "Canceled",
-    image: "/images/product/product-04.jpg", // Replace with actual image URL
-  },
-  {
-    id: 5,
-    name: "AirPods Pro 2nd Gen",
-    variants: "1 Variant",
-    category: "Accessories",
-    price: "$240.00",
-    status: "Delivered",
-    image: "/images/product/product-05.jpg", // Replace with actual image URL
-  },
-];
+const STATUS_MAP: Record<
+  string,
+  { label: string; color: "success" | "warning" | "error" | "info" | "light" }
+> = {
+  DELIVERED: { label: "Delivered", color: "success" },
+  PLACED: { label: "Placed", color: "info" },
+  CONFIRMED: { label: "Confirmed", color: "info" },
+  PROCESSING: { label: "Processing", color: "warning" },
+  SHIPPED: { label: "Shipped", color: "warning" },
+  CANCELLED: { label: "Cancelled", color: "error" },
+};
 
 export default function RecentOrders() {
+  const [orders, setOrders] = useState<RecentOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/dashboard")
+      .then((res) => res.json())
+      .then((d) => {
+        if (d?.recentOrders) setOrders(d.recentOrders);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(amount);
+
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -77,132 +65,143 @@ export default function RecentOrders() {
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
             Recent Orders
           </h3>
+          {!loading && (
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+              Last {orders.length} order{orders.length !== 1 ? "s" : ""}
+            </p>
+          )}
         </div>
-
         <div className="flex items-center gap-3">
-          <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200">
-            <svg
-              className="stroke-current fill-white dark:fill-gray-800"
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M2.29004 5.90393H17.7067"
-                stroke=""
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M17.7075 14.0961H2.29085"
-                stroke=""
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M12.0826 3.33331C13.5024 3.33331 14.6534 4.48431 14.6534 5.90414C14.6534 7.32398 13.5024 8.47498 12.0826 8.47498C10.6627 8.47498 9.51172 7.32398 9.51172 5.90415C9.51172 4.48432 10.6627 3.33331 12.0826 3.33331Z"
-                fill=""
-                stroke=""
-                strokeWidth="1.5"
-              />
-              <path
-                d="M7.91745 11.525C6.49762 11.525 5.34662 12.676 5.34662 14.0959C5.34661 15.5157 6.49762 16.6667 7.91745 16.6667C9.33728 16.6667 10.4883 15.5157 10.4883 14.0959C10.4883 12.676 9.33728 11.525 7.91745 11.525Z"
-                fill=""
-                stroke=""
-                strokeWidth="1.5"
-              />
-            </svg>
-            Filter
-          </button>
-          <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200">
+          <Link
+            href="/orders"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
+          >
             See all
-          </button>
+          </Link>
         </div>
       </div>
+
       <div className="max-w-full overflow-x-auto">
         <Table>
-          {/* Table Header */}
           <TableHeader className="border-gray-100 dark:border-gray-800 border-y">
             <TableRow>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                Products
+              <TableCell isHeader className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                Order
               </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                Category
+              <TableCell isHeader className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                Customer
               </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                Price
+              <TableCell isHeader className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
+                Amount
               </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
+              <TableCell isHeader className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
                 Status
               </TableCell>
             </TableRow>
           </TableHeader>
 
-          {/* Table Body */}
-
           <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
-            {tableData.map((product) => (
-              <TableRow key={product.id} className="">
-                <TableCell className="py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-[50px] w-[50px] overflow-hidden rounded-md">
-                      <Image
-                        width={50}
-                        height={50}
-                        src={product.image}
-                        className="h-[50px] w-[50px]"
-                        alt={product.name}
-                      />
+            {loading ? (
+              // Skeleton rows
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i} className="animate-pulse">
+                  <TableCell className="py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-[50px] w-[50px] rounded-md bg-gray-200 dark:bg-gray-700" />
+                      <div>
+                        <div className="w-28 h-4 bg-gray-200 dark:bg-gray-700 rounded mb-1" />
+                        <div className="w-20 h-3 bg-gray-100 dark:bg-gray-800 rounded" />
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                        {product.name}
-                      </p>
-                      <span className="text-gray-500 text-theme-xs dark:text-gray-400">
-                        {product.variants}
-                      </span>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  {product.price}
-                </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  {product.category}
-                </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  <Badge
-                    size="sm"
-                    color={
-                      product.status === "Delivered"
-                        ? "success"
-                        : product.status === "Pending"
-                        ? "warning"
-                        : "error"
-                    }
-                  >
-                    {product.status}
-                  </Badge>
-                </TableCell>
+                  </TableCell>
+                  <TableCell className="py-3">
+                    <div className="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded" />
+                  </TableCell>
+                  <TableCell className="py-3">
+                    <div className="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded" />
+                  </TableCell>
+                  <TableCell className="py-3">
+                    <div className="w-20 h-5 bg-gray-200 dark:bg-gray-700 rounded-full" />
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : orders.length === 0 ? (
+              <TableRow>
+                <td colSpan={4} className="py-8 text-center text-gray-400 dark:text-gray-500 text-sm">
+                  No orders yet.
+                </td>
               </TableRow>
-            ))}
+            ) : (
+              orders.map((order) => {
+                const statusInfo = STATUS_MAP[order.status] ?? {
+                  label: order.status,
+                  color: "light" as const,
+                };
+                return (
+                  <TableRow key={order.id}>
+                    <TableCell className="py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-[50px] w-[50px] overflow-hidden rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                          {order.product_image ? (
+                            <Image
+                              width={50}
+                              height={50}
+                              src={order.product_image}
+                              className="h-[50px] w-[50px] object-cover"
+                              alt={order.product_name}
+                            />
+                          ) : (
+                            <svg
+                              className="w-6 h-6 text-gray-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                        <div>
+                          <div className="relative group/tooltip inline-block max-w-[140px]">
+                            <p className="font-medium text-gray-800 text-theme-sm dark:text-white/90 truncate max-w-[140px] cursor-default">
+                              {order.product_name}
+                            </p>
+                            {/* Tooltip */}
+                            <div className="pointer-events-none absolute bottom-full left-0 mb-2 z-50 hidden group-hover/tooltip:block">
+                              <div className="bg-gray-900 dark:bg-gray-700 text-white text-xs font-medium rounded-lg px-3 py-1.5 whitespace-nowrap shadow-lg max-w-[260px] break-words">
+                                {order.product_name}
+                                {/* Arrow */}
+                                <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700" />
+                              </div>
+                            </div>
+                          <span className="text-gray-500 text-theme-xs dark:text-gray-400">
+                            {order.order_number}
+                          </span>
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3 text-gray-600 text-theme-sm dark:text-gray-300">
+                      <p className="font-medium text-gray-800 dark:text-white/90 text-theme-sm">{order.customer}</p>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">{order.email}</span>
+                    </TableCell>
+                    <TableCell className="py-3 text-gray-700 text-theme-sm dark:text-gray-300 font-medium">
+                      {formatCurrency(order.total_amount)}
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <Badge size="sm" color={statusInfo.color}>
+                        {statusInfo.label}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </div>

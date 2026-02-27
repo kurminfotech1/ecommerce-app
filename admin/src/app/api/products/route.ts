@@ -83,15 +83,15 @@ export async function GET(req: Request) {
     const bestsellerParam = searchParams.get("bestseller"); // "true" | null
     const isNewParam = searchParams.get("is_new");       // "true" | null
     const isUpcomingParam = searchParams.get("is_upcoming"); // "true" | null
-    const size = searchParams.get("size")?.trim();
+    const weight = searchParams.get("weight")?.trim();
     const minPrice = searchParams.get("min_price");
     const maxPrice = searchParams.get("max_price");
 
     const skip = (page - 1) * limit;
 
     const variantFilters: any = {};
-    if (size) {
-      variantFilters.size = { equals: size, mode: "insensitive" };
+    if (weight) {
+      variantFilters.weight = { startsWith: weight, mode: "insensitive" };
     }
     if (minPrice || maxPrice) {
       variantFilters.price = {};
@@ -179,7 +179,7 @@ export async function POST(req: Request) {
         description: body.description ?? null,
         short_desc: body.short_desc ?? null,
         category_id: body.category_id,
-        
+
         ingredient: body.ingredient ?? null,
         benefits: body.benefits ?? [],
         certifications: body.certifications ?? [],
