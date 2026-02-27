@@ -378,3 +378,12 @@ model Blog {
   @@index([published_at])
   @@index([category])
 }
+
+// Singleton row — always id = 'site-logo'
+model SiteLogo {
+  id           String   @id @default("site-logo")
+  light_url    String?  // logo for light mode
+  dark_url     String?  // logo for dark mode
+  favicon_url  String?  // favicon
+  updated_at   DateTime @updatedAt
+}

@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useEffect } from 'react';
 import { Outfit } from 'next/font/google';
 import './globals.css';
 import "flatpickr/dist/flatpickr.css";
@@ -19,6 +20,28 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  useEffect(() => {
+    const updateFavicon = () => {
+      fetch('/api/logo')
+        .then((res) => res.json())
+        .then((json) => {
+          const faviconUrl = json?.data?.favicon_url || '/icon.png';
+          let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+          if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.head.appendChild(link);
+          }
+          link.href = faviconUrl;
+        })
+        .catch((err) => console.error("Failed to fetch favicon:", err));
+    };
+
+    updateFavicon();
+    window.addEventListener("logo-updated", updateFavicon);
+    return () => window.removeEventListener("logo-updated", updateFavicon);
+  }, []);
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${outfit.className} dark:bg-gray-900`}>

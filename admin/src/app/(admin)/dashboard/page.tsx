@@ -10,8 +10,8 @@ import MonthlyTarget from "@/components/ecommerce/MonthlyTarget";
 
 export const metadata: Metadata = {
   title:
-    "Next.js E-commerce Dashboard | TailAdmin - Next.js Dashboard Template",
-  description: "This is Next.js Home for TailAdmin Dashboard Template",
+    "E-commerce Dashboard | Avshdh Organics - Premium Organic & Herbal Products",
+  description: "Dashboard for Avshdh Organics Store Management",
 };
 
 export default function Ecommerce() {
