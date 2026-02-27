@@ -3,14 +3,29 @@ import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
 import NotificationDropdown from "@/components/header/NotificationDropdown";
 import UserDropdown from "@/components/header/UserDropdown";
 import { useSidebar } from "@/context/SidebarContext";
-import Image from "next/image";
 import Link from "next/link";
-import React, { useState ,useEffect,useRef} from "react";
+import React, { useState, useEffect, useRef } from "react";
+
+type LogoData = { light_url: string | null; favicon_url: string | null } | null;
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
+  const [logoData, setLogoData] = useState<LogoData>(null);
 
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
+
+  const fetchLogoData = () => {
+    fetch("/api/logo")
+      .then((r) => r.json())
+      .then((j) => setLogoData(j.data))
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchLogoData();
+    window.addEventListener("logo-updated", fetchLogoData);
+    return () => window.removeEventListener("logo-updated", fetchLogoData);
+  }, []);
 
   const handleToggle = () => {
     if (window.innerWidth >= 1024) {
@@ -83,19 +98,11 @@ const AppHeader: React.FC = () => {
             {/* Cross Icon */}
           </button>
 
-          <Link href="/" className="lg:hidden">
-            <Image
-              width={154}
-              height={32}
-              className="dark:hidden"
-              src="./images/logo/logo.svg"
-              alt="Logo"
-            />
-            <Image
-              width={154}
-              height={32}
-              className="hidden dark:block"
-              src="./images/logo/logo-dark.svg"
+          <Link href="/" className="lg:hidden mx-auto">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="h-10 w-auto object-contain"
+              src={logoData?.light_url ?? "/images/logo/e-comm-logo.png"}
               alt="Logo"
             />
           </Link>

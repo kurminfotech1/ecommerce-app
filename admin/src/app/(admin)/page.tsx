@@ -9,8 +9,8 @@
 
 // export const metadata: Metadata = {
 //   title:
-//     "Next.js E-commerce Dashboard | TailAdmin - Next.js Dashboard Template",
-//   description: "This is Next.js Home for TailAdmin Dashboard Template",
+//     "Next.js E-commerce Dashboard | Aushadh Organic - Premium Organic & Herbal Products",
+//   description: "This is Next.js Home for Aushadh Organic Dashboard Template",
 // };
 
 // export default function Ecommerce() {
@@ -45,8 +45,8 @@ import SignInForm from "@/components/auth/SignInForm";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Next.js SignIn Page | TailAdmin - Next.js Dashboard Template",
-  description: "This is Next.js Signin Page TailAdmin Dashboard Template",
+  title: "Admin Sign In | Avshdh Organics - Premium Organic & Herbal Products",
+  description: "Secure Admin Login for Avshdh Organics Store",
 };
 
 export default function SignIn() {

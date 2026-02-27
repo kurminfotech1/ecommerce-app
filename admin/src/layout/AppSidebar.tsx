@@ -11,13 +11,13 @@ import {
   ListIcon,
   UserCircleIcon,
 } from "../icons/index";
-import { NewspaperIcon, ShoppingCart, StarIcon, Tags, RefreshCw } from "lucide-react";
+import { Crown, Database, ImageIcon, NewspaperIcon, Settings, ShieldCheck, ShoppingCart, StarIcon,Tags } from "lucide-react";
 
 type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  subItems?: { name: string; path: string; pro?: boolean; new?: boolean; icon?: React.ReactNode }[];
 };
 
 const navItems: NavItem[] = [
@@ -61,6 +61,15 @@ const navItems: NavItem[] = [
     icon: <NewspaperIcon size={18} />,
     name: "Blog",
     path: "/blog",
+    
+  },
+    {
+    name: "Master",
+    icon: < Settings />,
+    subItems: [
+      { name: "manage logo", path: "/logo", pro: false, icon: <ImageIcon size={18} /> },
+      { name: "User permission", path: "/userPermission", pro: false, icon: <ShieldCheck size={18} /> },
+    ],
   },
   // {
   //   icon: <CalenderIcon />,
@@ -73,11 +82,7 @@ const navItems: NavItem[] = [
   //   path: "/profile",
   // },
 
-  // {
-  //   name: "Forms",
-  //   icon: <ListIcon />,
-  //   subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-  // },
+
   // {
   //   name: "Tables",
   //   icon: <TableIcon />,
@@ -124,14 +129,30 @@ const othersItems: NavItem[] = [
   // },
 ];
 
+type LogoData = { light_url: string | null; favicon_url: string | null } | null;
+
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const [logoData, setLogoData] = useState<LogoData>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    const fetchLogoData = () => {
+      fetch("/api/logo")
+        .then((r) => r.json())
+        .then((j) => setLogoData(j.data))
+        .catch(() => {});
+    };
+
+    fetchLogoData();
+    window.addEventListener("logo-updated", fetchLogoData);
+    return () => window.removeEventListener("logo-updated", fetchLogoData);
+  }, [pathname]); // re-fetch after navigating away from /logo page or on event
 
   const renderMenuItems = (
     navItems: NavItem[],
@@ -216,7 +237,14 @@ const AppSidebar: React.FC = () => {
                         : "menu-dropdown-item-inactive"
                         }`}
                     >
-                      {subItem.name}
+                      <span className="flex items-center gap-3">
+                        {subItem.icon && (
+                          <span className="flex-shrink-0">
+                            {subItem.icon}
+                          </span>
+                        )}
+                        <span>{subItem.name}</span>
+                      </span>
                       <span className="flex items-center gap-1 ml-auto">
                         {subItem.new && (
                           <span
@@ -283,10 +311,10 @@ const AppSidebar: React.FC = () => {
     });
 
     // If no submenu item matches, close the open submenu
-    if (!submenuMatched && openSubmenu !== null) {
+    if (!submenuMatched) {
       setOpenSubmenu(null);
     }
-  }, [pathname, isActive, openSubmenu]);
+  }, [pathname, isActive]);
 
   useEffect(() => {
     // Set the height of the submenu items when the submenu is opened
@@ -333,33 +361,24 @@ const AppSidebar: React.FC = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`py-8 flex  ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-          }`}
+        className={`py-4 flex w-full ${
+          !isExpanded && !isHovered ? "lg:justify-center px-4" : "justify-start px-6"
+        }`}
       >
-        <Link href="/">
+        <Link href="/" className="w-full flex items-center">
           {isExpanded || isHovered || isMobileOpen ? (
-            <>
-              <Image
-                className="dark:hidden"
-                src="/images/logo/logo.svg"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-              <Image
-                className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-            </>
-          ) : (
-            <Image
-              src="/images/logo/logo-icon.svg"
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              className="w-full object-cover"
+              src={logoData?.light_url ?? "/images/logo/e-comm-logo.png"}
               alt="Logo"
-              width={32}
-              height={32}
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoData?.favicon_url ?? logoData?.light_url ?? "/icon.png"}
+              alt="Logo"
+              className="w-12 h-12 mx-auto object-cover"
             />
           )}
         </Link>
