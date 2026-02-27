@@ -293,6 +293,7 @@ const generateInvoice = (order: Order) => {
     )
     .join("");
 
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -311,7 +312,7 @@ const generateInvoice = (order: Order) => {
   <!-- Header -->
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:36px">
     <div>
-      <div style="font-size:26px;font-weight:800;color:#4f46e5;letter-spacing:-0.5px">&#9670; KurmInfo</div>
+      <img src="${origin}/images/logo/e-comm-logo-resize.png" alt="Logo" style="height:44px;width:auto" />
       <div style="font-size:12px;color:#888;margin-top:4px">Your trusted e-commerce store</div>
     </div>
     <div style="text-align:right">
@@ -519,7 +520,7 @@ const OrderDetailModal = ({ order, onClose }: { order: Order; onClose: () => voi
           <div className="rounded-xl border border-gray-100 overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-100">
+                <tr className="bg-[#157f3c] text-xs font-semibold text-white uppercase tracking-wide border-b border-[#157f3c]">
                   <th className="px-4 py-3 text-left">Product</th>
                   <th className="px-4 py-3 text-left">SKU</th>
                   <th className="px-4 py-3 text-center">Qty</th>
@@ -571,8 +572,11 @@ const OrderDetailModal = ({ order, onClose }: { order: Order; onClose: () => voi
           </div>
         </div>
 
-        <div className="flex gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
-          <button className="flex-1 flex items-center justify-center gap-2 bg-[#155dfc] hover:bg-[#1246cc] text-white py-2.5 rounded-xl text-sm font-semibold transition">
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
+          <button 
+            onClick={() => generateInvoice(order)}
+            className="px-2 flex items-center justify-center gap-2 bg-[#157f3c] hover:bg-[#126631] text-white py-2.5 rounded-xl text-sm font-semibold transition shadow-sm"
+          >
             <FileText size={15} /> Download Invoice
           </button>
           <button onClick={onClose} className="px-6 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 py-2.5 rounded-xl text-sm font-semibold transition">

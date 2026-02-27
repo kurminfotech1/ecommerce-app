@@ -198,7 +198,6 @@ export default function ReturnsPage() {
                                         <th className="px-6 py-4 text-left">Reason</th>
                                         <th className="px-6 py-4 text-left">Requested On</th>
                                         <th className="px-6 py-4 text-left">Status</th>
-                                        <th className="px-6 py-4 text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -227,7 +226,7 @@ export default function ReturnsPage() {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <p className="max-w-[200px] truncate text-gray-600 italic" title={req.reason}>
-                                                        "{req.reason}"
+                                                        {req.reason}
                                                     </p>
                                                 </td>
                                                 <td className="px-6 py-4 text-gray-600">
@@ -240,37 +239,6 @@ export default function ReturnsPage() {
                                                         <Icon size={12} />
                                                         {cfg.label}
                                                     </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        {req.status === "REQUESTED" && (
-                                                            <>
-                                                                <button
-                                                                    onClick={() => handleStatusUpdate(req.id, "APPROVED")}
-                                                                    className="px-3 py-1.5 text-[11px] font-bold text-white bg-[#155dfc] hover:bg-blue-700 rounded-lg transition"
-                                                                >
-                                                                    Approve
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleStatusUpdate(req.id, "REJECTED")}
-                                                                    className="px-3 py-1.5 text-[11px] font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition"
-                                                                >
-                                                                    Reject
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                        {req.status === "APPROVED" && (
-                                                            <button
-                                                                onClick={() => handleStatusUpdate(req.id, "COMPLETED")}
-                                                                className="px-3 py-1.5 text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition"
-                                                            >
-                                                                Mark Completed
-                                                            </button>
-                                                        )}
-                                                        <button className="p-2 text-gray-400 hover:text-gray-600 transition">
-                                                            <MoreVertical size={16} />
-                                                        </button>
-                                                    </div>
                                                 </td>
                                             </tr>
                                         );

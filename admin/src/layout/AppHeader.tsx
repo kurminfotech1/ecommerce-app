@@ -102,7 +102,7 @@ const AppHeader: React.FC = () => {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               className="h-10 w-auto object-contain"
-              src={logoData?.light_url ?? "/images/logo/e-comm-logo.png"}
+              src={logoData?.light_url ?? "/images/logo/e-comm-logo-resize.png"}
               alt="Logo"
             />
           </Link>

@@ -68,7 +68,7 @@ const navItems: NavItem[] = [
     icon: < Settings />,
     subItems: [
       { name: "manage logo", path: "/logo", pro: false, icon: <ImageIcon size={18} /> },
-      { name: "User permission", path: "/userPermission", pro: false, icon: <ShieldCheck size={18} /> },
+      // { name: "User permission", path: "/userPermission", pro: false, icon: <ShieldCheck size={18} /> },
     ],
   },
   // {
@@ -370,7 +370,7 @@ const AppSidebar: React.FC = () => {
             // eslint-disable-next-line @next/next/no-img-element
             <img
               className="w-full object-cover"
-              src={logoData?.light_url ?? "/images/logo/e-comm-logo.png"}
+              src={logoData?.light_url ?? "/images/logo/e-comm-logo-resize.png"}
               alt="Logo"
             />
           ) : (
