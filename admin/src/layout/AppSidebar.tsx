@@ -11,7 +11,7 @@ import {
   ListIcon,
   UserCircleIcon,
 } from "../icons/index";
-import { Crown, Database, ImageIcon, NewspaperIcon, Settings, ShieldCheck, ShoppingCart, StarIcon,Tags } from "lucide-react";
+import { Crown, Database, ImageIcon, NewspaperIcon, RefreshCw, Settings, ShieldCheck, ShoppingCart, StarIcon,Tags } from "lucide-react";
 
 type NavItem = {
   name: string;
