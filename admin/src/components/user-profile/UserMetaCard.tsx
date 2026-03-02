@@ -25,6 +25,7 @@ export default function UserMetaCard() {
     const cookieValue = Cookies.get("userId");
     if (cookieValue) {
       const id = decryptData(cookieValue);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUserId(id);
     }
   }, []);

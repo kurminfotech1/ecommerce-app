@@ -138,6 +138,7 @@ const AppSidebar: React.FC = () => {
   const [logoData, setLogoData] = useState<LogoData>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -312,6 +313,7 @@ const AppSidebar: React.FC = () => {
 
     // If no submenu item matches, close the open submenu
     if (!submenuMatched) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setOpenSubmenu(null);
     }
   }, [pathname, isActive]);

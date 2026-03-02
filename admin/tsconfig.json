@@ -33,8 +33,12 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
-, "src/lib/models/auth/auth.model.js", "src/lib/supabaseClient.ts", "src/lib/supabaseServer.ts", "src/app/api/categories"  ],
+    ".next/dev/types/**/*.ts",
+    "src/lib/models/auth/auth.model.js",
+    "src/lib/supabaseClient.ts",
+    "src/lib/supabaseServer.ts",
+    "src/app/api/categories"
+  ],
   "exclude": [
     "node_modules"
   ]
