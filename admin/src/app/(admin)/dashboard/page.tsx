@@ -30,7 +30,7 @@ export default function Ecommerce() {
         <MonthlySalesChart salesData={data?.monthlySales.sales ?? new Array(12).fill(0)} loading={loading} />
       </div>
 
-      <div className="col-span-12 xl:col-span-5">
+      <div className="col-span-12 xl:col-span-5 ">
         <MonthlyTarget targetData={data?.monthlyTarget ?? null} loading={loading} />
       </div>
 
