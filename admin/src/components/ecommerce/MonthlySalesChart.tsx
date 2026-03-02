@@ -1,28 +1,17 @@
-"use client";
 import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { DashboardData } from "@/types/dashboard";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-export default function MonthlySalesChart() {
-  const [salesData, setSalesData] = useState<number[]>(new Array(12).fill(0));
-  const [loading, setLoading] = useState(true);
+interface MonthlySalesChartProps {
+  salesData: number[];
+  loading: boolean;
+}
 
-  useEffect(() => {
-    fetch("/api/dashboard")
-      .then((res) => res.json())
-      .then((d) => {
-        if (d?.monthlySales?.sales) {
-          setSalesData(d.monthlySales.sales);
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
+export default function MonthlySalesChart({ salesData, loading }: MonthlySalesChartProps) {
   const options: ApexOptions = {
     colors: ["#465fff"],
     chart: {

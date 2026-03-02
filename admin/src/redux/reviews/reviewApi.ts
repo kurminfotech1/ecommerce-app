@@ -52,7 +52,7 @@ export const getReviews = createAsyncThunk<GetReviewsResponse, ReviewsQueryParam
       const res = await Axios.get(`reviews?${query.toString()}`);
       return res.data;
     } catch (error: any) {
-      toast.error(error?.response?.data?.error || "Failed to fetch reviews");
+      toast.error(error?.response?.data?.error || "Reviews not found");
       return rejectWithValue(error.message);
     }
   }

@@ -1,27 +1,14 @@
-"use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Badge from "../ui/badge/Badge";
 import { ArrowDownIcon, ArrowUpIcon, BoxIconLine, GroupIcon } from "@/icons";
+import { DashboardData } from "@/types/dashboard";
 
-interface DashboardData {
-  customers: { total: number; growth: number; isGrowing: boolean };
-  orders: { total: number; growth: number; isGrowing: boolean };
+interface EcommerceMetricsProps {
+  data: DashboardData | null;
+  loading: boolean;
 }
 
-export const EcommerceMetrics = () => {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/dashboard")
-      .then((res) => res.json())
-      .then((d) => {
-        setData(d);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
+export const EcommerceMetrics = ({ data, loading }: EcommerceMetricsProps) => {
   const formatNumber = (n: number) =>
     n >= 1000 ? (n / 1000).toFixed(1) + "K" : n.toString();
 

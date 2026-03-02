@@ -1,20 +1,10 @@
-"use client";
 import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
-import { Dropdown } from "../ui/dropdown/Dropdown";
-import { MoreDotIcon } from "@/icons";
-import { useEffect, useState } from "react";
-import { DropdownItem } from "../ui/dropdown/DropdownItem";
+import { DashboardData } from "@/types/dashboard";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
-interface TargetData {
-  target: number;
-  revenue: number;
-  today: number;
-  lastMonthRevenue: number;
-  progress: number;
-}
+type TargetData = DashboardData["monthlyTarget"];
 
 function formatCurrency(value: number): string {
   if (value >= 1000000) return `₹${(value / 1000000).toFixed(1)}M`;
@@ -22,29 +12,18 @@ function formatCurrency(value: number): string {
   return `₹${value.toFixed(0)}`;
 }
 
-export default function MonthlyTarget() {
-  const [data, setData] = useState<TargetData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isOpen, setIsOpen] = useState(false);
+interface MonthlyTargetProps {
+  targetData: TargetData | null;
+  loading: boolean;
+}
 
-  useEffect(() => {
-    fetch("/api/dashboard")
-      .then((res) => res.json())
-      .then((d) => {
-        if (d?.monthlyTarget) {
-          setData(d.monthlyTarget);
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
-  const progress = data?.progress ?? 0;
+export default function MonthlyTarget({ targetData, loading }: MonthlyTargetProps) {
+  const progress = targetData?.progress ?? 0;
   const revenueGrowthVsLastMonth =
-    data && data.lastMonthRevenue > 0
-      ? (((data.revenue - data.lastMonthRevenue) / data.lastMonthRevenue) * 100).toFixed(1)
+    targetData && targetData.lastMonthRevenue > 0
+      ? (((targetData.revenue - targetData.lastMonthRevenue) / targetData.lastMonthRevenue) * 100).toFixed(1)
       : "0";
-  const isGrowing = data ? data.revenue >= data.lastMonthRevenue : true;
+  const isGrowing = targetData ? targetData.revenue >= targetData.lastMonthRevenue : true;
 
   const options: ApexOptions = {
     colors: ["#465FFF"],
@@ -106,20 +85,6 @@ export default function MonthlyTarget() {
               Target you&apos;ve set for each month
             </p>
           </div>
-          {/* <div className="relative inline-block">
-            <button onClick={() => setIsOpen(!isOpen)} className="dropdown-toggle">
-              <MoreDotIcon className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" />
-            </button>
-            <Dropdown isOpen={isOpen} onClose={() => setIsOpen(false)} className="w-40 p-2">
-              <DropdownItem
-                tag="a"
-                onItemClick={() => setIsOpen(false)}
-                className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-              >
-                View More
-              </DropdownItem>
-            </Dropdown>
-          </div> */}
         </div>
 
         <div className="relative">
@@ -151,10 +116,10 @@ export default function MonthlyTarget() {
         <p className="mx-auto mt-10 w-full max-w-[380px] text-center text-sm text-gray-500 sm:text-base">
           {loading ? (
             <span className="inline-block w-64 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-          ) : data ? (
+          ) : targetData ? (
             <>
               You earned{" "}
-              <strong className="text-gray-800 dark:text-white">{formatCurrency(data.today)}</strong>{" "}
+              <strong className="text-gray-800 dark:text-white">{formatCurrency(targetData.today)}</strong>{" "}
               today.{" "}
               {isGrowing
                 ? "Revenue is higher than last month. Keep up your good work!"
@@ -174,7 +139,7 @@ export default function MonthlyTarget() {
               <span className="inline-block w-14 h-5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
             ) : (
               <>
-                {formatCurrency(data?.target ?? 0)}
+                {formatCurrency(targetData?.target ?? 0)}
                 <DownArrow />
               </>
             )}
@@ -192,7 +157,7 @@ export default function MonthlyTarget() {
               <span className="inline-block w-14 h-5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
             ) : (
               <>
-                {formatCurrency(data?.revenue ?? 0)}
+                {formatCurrency(targetData?.revenue ?? 0)}
                 <UpArrow />
               </>
             )}
@@ -210,7 +175,7 @@ export default function MonthlyTarget() {
               <span className="inline-block w-14 h-5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
             ) : (
               <>
-                {formatCurrency(data?.today ?? 0)}
+                {formatCurrency(targetData?.today ?? 0)}
                 <UpArrow />
               </>
             )}

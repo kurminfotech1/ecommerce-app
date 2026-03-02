@@ -1,10 +1,10 @@
-"use client";
 import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { CalenderIcon } from "../../icons";
 import flatpickr from "flatpickr";
 import { useRef } from "react";
+import { DashboardData } from "@/types/dashboard";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -13,31 +13,20 @@ const QUARTERS = ["Q1 (Jan–Mar)", "Q2 (Apr–Jun)", "Q3 (Jul–Sep)", "Q4 (Oct
 
 type TabType = "Monthly" | "Quarterly" | "Annually";
 
-interface DashboardData {
-  monthlySales: { sales: number[]; revenue: number[] };
-}
-
 function aggregateQuarterly(monthly: number[]): number[] {
   return [0, 1, 2, 3].map((q) =>
     monthly.slice(q * 3, q * 3 + 3).reduce((a, b) => a + b, 0)
   );
 }
 
-export default function StatisticsChart() {
-  const datePickerRef = useRef<HTMLInputElement>(null);
-  const [rawData, setRawData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabType>("Monthly");
+interface StatisticsChartProps {
+  rawData: DashboardData | null;
+  loading: boolean;
+}
 
-  useEffect(() => {
-    fetch("/api/dashboard")
-      .then((res) => res.json())
-      .then((d) => {
-        if (d?.monthlySales) setRawData(d);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+export default function StatisticsChart({ rawData, loading }: StatisticsChartProps) {
+  const datePickerRef = useRef<HTMLInputElement>(null);
+  const [activeTab, setActiveTab] = useState<TabType>("Monthly");
 
   useEffect(() => {
     if (!datePickerRef.current) return;
