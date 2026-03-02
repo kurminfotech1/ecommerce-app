@@ -15,13 +15,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const publicRoutes = ["/signin", "/"];
+  const publicRoutes = ["/"];
 
   const isPublic = publicRoutes.some((route) =>
     pathname === route
   );
 
-  if (token && (pathname === "/" || pathname === "/signin")) {
+  if (token && pathname === "/") {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
