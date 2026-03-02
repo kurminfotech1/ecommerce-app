@@ -1,0 +1,385 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  SUPERADMIN
+}
+
+enum OrderStatus {
+  PLACED
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum ReturnStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+model Admin {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  full_name   String?
+  password    String?
+  role        Role     @default(ADMIN)
+  phone       String?
+  country     String?
+  state       String?
+  city        String?
+  postal_code String?
+  createdAt   DateTime @default(now())
+}
+
+model Category {
+  id   String @id @default(uuid())
+  name String
+  slug String @unique
+
+  parentId String?
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children Category[] @relation("CategoryTree")
+
+  is_active Boolean @default(true)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id String @id @default(uuid())
+
+  // Category Relation
+  category_id String
+  category    Category @relation(fields: [category_id], references: [id])
+
+  // Core Info
+  product_name String
+  slug         String  @unique
+  short_desc   String?
+  description  String?
+
+  // Wellness / Organic Specific Fields
+  ingredient        String?
+  benefits          String[] // searchable wellness claims
+  certifications    String[] // USDA, Non-GMO, etc.
+  country_of_origin String?
+  expiry_months     Int?
+  storage_info      String?
+  allergen_info     String?
+
+  // Sales Metrics
+  sold_count   Int   @default(0)
+  rating_avg   Float @default(0)
+  rating_count Int   @default(0)
+
+  // Status Flags
+  is_active     Boolean @default(true)
+  is_featured   Boolean @default(false)
+  is_bestseller Boolean @default(false)
+  is_new        Boolean @default(false)
+  is_upcoming   Boolean @default(false)
+
+  // SEO
+  meta_title String?
+  meta_desc  String?
+
+  // System
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  images   ProductImage[]
+  variants ProductVariant[]
+  reviews  Review[]
+  wishlist Wishlist[]
+
+  @@index([slug])
+  @@index([is_active])
+  @@index([is_featured])
+  @@index([is_bestseller])
+  @@index([is_new])
+  @@index([is_upcoming])
+}
+
+model ProductVariant {
+  id String @id @default(uuid())
+
+  product_id String
+  product    Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  // Variant Attributes
+  size   String? // keep generic for future expansion
+  color  String?
+  weight String? // added for powders
+
+  // Pricing
+  price         Float
+  compare_price Float?
+
+  // Inventory
+  stock               Int @default(0)
+  low_stock_threshold Int @default(5)
+
+  sku String @unique
+
+  // System
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  images     VariantImage[]
+  cartItems  Cart[]
+  orderItems OrderItem[]
+  stockLogs  StockLog[]
+
+  @@index([price])
+  @@index([stock])
+}
+
+model StockLog {
+  id         String   @id @default(uuid())
+  variant_id String
+  change     Int
+  reason     String
+  created_at DateTime @default(now())
+
+  variant ProductVariant @relation(fields: [variant_id], references: [id], onDelete: Cascade)
+}
+
+model ProductImage {
+  id         String  @id @default(uuid())
+  product_id String
+  image_url  String
+  alt_text   String?
+  sort_order Int     @default(0)
+
+  product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@index([product_id])
+}
+
+model VariantImage {
+  id         String  @id @default(uuid())
+  variant_id String
+  image_url  String
+  alt_text   String?
+  sort_order Int     @default(0)
+
+  variant ProductVariant @relation(fields: [variant_id], references: [id], onDelete: Cascade)
+
+  @@index([variant_id])
+}
+
+model User {
+  id          String   @id @default(uuid())
+  full_name   String
+  email       String   @unique
+  password    String
+  phone       String
+  is_verified Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  addresses Address[]
+  cart      Cart[]
+  orders    Order[]
+  reviews   Review[]
+  wishlist  Wishlist[]
+  returns   ReturnRequest[]
+}
+
+model Address {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  line1   String
+  line2   String?
+  city    String
+  state   String
+  pincode String
+  country String
+
+  createdAt DateTime @default(now())
+}
+
+model Cart {
+  id         String   @id @default(uuid())
+  user_id    String
+  variant_id String
+  quantity   Int
+  price      Float
+  created_at DateTime @default(now())
+
+  user    User           @relation(fields: [user_id], references: [id])
+  variant ProductVariant @relation(fields: [variant_id], references: [id])
+
+  @@unique([user_id, variant_id])
+}
+
+model Order {
+  id           String @id @default(uuid())
+  order_number String @unique
+  user_id      String
+
+  total_amount Float
+  order_status OrderStatus @default(PLACED)
+
+  shipping_name    String
+  shipping_phone   String
+  shipping_address String
+  shipping_city    String
+  shipping_state   String
+  shipping_pincode String
+  shipping_country String
+
+  created_at DateTime @default(now())
+
+  user           User            @relation(fields: [user_id], references: [id])
+  items          OrderItem[]
+  payment        Payment?
+  returnRequests ReturnRequest[]
+
+  @@index([order_status])
+}
+
+model OrderItem {
+  id         String @id @default(uuid())
+  order_id   String
+  variant_id String
+  quantity   Int
+  price      Float
+
+  order   Order          @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variant_id], references: [id])
+}
+
+model Payment {
+  id             String        @id @default(uuid())
+  order_id       String        @unique
+  payment_method String
+  transaction_id String
+  amount         Float
+  status         PaymentStatus @default(PENDING)
+  created_at     DateTime      @default(now())
+
+  order Order @relation(fields: [order_id], references: [id], onDelete: Cascade)
+}
+
+model ReturnRequest {
+  id         String       @id @default(uuid())
+  order_id   String
+  user_id    String
+  reason     String
+  status     ReturnStatus @default(REQUESTED)
+  created_at DateTime     @default(now())
+  updated_at DateTime     @updatedAt
+
+  order Order @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [user_id], references: [id])
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  user_id    String
+  product_id String
+  rating     Int
+  title      String?
+  body       String?
+  status     String   @default("Pending")
+  created_at DateTime @default(now())
+
+  user    User    @relation(fields: [user_id], references: [id])
+  product Product @relation(fields: [product_id], references: [id])
+}
+
+model Wishlist {
+  id         String @id @default(uuid())
+  user_id    String
+  product_id String
+
+  user    User    @relation(fields: [user_id], references: [id])
+  product Product @relation(fields: [product_id], references: [id])
+}
+
+model BlogTag {
+  id   String @id @default(uuid())
+  name String
+  slug String @unique
+
+  blogs Blog[]
+
+  created_at DateTime @default(now())
+}
+
+model Blog {
+  id String @id @default(uuid())
+
+  // Core Content
+  title   String
+  slug    String  @unique
+  excerpt String?
+  content String
+
+  featured_image String?
+
+  // Author & Category
+  category String
+  author   String
+
+  tags BlogTag[]
+
+  // SEO
+  meta_title    String?
+  meta_desc     String?
+  canonical_url String?
+
+  // Status
+  is_draft     Boolean @default(false)
+  is_published Boolean @default(false)
+  is_featured  Boolean @default(false)
+
+  // Publishing
+  published_at DateTime?
+
+  // System
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([slug])
+  @@index([is_published])
+  @@index([is_draft])
+  @@index([is_featured])
+  @@index([published_at])
+  @@index([category])
+}
+
+// Singleton row — always id = 'site-logo'
+model SiteLogo {
+  id          String   @id @default("site-logo")
+  light_url   String? // logo for light mode
+  dark_url    String? // logo for dark mode
+  favicon_url String? // favicon
+  updated_at  DateTime @updatedAt
+}
