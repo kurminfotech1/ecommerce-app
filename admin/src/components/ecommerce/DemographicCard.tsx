@@ -1,12 +1,7 @@
-"use client";
 import CountryMap from "./CountryMap";
-import { useEffect, useState } from "react";
+import { DashboardData } from "@/types/dashboard";
 
-interface DemographicItem {
-  country: string;
-  count: number;
-  percentage: number;
-}
+type DemographicItem = DashboardData["demographics"][number];
 
 // Country code mapping for flag emojis (extend as needed)
 const COUNTRY_EMOJI: Record<string, string> = {
@@ -39,20 +34,12 @@ const BRAND_COLORS = [
   "bg-purple-400",
 ];
 
-export default function DemographicCard() {
-  const [data, setData] = useState<DemographicItem[]>([]);
-  const [loading, setLoading] = useState(true);
+interface DemographicCardProps {
+  demographics: DemographicItem[];
+  loading: boolean;
+}
 
-  useEffect(() => {
-    fetch("/api/dashboard")
-      .then((res) => res.json())
-      .then((d) => {
-        if (d?.demographics) setData(d.demographics);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
+export default function DemographicCard({ demographics, loading }: DemographicCardProps) {
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] sm:p-6">
       <div className="flex justify-between">
@@ -93,12 +80,12 @@ export default function DemographicCard() {
               </div>
             </div>
           ))
-        ) : data.length === 0 ? (
+        ) : demographics.length === 0 ? (
           <p className="text-center text-gray-400 dark:text-gray-500 py-4 text-sm">
             No customer address data yet.
           </p>
         ) : (
-          data.map((item, idx) => (
+          demographics.map((item, idx) => (
             <div key={item.country} className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-lg">

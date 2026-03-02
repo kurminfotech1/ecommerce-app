@@ -1,4 +1,3 @@
-"use client";
 import {
   Table,
   TableBody,
@@ -9,21 +8,9 @@ import {
 import Badge from "../ui/badge/Badge";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { DashboardData } from "@/types/dashboard";
 
-interface RecentOrder {
-  id: string;
-  order_number: string;
-  customer: string;
-  email: string;
-  product_name: string;
-  product_image: string | null;
-  category: string;
-  total_amount: number;
-  status: string;
-  created_at: string;
-  items_count: number;
-}
+type RecentOrder = DashboardData["recentOrders"][number];
 
 const STATUS_MAP: Record<
   string,
@@ -37,20 +24,12 @@ const STATUS_MAP: Record<
   CANCELLED: { label: "Cancelled", color: "error" },
 };
 
-export default function RecentOrders() {
-  const [orders, setOrders] = useState<RecentOrder[]>([]);
-  const [loading, setLoading] = useState(true);
+interface RecentOrdersProps {
+  orders: RecentOrder[];
+  loading: boolean;
+}
 
-  useEffect(() => {
-    fetch("/api/dashboard")
-      .then((res) => res.json())
-      .then((d) => {
-        if (d?.recentOrders) setOrders(d.recentOrders);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
+export default function RecentOrders({ orders, loading }: RecentOrdersProps) {
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("en-IN", {
       style: "currency",
