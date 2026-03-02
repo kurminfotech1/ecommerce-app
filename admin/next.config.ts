@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  assetPrefix: "/admin",
+  basePath: "/admin",
   /* config options here */
 
   async headers() {
