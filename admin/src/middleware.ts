@@ -5,21 +5,8 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   const { pathname } = request.nextUrl;
 
-  // Skip Next.js internal and static files
-  if (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/favicon.ico") ||
-    pathname.match(/\.(png|jpg|jpeg|svg|gif|webp|css|js|woff2?)$/)
-  ) {
-    return NextResponse.next();
-  }
-
   const publicRoutes = ["/"];
-
-  const isPublic = publicRoutes.some((route) =>
-    pathname === route
-  );
+  const isPublic = publicRoutes.includes(pathname);
 
   if (token && pathname === "/") {
     return NextResponse.redirect(new URL("/dashboard", request.url));
@@ -33,6 +20,16 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/:path*"],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - images (public images)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|images|icon.png).*)',
+  ],
 };
 
