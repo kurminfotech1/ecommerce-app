@@ -179,9 +179,9 @@ export default function RecentOrders() {
                                 <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700" />
                               </div>
                             </div>
-                          <span className="text-gray-500 text-theme-xs dark:text-gray-400">
-                            {order.order_number}
-                          </span>
+                            <span className="text-gray-500 text-theme-xs dark:text-gray-400">
+                              {order.order_number}
+                            </span>
                           </div>
                         </div>
                       </div>
