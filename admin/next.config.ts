@@ -35,6 +35,9 @@ const nextConfig: NextConfig = {
   },
 
 
+  experimental: {
+    serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
+  },
   turbopack: {
     rules: {
       '*.svg': {
@@ -43,7 +46,6 @@ const nextConfig: NextConfig = {
       },
     },
   },
-
 };
 
 export default nextConfig;
