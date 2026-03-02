@@ -9,8 +9,8 @@
 
 // export const metadata: Metadata = {
 //   title:
-//     "Next.js E-commerce Dashboard | Aushadh Organic - Premium Organic & Herbal Products",
-//   description: "This is Next.js Home for Aushadh Organic Dashboard Template",
+//     "Next.js E-commerce Dashboard | Avshdh Organic - Premium Organic & Herbal Products",
+//   description: "This is Next.js Home for Avshdh Organic Dashboard Template",
 // };
 
 // export default function Ecommerce() {

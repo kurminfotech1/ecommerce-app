@@ -48,8 +48,15 @@ useEffect(() => {
 
   const handleLogout = () => {
     dispatch(logout());
-     toast.success("Logged out successfully");
-    router.push("/");
+    toast.success("Logged out successfully", {
+      onClose: () => {
+        window.location.replace("/");
+      }
+    });
+    // Fallback if toast doesn't close or auto-close is long
+    setTimeout(() => {
+      window.location.replace("/");
+    }, 1500);
   };
 
   return (

@@ -5,8 +5,8 @@ import React from "react";
 
 
 export const metadata: Metadata = {
-  title: "Aushadh Organic - Premium Organic Products",
-  description: "Aushadh Organic Admin Panel",
+  title: "Avshdh Organic - Premium Organic Products",
+  description: "Avshdh Organic Admin Panel",
 };
   
 export default function SignIn() {

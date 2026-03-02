@@ -5,9 +5,9 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Next.js Bar Chart | Aushadh Organic - Premium Organic & Herbal Products",
+  title: "Next.js Bar Chart | Avshdh Organic - Premium Organic & Herbal Products",
   description:
-    "This is Next.js Bar Chart page for Aushadh Organic - Next.js Tailwind CSS Admin Dashboard Template",
+    "This is Next.js Bar Chart page for Avshdh Organic - Next.js Tailwind CSS Admin Dashboard Template",
 };
 
 export default function page() {

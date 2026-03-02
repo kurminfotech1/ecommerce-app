@@ -3,8 +3,8 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Next.js Blank Page | Aushadh Organic - Premium Organic & Herbal Products",
-  description: "This is Next.js Blank Page Aushadh Organic Dashboard Template",
+  title: "Next.js Blank Page | Avshdh Organic - Premium Organic & Herbal Products",
+  description: "This is Next.js Blank Page Avshdh Organic Dashboard Template",
 };
 
 export default function BlankPage() {
