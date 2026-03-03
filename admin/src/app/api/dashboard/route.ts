@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+// ⚡ Ensure this route is dynamic but cached for 30 seconds to guarantee ultra-fast loads
+export const revalidate = 30;
+
 export async function GET() {
     try {
         const now = new Date();
@@ -10,36 +13,47 @@ export async function GET() {
         const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
         const firstDayOfLastMonth = new Date(currentYear, currentMonth - 1, 1);
         const lastDayOfLastMonth = new Date(currentYear, currentMonth, 0, 23, 59, 59, 999);
-        const firstDayOfYear = new Date(currentYear, 0, 1);
-        const lastDayOfYear = new Date(currentYear, 11, 31, 23, 59, 59, 999);
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
 
-        // ─── Run ALL independent queries in parallel ───────────────────────────
+        // ─── 1. Build 12 promises for Monthly aggregations ─────────────────────
+        // Letting the DB do the aggregation instead of transferring row arrays
+        const monthlyPromises = Array.from({ length: 12 }).map((_, m) => {
+            const start = new Date(currentYear, m, 1);
+            const end = new Date(currentYear, m + 1, 0, 23, 59, 59, 999);
+            return prisma.order.aggregate({
+                where: {
+                    created_at: { gte: start, lte: end },
+                    order_status: { not: "CANCELLED" },
+                },
+                _count: { id: true },
+                _sum: { total_amount: true },
+            });
+        });
+
+        // ─── Run ALL queries in parallel (10 base queries + 12 monthly = 22) ────
         const [
             totalCustomers,
             lastMonthCustomers,
             totalOrders,
             lastMonthOrders,
-            // Monthly orders for the whole year in ONE query — grouped by raw data
-            yearOrders,
-            // Last month revenue aggregate
+            // Revenue Aggregates
             lastMonthRevenueAgg,
-            // This month revenue aggregate
             thisMonthRevenueAgg,
-            // Today revenue aggregate
             todayRevenueAgg,
-            // Demographics
-            userAddresses,
+            // Grouped Demographics (Replaces downloading all addresses)
+            groupedAddresses,
             // Recent orders
             recentOrders,
             // Status breakdown
             statusBreakdown,
+            // Destructure the 12 monthly results
+            ...monthlyAggregations
         ] = await Promise.all([
             // 1a. Total customers
             prisma.user.count(),
 
-            // 1b. Customers before this month (for growth calc)
+            // 1b. Customers before this month
             prisma.user.count({
                 where: { createdAt: { lt: firstDayOfMonth } },
             }),
@@ -47,18 +61,9 @@ export async function GET() {
             // 2a. Total orders
             prisma.order.count(),
 
-            // 2b. Orders before this month (for growth calc)
+            // 2b. Orders before this month
             prisma.order.count({
                 where: { created_at: { lt: firstDayOfMonth } },
-            }),
-
-            // 3. All non-cancelled orders in the current year — single query replaces 12-query loop
-            prisma.order.findMany({
-                where: {
-                    created_at: { gte: firstDayOfYear, lte: lastDayOfYear },
-                    order_status: { not: "CANCELLED" },
-                },
-                select: { created_at: true, total_amount: true },
             }),
 
             // 4a. Last month revenue aggregate
@@ -88,9 +93,10 @@ export async function GET() {
                 _sum: { total_amount: true },
             }),
 
-            // 5. Customer demographics
-            prisma.address.findMany({
-                select: { country: true },
+            // 5. Customer demographics - DATABASE LEVEL GROUPING
+            prisma.address.groupBy({
+                by: ["country"],
+                _count: { _all: true },
             }),
 
             // 6. Recent orders
@@ -122,6 +128,9 @@ export async function GET() {
                 by: ["order_status"],
                 _count: { id: true },
             }),
+
+            // 3. Push all 12 monthly aggregates into the Promise.all
+            ...monthlyPromises,
         ]);
 
         // ─── 1. Customer stats ─────────────────────────────────────────────────
@@ -138,15 +147,9 @@ export async function GET() {
                 ? ((newOrdersThisMonth / lastMonthOrders) * 100).toFixed(2)
                 : "0";
 
-        // ─── 3. Monthly sales — aggregate in JS from yearOrders ───────────────
-        const monthlySales = new Array(12).fill(0);
-        const monthlyRevenue = new Array(12).fill(0);
-        for (const order of yearOrders) {
-            const m = new Date(order.created_at).getMonth(); // 0-indexed
-            monthlySales[m] += 1;
-            monthlyRevenue[m] += order.total_amount;
-        }
-        monthlyRevenue.forEach((v, i) => (monthlyRevenue[i] = Math.round(v)));
+        // ─── 3. Monthly sales — from parallel aggregates ──────────────────────
+        const monthlySales = monthlyAggregations.map((agg) => agg._count.id);
+        const monthlyRevenue = monthlyAggregations.map((agg) => Math.round(agg._sum.total_amount ?? 0));
 
         // ─── 4. Monthly target ─────────────────────────────────────────────────
         const lastMonthRevenue = lastMonthRevenueAgg._sum.total_amount ?? 0;
@@ -159,12 +162,16 @@ export async function GET() {
                 : 0;
 
         // ─── 5. Demographics ──────────────────────────────────────────────────
+        let totalAddresses = 0;
         const countryMap: Record<string, number> = {};
-        for (const addr of userAddresses) {
-            const c = addr.country || "Unknown";
-            countryMap[c] = (countryMap[c] || 0) + 1;
+        
+        for (const group of groupedAddresses) {
+            const count = group._count._all;
+            const c = group.country || "Unknown";
+            countryMap[c] = (countryMap[c] || 0) + count;
+            totalAddresses += count;
         }
-        const totalAddresses = userAddresses.length;
+
         const demographics = Object.entries(countryMap)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 5)
@@ -200,7 +207,7 @@ export async function GET() {
             };
         });
 
-        // ─── Response (unchanged shape) ───────────────────────────────────────
+        // ─── Response ─────────────────────────────────────────────────────────
         return NextResponse.json({
             customers: {
                 total: totalCustomers,
