@@ -140,7 +140,7 @@ export default function MonthlyTarget({ targetData, loading }: MonthlyTargetProp
             ) : (
               <>
                 {formatCurrency(targetData?.target ?? 0)}
-                <DownArrow />
+                {targetData && targetData.target >= targetData.lastMonthRevenue ? <UpArrow /> : <DownArrow />}
               </>
             )}
           </p>
@@ -158,7 +158,7 @@ export default function MonthlyTarget({ targetData, loading }: MonthlyTargetProp
             ) : (
               <>
                 {formatCurrency(targetData?.revenue ?? 0)}
-                <UpArrow />
+                {isGrowing ? <UpArrow /> : <DownArrow />}
               </>
             )}
           </p>
@@ -176,7 +176,7 @@ export default function MonthlyTarget({ targetData, loading }: MonthlyTargetProp
             ) : (
               <>
                 {formatCurrency(targetData?.today ?? 0)}
-                <UpArrow />
+                {targetData && targetData.today > 0 ? <UpArrow /> : <DownArrow />}
               </>
             )}
           </p>
