@@ -119,7 +119,7 @@ export default function StatisticsChart({ rawData, loading }: StatisticsChartPro
       x: { show: true },
       y: [
         { formatter: (val: number) => `${val} orders` },
-        { formatter: (val: number) => `₹${val.toLocaleString("en-IN")}` },
+        { formatter: (val: number) => `Rs. ${val.toLocaleString("en-IN")}` },
       ],
     },
     xaxis: {
@@ -137,7 +137,7 @@ export default function StatisticsChart({ rawData, loading }: StatisticsChartPro
 
   const series = [
     { name: "Orders", data: salesSeries },
-    { name: "Revenue (₹)", data: revenueSeries },
+    { name: "Revenue (Rs.)", data: revenueSeries },
   ];
 
   const tabs: TabType[] = ["Monthly", "Quarterly", "Annually"];

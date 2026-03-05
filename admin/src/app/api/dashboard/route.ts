@@ -225,7 +225,9 @@ export async function GET() {
             },
             monthlyTarget: {
                 target: thisMonthTarget,
-                revenue: Math.round(thisMonthRevenue),
+                thisMonthRevenue: Math.round(thisMonthRevenue),
+                thisMonthOrders: newOrdersThisMonth,
+                thisMonthCustomers: newCustomersThisMonth,
                 today: Math.round(todayRevenue),
                 lastMonthRevenue: Math.round(lastMonthRevenue),
                 progress: targetProgress,

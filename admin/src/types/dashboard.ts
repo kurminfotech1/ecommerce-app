@@ -16,7 +16,9 @@ export interface DashboardData {
     };
     monthlyTarget: {
         target: number;
-        revenue: number;
+        thisMonthRevenue: number;
+        thisMonthOrders: number;
+        thisMonthCustomers: number;
         today: number;
         lastMonthRevenue: number;
         progress: number;

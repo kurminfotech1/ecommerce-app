@@ -18,9 +18,10 @@ const DownArrow = () => (
 type TargetData = DashboardData["monthlyTarget"];
 
 function formatCurrency(value: number): string {
-  if (value >= 1000000) return `₹${(value / 1000000).toFixed(1)}M`;
-  if (value >= 1000) return `₹${(value / 1000).toFixed(1)}K`;
-  return `₹${value.toFixed(0)}`;
+  const safeValue = value || 0;
+  if (safeValue >= 1000000) return `₹ ${(safeValue / 1000000).toFixed(1)}M`;
+  if (safeValue >= 1000) return `₹ ${(safeValue / 1000).toFixed(1)}K`;
+  return `₹ ${safeValue.toFixed(0)}`;
 }
 
 interface MonthlyTargetProps {
@@ -32,9 +33,9 @@ export default function MonthlyTarget({ targetData, loading }: MonthlyTargetProp
   const progress = targetData?.progress ?? 0;
   const revenueGrowthVsLastMonth =
     targetData && targetData.lastMonthRevenue > 0
-      ? (((targetData.revenue - targetData.lastMonthRevenue) / targetData.lastMonthRevenue) * 100).toFixed(1)
+      ? (((targetData.thisMonthRevenue - targetData.lastMonthRevenue) / targetData.lastMonthRevenue) * 100).toFixed(1)
       : "0";
-  const isGrowing = targetData ? targetData.revenue >= targetData.lastMonthRevenue : true;
+  const isGrowing = targetData ? targetData.thisMonthRevenue >= targetData.lastMonthRevenue : true;
 
   const options: ApexOptions = {
     colors: ["#465FFF"],
@@ -118,9 +119,9 @@ export default function MonthlyTarget({ targetData, loading }: MonthlyTargetProp
             <span className="inline-block w-64 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
           ) : targetData ? (
             <>
-              You earned{" "}
-              <strong className="text-gray-800 dark:text-white">{formatCurrency(targetData.today)}</strong>{" "}
-              today.{" "}
+              You have earned{" "}
+              <strong className="text-gray-800 dark:text-white">{formatCurrency(targetData.thisMonthRevenue)}</strong>{" "}
+              this month.{" "}
               {isGrowing
                 ? "Revenue is higher than last month. Keep up your good work!"
                 : "Revenue is lower than last month. Let's push harder!"}
@@ -132,15 +133,15 @@ export default function MonthlyTarget({ targetData, loading }: MonthlyTargetProp
       <div className="flex items-center justify-center gap-5 px-6 py-3.5 sm:gap-8 sm:py-5">
         <div>
           <p className="mb-1 text-center text-gray-500 text-theme-xs dark:text-gray-400 sm:text-sm">
-            Target
+            Orders
           </p>
           <p className="flex items-center justify-center gap-1 text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
             {loading ? (
               <span className="inline-block w-14 h-5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
             ) : (
               <>
-                {formatCurrency(targetData?.target ?? 0)}
-                {targetData && targetData.target >= targetData.lastMonthRevenue ? <UpArrow /> : <DownArrow />}
+                {targetData?.thisMonthOrders ?? 0}
+                {(targetData?.thisMonthOrders ?? 0) > 0 ? <UpArrow /> : <DownArrow />}
               </>
             )}
           </p>
@@ -157,7 +158,7 @@ export default function MonthlyTarget({ targetData, loading }: MonthlyTargetProp
               <span className="inline-block w-14 h-5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
             ) : (
               <>
-                {formatCurrency(targetData?.revenue ?? 0)}
+                {formatCurrency(targetData?.thisMonthRevenue ?? 0)}
                 {isGrowing ? <UpArrow /> : <DownArrow />}
               </>
             )}
@@ -168,15 +169,15 @@ export default function MonthlyTarget({ targetData, loading }: MonthlyTargetProp
 
         <div>
           <p className="mb-1 text-center text-gray-500 text-theme-xs dark:text-gray-400 sm:text-sm">
-            Today
+            Last Month
           </p>
           <p className="flex items-center justify-center gap-1 text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
             {loading ? (
               <span className="inline-block w-14 h-5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
             ) : (
               <>
-                {formatCurrency(targetData?.today ?? 0)}
-                {targetData && targetData.today > 0 ? <UpArrow /> : <DownArrow />}
+                {formatCurrency(targetData?.lastMonthRevenue ?? 0)}
+                {targetData && targetData.lastMonthRevenue > 0 ? <UpArrow /> : <DownArrow />}
               </>
             )}
           </p>
