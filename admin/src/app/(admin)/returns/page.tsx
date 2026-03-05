@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { usePermission } from "@/hooks/usePermission";
 
 // -- Types --
 type ReturnStatus = "REQUESTED" | "APPROVED" | "REJECTED" | "COMPLETED";
@@ -90,6 +91,9 @@ export default function ReturnsPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
+
+    // ── Permission flags ──
+    const { canUpdate } = usePermission("Returns");
 
     const fetchReturns = useCallback(async () => {
         try {
@@ -233,12 +237,33 @@ export default function ReturnsPage() {
                                                     {formatDate(req.created_at)}
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span
-                                                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${cfg.color} ${cfg.bg} ${cfg.border}`}
-                                                    >
-                                                        <Icon size={12} />
-                                                        {cfg.label}
-                                                    </span>
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                      <span
+                                                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${cfg.color} ${cfg.bg} ${cfg.border}`}
+                                                      >
+                                                          <Icon size={12} />
+                                                          {cfg.label}
+                                                      </span>
+                                                      {canUpdate && (
+                                                        <div className="flex gap-1 flex-wrap">
+                                                          {Object.entries(STATUS_CONFIG)
+                                                            .filter(([key]) => key !== req.status)
+                                                            .map(([key, c]) => {
+                                                              const BtnIcon = c.icon;
+                                                              return (
+                                                                <button
+                                                                  key={key}
+                                                                  onClick={() => handleStatusUpdate(req.id, key as ReturnStatus)}
+                                                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold border transition hover:opacity-80 ${c.color} ${c.bg} ${c.border}`}
+                                                                  title={`Mark as ${c.label}`}
+                                                                >
+                                                                  <BtnIcon size={10} /> {c.label}
+                                                                </button>
+                                                              );
+                                                            })}
+                                                        </div>
+                                                      )}
+                                                    </div>
                                                 </td>
                                             </tr>
                                         );

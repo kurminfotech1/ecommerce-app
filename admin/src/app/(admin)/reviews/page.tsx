@@ -24,6 +24,7 @@ import {
   Eye,
 } from "lucide-react";
 import { DeleteModal } from "@/components/common/DeleteModal";
+import { usePermission } from "@/hooks/usePermission";
 
 
 
@@ -135,12 +136,16 @@ const RowMenu = ({
   onReject,
   onDelete,
   onView,
+  canUpdate,
+  canDelete,
 }: {
   review: Review;
   onApprove: () => void;
   onReject: () => void;
   onDelete: () => void;
   onView: () => void;
+  canUpdate: boolean;
+  canDelete: boolean;
 }) => {
   const [open, setOpen] = useState(false);
   return (
@@ -155,35 +160,39 @@ const RowMenu = ({
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
           <div className="absolute right-0 top-8 z-20 bg-white rounded-xl border border-gray-100 shadow-xl py-1 min-w-[150px]">
+          <button
+            onClick={() => { onView(); setOpen(false); }}
+            className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition"
+          >
+            <Eye size={13} /> View Full Review
+          </button>
+          {canUpdate && review.status !== "Approved" && (
             <button
-              onClick={() => { onView(); setOpen(false); }}
-              className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition"
+              onClick={() => { onApprove(); setOpen(false); }}
+              className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50 transition"
             >
-              <Eye size={13} /> View Full Review
+              <CheckCircle2 size={13} /> Approve
             </button>
-            {review.status !== "Approved" && (
-              <button
-                onClick={() => { onApprove(); setOpen(false); }}
-                className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50 transition"
-              >
-                <CheckCircle2 size={13} /> Approve
-              </button>
-            )}
-            {review.status !== "Rejected" && (
-              <button
-                onClick={() => { onReject(); setOpen(false); }}
-                className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-amber-700 hover:bg-amber-50 transition"
-              >
-                <XCircle size={13} /> Reject
-              </button>
-            )}
-            <div className="my-1 border-t border-gray-100" />
+          )}
+          {canUpdate && review.status !== "Rejected" && (
             <button
-              onClick={() => { onDelete(); setOpen(false); }}
-              className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50 transition"
+              onClick={() => { onReject(); setOpen(false); }}
+              className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-amber-700 hover:bg-amber-50 transition"
             >
-              <Trash2 size={13} /> Delete Review
+              <XCircle size={13} /> Reject
             </button>
+          )}
+          {canDelete && (
+            <>
+              <div className="my-1 border-t border-gray-100" />
+              <button
+                onClick={() => { onDelete(); setOpen(false); }}
+                className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50 transition"
+              >
+                <Trash2 size={13} /> Delete Review
+              </button>
+            </>
+          )}
           </div>
         </>
       )}
@@ -192,11 +201,12 @@ const RowMenu = ({
 };
 
 // ── Detail Modal ───────────────────────────────────────────────────
-const ReviewDetailModal = ({ review, onClose, onApprove, onReject }: {
+const ReviewDetailModal = ({ review, onClose, onApprove, onReject, canUpdate }: {
   review: Review;
   onClose: () => void;
   onApprove: () => void;
   onReject: () => void;
+  canUpdate: boolean;
 }) => (
   <div
     className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
@@ -260,7 +270,7 @@ const ReviewDetailModal = ({ review, onClose, onApprove, onReject }: {
 
       {/* Footer actions */}
       <div className="flex gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
-        {review.status !== "Approved" && (
+        {canUpdate && review.status !== "Approved" && (
           <button
             onClick={() => { onApprove(); onClose(); }}
             className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-sm font-semibold transition"
@@ -268,7 +278,7 @@ const ReviewDetailModal = ({ review, onClose, onApprove, onReject }: {
             <CheckCircle2 size={15} /> Approve Review
           </button>
         )}
-        {review.status !== "Rejected" && (
+        {canUpdate && review.status !== "Rejected" && (
           <button
             onClick={() => { onReject(); onClose(); }}
             className="flex-1 flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white py-2.5 rounded-xl text-sm font-semibold transition"
@@ -314,6 +324,9 @@ const ALL_RATINGS = ["All", "5", "4", "3", "2", "1"];
 export default function ReviewsPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { reviews, totalRecords, currentPage, totalPages, pageSize, loading } = useSelector((state: RootState) => state.reviews);
+
+  // ── Permission flags ──
+  const { canUpdate, canDelete } = usePermission("Reviews");
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
@@ -590,7 +603,7 @@ export default function ReviewsPage() {
                             <td className="px-4 py-3">
                               <div className="flex items-center justify-end gap-0.5">
                                 {/* Quick approve/reject inline */}
-                                {review.status === "Pending" && (
+                                {canUpdate && review.status === "Pending" && (
                                   <>
                                     <button
                                       onClick={() => handleApprove(review.id)}
@@ -623,6 +636,8 @@ export default function ReviewsPage() {
                                   onReject={() => handleReject(review.id)}
                                   onDelete={() => setDeleteReviewState(review)}
                                   onView={() => setViewReview(review)}
+                                  canUpdate={canUpdate}
+                                  canDelete={canDelete}
                                 />
                               </div>
                             </td>
@@ -696,6 +711,7 @@ export default function ReviewsPage() {
           onClose={() => setViewReview(null)}
           onApprove={() => { handleApprove(viewReview.id); setViewReview(null); }}
           onReject={() => { handleReject(viewReview.id); setViewReview(null); }}
+          canUpdate={canUpdate}
         />
       )}
     </>

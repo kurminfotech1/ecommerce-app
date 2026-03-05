@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { ImageIcon, Trash2, Upload, CheckCircle2, Loader2 } from "lucide-react";
+import { usePermission } from "@/hooks/usePermission";
 
 type LogoData = {
   id: string;
@@ -33,6 +34,9 @@ export default function ManageLogoPage() {
   const [deleting, setDeleting] = useState<UploadSlot | null>(null);
   const [loading, setLoading]   = useState(true);
   const refs = { light: useRef<HTMLInputElement>(null), favicon: useRef<HTMLInputElement>(null) };
+
+  // ── Permission flags ──
+  const { canUpdate, canDelete } = usePermission("manage logo");
 
   // ── fetch current logos ──────────────────────────────────────────
   const fetchLogo = useCallback(async () => {
@@ -178,14 +182,16 @@ export default function ManageLogoPage() {
                 <p className="text-xs text-gray-400 mb-3">{hint}</p>
 
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => refs[key].current?.click()}
-                    className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium py-1.5 px-3 rounded-lg border border-brand-300 text-brand-600 hover:bg-brand-50 dark:border-brand-600 dark:text-brand-400 dark:hover:bg-brand-500/10 transition-colors"
-                  >
-                    <Upload className="w-3.5 h-3.5" />
-                    {displayed ? "Replace" : "Upload"}
-                  </button>
-                  {saved && (
+                  {canUpdate && (
+                    <button
+                      onClick={() => refs[key].current?.click()}
+                      className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium py-1.5 px-3 rounded-lg border border-brand-300 text-brand-600 hover:bg-brand-50 dark:border-brand-600 dark:text-brand-400 dark:hover:bg-brand-500/10 transition-colors"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      {displayed ? "Replace" : "Upload"}
+                    </button>
+                  )}
+                  {canDelete && saved && (
                     <button
                       onClick={() => handleDelete(key)}
                       disabled={deleting === key}
@@ -194,6 +200,9 @@ export default function ManageLogoPage() {
                       {deleting === key ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                       Remove
                     </button>
+                  )}
+                  {!canUpdate && !canDelete && (
+                    <span className="text-xs text-gray-400 italic">Read only</span>
                   )}
                 </div>
 
@@ -212,16 +221,18 @@ export default function ManageLogoPage() {
       </div>
 
       {/* ── Save button ─────────────────────────────────────────────── */}
-      <div className="flex justify-end">
-        <button
-          onClick={handleSave}
-          disabled={saving || !Object.values(files).some(Boolean)}
-          className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-        >
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-          {saving ? "Saving..." : "Save Changes"}
-        </button>
-      </div>
+      {canUpdate && (
+        <div className="flex justify-end">
+          <button
+            onClick={handleSave}
+            disabled={saving || !Object.values(files).some(Boolean)}
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+      )}
 
       {/* ── Live Preview ─────────────────────────────────────────────── */}
       <div className="mt-10 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">

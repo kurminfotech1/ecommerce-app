@@ -1,36 +1,27 @@
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import { checkApiPermission } from "@/lib/utils/apiPermission";
 
-/* ================= GET ================= */
+const MODULE = "Reviews";
+
+/* ================= GET — public ================= */
 export async function GET(req: Request) {
   try {
-    // const user = await verifyToken();
-    // if (!user) {
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    // }
-
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
     const page = parseInt(searchParams.get("page") || "1");
     const limitParam = searchParams.get("limit");
     const limit = limitParam ? parseInt(limitParam) : null;
-    const status = searchParams.get("status") || "All"; // All | Pending | Approved | Rejected
-    const ratingParam = searchParams.get("rating") || "All"; // All | 5 | 4 | 3 | 2 | 1
+    const status = searchParams.get("status") || "All";
+    const ratingParam = searchParams.get("rating") || "All";
     const product_id = searchParams.get("product_id");
 
     const skip = limit ? (page - 1) * limit : 0;
 
     const where: any = {};
-    if (product_id) {
-      where.product_id = product_id;
-    }
-    if (status !== "All") {
-      where.status = status;
-    }
-    if (ratingParam !== "All") {
-      where.rating = parseInt(ratingParam);
-    }
+    if (product_id) where.product_id = product_id;
+    if (status !== "All") where.status = status;
+    if (ratingParam !== "All") where.rating = parseInt(ratingParam);
     if (search) {
       where.OR = [
         { title: { contains: search, mode: "insensitive" } },
@@ -52,12 +43,7 @@ export async function GET(req: Request) {
               variants: {
                 orderBy: { created_at: "asc" },
                 take: 1,
-                include: {
-                  images: {
-                    orderBy: { sort_order: "asc" },
-                    take: 1,
-                  },
-                },
+                include: { images: { orderBy: { sort_order: "asc" }, take: 1 } },
               },
             },
           },
@@ -68,13 +54,9 @@ export async function GET(req: Request) {
       }),
     ]);
 
-    // Format for the UI
     const formattedReviews = rawReviews.map((r) => ({
       id: r.id,
-      customer: {
-        name: r.user.full_name,
-        email: r.user.email,
-      },
+      customer: { name: r.user.full_name, email: r.user.email },
       product: {
         name: r.product.product_name,
         image: r.product.variants?.[0]?.images?.[0]?.image_url || null,
@@ -96,25 +78,19 @@ export async function GET(req: Request) {
     });
   } catch (error) {
     console.error("GET REVIEWS ERROR:", error);
-    return NextResponse.json(
-      { error: "Reviews not found" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Reviews not found" }, { status: 500 });
   }
 }
 
-/* ================= POST ================= */
+/* ================= POST — customer action, no admin perm needed ================= */
 export async function POST(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const queryProductId = searchParams.get("product_id");
 
-    // Try token, otherwise require user_id in body
-    const user = await verifyToken();
-
     const body = await req.json().catch(() => ({}));
     const product_id = queryProductId || body.product_id;
-    const user_id = user?.id || body.user_id;
+    const user_id = body.user_id;
     const { rating, title, body: reviewBody } = body;
 
     if (!user_id || !product_id || !rating) {
@@ -122,94 +98,58 @@ export async function POST(req: Request) {
     }
 
     const newReview = await prisma.review.create({
-      data: {
-        user_id,
-        product_id,
-        rating: Number(rating),
-        title,
-        body: reviewBody,
-        status: "Pending", 
-      },
+      data: { user_id, product_id, rating: Number(rating), title, body: reviewBody, status: "Pending" },
     });
 
-    // We only update rating when it's Approved, so no need to recalculate here unless default status changes.
-
-    return NextResponse.json(
-      { review: newReview, message: "Review submitted successfully" },
-      { status: 201 }
-    );
+    return NextResponse.json({ review: newReview, message: "Review submitted successfully" }, { status: 201 });
   } catch (error: any) {
     console.error("CREATE REVIEW ERROR:", error);
     return NextResponse.json({ error: "Failed to submit review" }, { status: 500 });
   }
 }
 
-/* ================= PATCH ================= */
+/* ================= PATCH — requires canUpdate ================= */
 export async function PATCH(req: Request) {
   try {
-    const user = await verifyToken();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    
-    // Only give admins permission, but wait, the ui has role checks elsewhere too. Let's just assume auth passes.
+    const { error } = await checkApiPermission(MODULE, "canUpdate");
+    if (error) return error;
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
-
-    if (!id) {
-      return NextResponse.json({ error: "Review ID required" }, { status: 400 });
-    }
+    if (!id) return NextResponse.json({ error: "Review ID required" }, { status: 400 });
 
     const body = await req.json();
-    const { status } = body; // "Approved" or "Rejected"
+    const { status } = body;
 
     if (!["Approved", "Rejected", "Pending"].includes(status)) {
       return NextResponse.json({ error: "Invalid status value" }, { status: 400 });
     }
 
     const review = await prisma.review.findUnique({ where: { id } });
-    if (!review) {
-      return NextResponse.json({ error: "Review not found" }, { status: 404 });
-    }
+    if (!review) return NextResponse.json({ error: "Review not found" }, { status: 404 });
 
-    const updated = await prisma.review.update({
-      where: { id },
-      data: { status },
-    });
-
-    return NextResponse.json({
-      updated,
-      message: `Review ${status.toLowerCase()} successfully`,
-    });
+    const updated = await prisma.review.update({ where: { id }, data: { status } });
+    return NextResponse.json({ updated, message: `Review ${status.toLowerCase()} successfully` });
   } catch (error) {
     console.error("UPDATE REVIEW STATUS ERROR:", error);
     return NextResponse.json({ error: "Failed to update review status" }, { status: 500 });
   }
 }
 
-/* ================= DELETE ================= */
+/* ================= DELETE — requires canDelete ================= */
 export async function DELETE(req: Request) {
   try {
-    const user = await verifyToken();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { error } = await checkApiPermission(MODULE, "canDelete");
+    if (error) return error;
 
     const id = new URL(req.url).searchParams.get("id");
     if (!id) return NextResponse.json({ error: "Review ID required" }, { status: 400 });
 
     const review = await prisma.review.findUnique({ where: { id } });
+    if (!review) return NextResponse.json({ error: "Review not found" }, { status: 404 });
 
-    if (!review) {
-      return NextResponse.json({ error: "Review not found" }, { status: 404 });
-    }
-
-    await prisma.review.delete({
-      where: { id },
-    });
-
-    return NextResponse.json({
-      message: "Review deleted successfully",
-    });
+    await prisma.review.delete({ where: { id } });
+    return NextResponse.json({ message: "Review deleted successfully" });
   } catch (error) {
     console.error("DELETE REVIEW ERROR:", error);
     return NextResponse.json({ error: "Delete failed" }, { status: 500 });

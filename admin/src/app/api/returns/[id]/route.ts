@@ -1,12 +1,18 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { checkApiPermission } from "@/lib/utils/apiPermission";
 
-// PATCH: Update return request status (Admin only)
+const MODULE = "Returns";
+
+// PATCH: Update return request status — requires canUpdate
 export async function PATCH(
     request: Request,
     context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { error } = await checkApiPermission(MODULE, "canUpdate");
+        if (error) return error;
+
         const { id } = await context.params;
         const body = await request.json();
         const { status } = body;
@@ -15,37 +21,21 @@ export async function PATCH(
             return NextResponse.json({ error: "Return status is required" }, { status: 400 });
         }
 
-        // Use a transaction if status is COMPLETED to handle restocking
         const updatedReturn = await prisma.$transaction(async (tx) => {
             const currentReturn = await tx.returnRequest.findUnique({
                 where: { id },
-                include: {
-                    order: {
-                        include: {
-                            items: true
-                        }
-                    }
-                }
+                include: { order: { include: { items: true } } }
             });
 
-            if (!currentReturn) {
-                throw new Error("Return request not found");
-            }
+            if (!currentReturn) throw new Error("Return request not found");
 
             // Only restock if moving TO completed and it wasn't already completed
             if (status === "COMPLETED" && currentReturn.status !== "COMPLETED") {
-                // Restock each item
                 for (const item of currentReturn.order.items) {
                     await tx.productVariant.update({
                         where: { id: item.variant_id },
-                        data: {
-                            stock: {
-                                increment: item.quantity
-                            }
-                        }
+                        data: { stock: { increment: item.quantity } }
                     });
-
-                    // Log the stock change
                     await tx.stockLog.create({
                         data: {
                             variant_id: item.variant_id,
@@ -56,10 +46,7 @@ export async function PATCH(
                 }
             }
 
-            return await tx.returnRequest.update({
-                where: { id },
-                data: { status }
-            });
+            return await tx.returnRequest.update({ where: { id }, data: { status } });
         });
 
         return NextResponse.json(updatedReturn, { status: 200 });
@@ -72,7 +59,7 @@ export async function PATCH(
     }
 }
 
-// GET: Details for a specific return request
+// GET: Details for a specific return request — public read
 export async function GET(
     request: Request,
     context: { params: Promise<{ id: string }> }
@@ -86,13 +73,7 @@ export async function GET(
                 order: {
                     include: {
                         items: {
-                            include: {
-                                variant: {
-                                    include: {
-                                        product: true
-                                    }
-                                }
-                            }
+                            include: { variant: { include: { product: true } } }
                         }
                     }
                 },

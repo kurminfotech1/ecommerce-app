@@ -24,6 +24,7 @@ import {
   Upload,
 } from "lucide-react";
 import { DeleteModal } from "@/components/common/DeleteModal";
+import { usePermission } from "@/hooks/usePermission";
 
 // ── Helpers ────────────────────────────────────────────────────────
 const formatDate = (iso?: string | null) => {
@@ -145,6 +146,9 @@ export default function BlogPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { blogs, totalPages, totalRecords, loading, submitting, uploading } =
     useSelector((s: RootState) => s.blogs);
+
+  // ── Permission flags ──
+  const { canCreate, canUpdate, canDelete } = usePermission("Blog");
 
   // ── List state ─────────────────────────────────────────────────
   const [search, setSearch] = useState("");
@@ -396,9 +400,11 @@ export default function BlogPage() {
                 {totalRecords} post{totalRecords !== 1 ? "s" : ""} total
               </p>
             </div>
-            <button onClick={openCreate} className="c-btn-add">
-              <Plus size={16} /> Add Blog Post
-            </button>
+            {canCreate && (
+              <button onClick={openCreate} className="c-btn-add">
+                <Plus size={16} /> Add Blog Post
+              </button>
+            )}
           </div>
 
           {/* ── Filters Bar ── */}
@@ -460,9 +466,11 @@ export default function BlogPage() {
               </div>
               <p className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-1">No blog posts yet</p>
               <p className="text-sm text-gray-400 mb-6">Start by creating your first blog post.</p>
-              <button onClick={openCreate} className="c-btn-add">
-                <Plus size={16} /> Add First Post
-              </button>
+              {canCreate && (
+                <button onClick={openCreate} className="c-btn-add">
+                  <Plus size={16} /> Add First Post
+                </button>
+              )}
             </div>
           ) : (
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
@@ -572,12 +580,19 @@ export default function BlogPage() {
                             <Link href={`/blog/${blog.id}`} className="ib ib-green" title="View">
                               <Eye size={13} />
                             </Link>
-                            <button onClick={() => openEdit(blog)} title="Edit" className="ib ib-blue">
-                              <Pencil size={13} />
-                            </button>
-                            <button className="ib ib-red" title="Delete" onClick={() => setDeleteBlogItem(blog)}>
-                              <Trash2 size={13} />
-                            </button>
+                            {canUpdate && (
+                              <button onClick={() => openEdit(blog)} title="Edit" className="ib ib-blue">
+                                <Pencil size={13} />
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button className="ib ib-red" title="Delete" onClick={() => setDeleteBlogItem(blog)}>
+                                <Trash2 size={13} />
+                              </button>
+                            )}
+                            {!canUpdate && !canDelete && (
+                              <span className="text-[10px] text-gray-400 italic">Read only</span>
+                            )}
                           </div>
                         </td>
                       </tr>

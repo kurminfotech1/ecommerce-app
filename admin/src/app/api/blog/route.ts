@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { verifyToken } from "@/lib/auth";
+import { checkApiPermission } from "@/lib/utils/apiPermission";
+
+const MODULE = "Blog";
 
 /** Standard blog include — pulls in tags */
-const blogInclude = {
-  tags: true,
-} as const;
+const blogInclude = { tags: true } as const;
 
 /** Upsert tags by name → returns array of { id } for Prisma connect */
 async function upsertTags(names: string[]): Promise<{ id: string }[]> {
@@ -24,37 +24,18 @@ async function upsertTags(names: string[]): Promise<{ id: string }[]> {
   return results;
 }
 
-// ─────────────────────────────────────────────────────────────────
-// GET  /api/blog
-//   ?id=<uuid>              → single blog
-//   ?page=1&limit=10        → paginated list
-//   ?search=keyword         → search by title
-//   ?category=<string>      → filter by category
-//   ?author=<string>        → filter by author
-//   ?tag=<uuid>             → filter by tag id
-//   ?published=true|false   → filter by is_published
-//   ?featured=true          → filter only featured blogs
-// ─────────────────────────────────────────────────────────────────
+// GET /api/blog — public
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
-    // ── Single Blog ─────────────────────────────────────────────
     if (id) {
-      const blog = await prisma.blog.findUnique({
-        where: { id },
-        include: blogInclude,
-      });
-
-      if (!blog) {
-        return NextResponse.json({ error: "Blog not found" }, { status: 404 });
-      }
-
+      const blog = await prisma.blog.findUnique({ where: { id }, include: blogInclude });
+      if (!blog) return NextResponse.json({ error: "Blog not found" }, { status: 404 });
       return NextResponse.json({ data: blog });
     }
 
-    // ── Paginated List ──────────────────────────────────────────
     const page = Math.max(1, Number(searchParams.get("page") || 1));
     const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") || 10)));
     const search = searchParams.get("search")?.trim() || "";
@@ -64,7 +45,6 @@ export async function GET(req: Request) {
     const publishedParam = searchParams.get("published");
     const featuredParam = searchParams.get("featured");
     const draftParam = searchParams.get("draft");
-
     const skip = (page - 1) * limit;
 
     const where: any = {
@@ -80,43 +60,28 @@ export async function GET(req: Request) {
     };
 
     const [blogs, totalRecords] = await Promise.all([
-      prisma.blog.findMany({
-        where,
-        include: blogInclude,
-        orderBy: { created_at: "desc" },
-        skip,
-        take: limit,
-      }),
+      prisma.blog.findMany({ where, include: blogInclude, orderBy: { created_at: "desc" }, skip, take: limit }),
       prisma.blog.count({ where }),
     ]);
-
-    const totalPages = Math.ceil(totalRecords / limit);
 
     return NextResponse.json({
       totalRecords,
       currentPage: page,
-      totalPages,
+      totalPages: Math.ceil(totalRecords / limit),
       pageSize: limit,
       data: blogs,
     });
   } catch (error) {
     console.error("GET BLOGS ERROR:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
-// ─────────────────────────────────────────────────────────────────
-// POST  /api/blog
-// ─────────────────────────────────────────────────────────────────
+// POST /api/blog — requires canCreate
 export async function POST(req: Request) {
   try {
-    const user = await verifyToken();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { error } = await checkApiPermission(MODULE, "canCreate");
+    if (error) return error;
 
     const body = await req.json();
 
@@ -127,7 +92,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Resolve tags: accept either tag_ids (UUIDs) or blog_tags (name strings)
     let tagConnects: { id: string }[] = [];
     if (Array.isArray(body.tag_ids) && body.tag_ids.length > 0) {
       tagConnects = body.tag_ids.map((id: string) => ({ id }));
@@ -156,55 +120,33 @@ export async function POST(req: Request) {
       include: blogInclude,
     });
 
-    return NextResponse.json(
-      { message: "Blog created successfully", data: blog },
-      { status: 201 }
-    );
+    return NextResponse.json({ message: "Blog created successfully", data: blog }, { status: 201 });
   } catch (error: any) {
     console.error("POST BLOG ERROR:", error);
-    if (error.code === 'P2002') {
-      return NextResponse.json({ error: "Slug already exists" }, { status: 400 });
-    }
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    if (error.code === 'P2002') return NextResponse.json({ error: "Slug already exists" }, { status: 400 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
-// ─────────────────────────────────────────────────────────────────
-// PUT  /api/blog?id=<uuid>
-// ─────────────────────────────────────────────────────────────────
+// PUT /api/blog?id=<uuid> — requires canUpdate
 export async function PUT(req: Request) {
   try {
-    const user = await verifyToken();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { error } = await checkApiPermission(MODULE, "canUpdate");
+    if (error) return error;
 
     const id = new URL(req.url).searchParams.get("id");
-    if (!id) {
-      return NextResponse.json({ error: "ID required" }, { status: 400 });
-    }
+    if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
     const body = await req.json();
 
-    const existingBlog = await prisma.blog.findUnique({
-      where: { id },
-    });
+    const existingBlog = await prisma.blog.findUnique({ where: { id } });
+    if (!existingBlog) return NextResponse.json({ error: "Blog not found" }, { status: 404 });
 
-    if (!existingBlog) {
-      return NextResponse.json({ error: "Blog not found" }, { status: 404 });
-    }
-
-    // Resolve tags: accept either tag_ids (UUIDs) or blog_tags (name strings)
     let tagConnects: { id: string }[] | undefined;
     if (body.tag_ids !== undefined) {
-      if (Array.isArray(body.tag_ids) && body.tag_ids.length > 0) {
-        tagConnects = body.tag_ids.map((id: string) => ({ id }));
-      } else {
-        tagConnects = []; // explicit empty → clear all tags
-      }
+      tagConnects = Array.isArray(body.tag_ids) && body.tag_ids.length > 0
+        ? body.tag_ids.map((id: string) => ({ id }))
+        : [];
     } else if (Array.isArray(body.blog_tags)) {
       tagConnects = await upsertTags(body.blog_tags);
     }
@@ -225,62 +167,35 @@ export async function PUT(req: Request) {
         is_draft: body.is_draft,
         is_published: body.is_published,
         is_featured: body.is_featured,
-
         ...(body.is_published !== undefined && body.is_published !== existingBlog.is_published && {
           published_at: body.is_published ? new Date() : null
         }),
-
-        ...(tagConnects !== undefined && {
-          tags: { set: tagConnects },
-        }),
+        ...(tagConnects !== undefined && { tags: { set: tagConnects } }),
       },
       include: blogInclude,
     });
 
-    return NextResponse.json({
-      message: "Blog updated successfully",
-      data: updatedBlog,
-    });
+    return NextResponse.json({ message: "Blog updated successfully", data: updatedBlog });
   } catch (error: any) {
     console.error("PUT BLOG ERROR:", error);
-    if (error.code === 'P2002') {
-      return NextResponse.json({ error: "Slug already exists" }, { status: 400 });
-    }
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    if (error.code === 'P2002') return NextResponse.json({ error: "Slug already exists" }, { status: 400 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
-// ─────────────────────────────────────────────────────────────────
-// DELETE  /api/blog?id=<uuid>
-// ─────────────────────────────────────────────────────────────────
+// DELETE /api/blog?id=<uuid> — requires canDelete
 export async function DELETE(req: Request) {
   try {
-    const user = await verifyToken();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { error } = await checkApiPermission(MODULE, "canDelete");
+    if (error) return error;
 
     const id = new URL(req.url).searchParams.get("id");
-    if (!id) {
-      return NextResponse.json({ error: "ID required" }, { status: 400 });
-    }
+    if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
-    await prisma.blog.delete({
-      where: { id },
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: "Blog deleted successfully",
-    });
+    await prisma.blog.delete({ where: { id } });
+    return NextResponse.json({ success: true, message: "Blog deleted successfully" });
   } catch (error) {
     console.error("DELETE BLOG ERROR:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
