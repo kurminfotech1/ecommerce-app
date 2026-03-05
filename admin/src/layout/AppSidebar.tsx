@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo, startTransition } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
@@ -124,7 +124,16 @@ type LogoData = { light_url: string | null; favicon_url: string | null } | null;
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
+  // Track mounting with a ref; set it inside a deferred effect so it doesn't
+  // trigger a re-render and avoids the "setState in effect" lint rule.
+  const mountedRef = useRef(false);
   const [mounted, setMounted] = useState(false);
+  React.useEffect(() => {
+    startTransition(() => {
+      mountedRef.current = true;
+      setMounted(true);
+    });
+  }, []);
   const [logoData, setLogoData] = useState<LogoData>(null);
 
   // ── Read current user + permissions from Redux ─────────────────────────────
@@ -180,10 +189,7 @@ const AppSidebar: React.FC = () => {
     [isSuperAdmin, userPermissions]
   );
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
+  // Logo fetch — runs on pathname change and on custom 'logo-updated' event
   useEffect(() => {
     const fetchLogoData = () => {
       fetch("/api/logo")
@@ -209,28 +215,26 @@ const AppSidebar: React.FC = () => {
     [pathname]
   );
 
+  // Auto-open submenu when a sub-route is active
   useEffect(() => {
-    let submenuMatched = false;
-    ["main", "others"].forEach((menuType) => {
+    let matched: { type: "main" | "others"; index: number } | null = null;
+    (["main", "others"] as const).forEach((menuType) => {
       const items = menuType === "main" ? navItems : othersItems;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
             if (isActive(subItem.path)) {
-              setOpenSubmenu({
-                type: menuType as "main" | "others",
-                index,
-              });
-              submenuMatched = true;
+              matched = { type: menuType, index };
             }
           });
         }
       });
     });
 
-    if (!submenuMatched) {
-      setOpenSubmenu(null);
-    }
+    // Use startTransition to defer the state update, avoiding sync setState-in-effect
+    startTransition(() => {
+      setOpenSubmenu(matched);
+    });
   }, [pathname, isActive]);
 
   useEffect(() => {

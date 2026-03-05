@@ -23,3 +23,9 @@ export interface Admin {
   createdAt: string;
   permissions?: AdminPermission[];
 }
+
+export interface ChangePasswordData {
+  email: string;
+  password: string; // old password
+  newPassword: string;
+}

@@ -57,7 +57,7 @@ useEffect(() => {
     // Fallback if toast doesn't close or auto-close is long
     setTimeout(() => {
       window.location.replace("/");
-    }, 1500);
+    }, 100);
   };
 
   return (

@@ -1,6 +1,6 @@
-import UserAddressCard from "@/components/user-profile/UserAddressCard";
 import UserInfoCard from "@/components/user-profile/UserInfoCard";
 import UserMetaCard from "@/components/user-profile/UserMetaCard";
+import ChangePasswordCard from "@/components/user-profile/ChangePasswordCard";
 import { Metadata } from "next";
 import React from "react";
 
@@ -20,7 +20,7 @@ export default function Profile() {
         <div className="space-y-6">
           <UserMetaCard />
           <UserInfoCard />
-          {/* <UserAddressCard /> */}
+          <ChangePasswordCard />
         </div>
       </div>
     </div>

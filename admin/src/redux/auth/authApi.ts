@@ -1,5 +1,5 @@
 import Axios from "@/lib/api/axios";
-import { Admin } from "@/types/auth";
+import { Admin, ChangePasswordData } from "@/types/auth";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
@@ -136,3 +136,24 @@ export const deleteAdmin = createAsyncThunk<
     }
   }
 );
+
+
+export const changePassword = async (
+  data: ChangePasswordData
+): Promise<{ success: boolean; message?: string }> => {
+  try {
+    const res = await Axios.patch<{ message?: string }>(
+      "/auth/changePassword",
+      data
+    );
+    toast.success(res.data?.message || "Password changed successfully");
+    return { success: true, message: res.data?.message };
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Something went wrong";
+    toast.error(message);
+    return { success: false, message };
+  }
+};
