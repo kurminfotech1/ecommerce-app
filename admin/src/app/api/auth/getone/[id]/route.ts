@@ -27,6 +27,7 @@ export async function GET(
 
     const admin = await prisma.admin.findUnique({
       where: { id },
+      include: { permissions: true },
     });
 
     if (!admin) {

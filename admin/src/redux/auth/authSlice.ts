@@ -1,6 +1,6 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { fetchAdminById, fetchUsers, login, register, updateAdmin, deleteAdmin } from "./authApi";
-import { Admin } from "@/types/auth";
+import { Admin, AdminPermission } from "@/types/auth";
 import Cookies from "js-cookie";
 interface AdminState {
   loading: boolean;
@@ -30,7 +30,12 @@ const adminSlice = createSlice({
       Cookies.remove("role");
       state.user = null;
       state.isAuthenticated = false;
-      
+    },
+    /** Overwrite only the permissions array on the current user (e.g. after a superadmin saves). */
+    setUserPermissions: (state, action: PayloadAction<AdminPermission[]>) => {
+      if (state.user) {
+        state.user.permissions = action.payload;
+      }
     },
   },
   extraReducers: (builder) => {
@@ -120,5 +125,5 @@ const adminSlice = createSlice({
   },
 });
 
-export const { logout } = adminSlice.actions;
+export const { logout, setUserPermissions } = adminSlice.actions;
 export default adminSlice.reducer;

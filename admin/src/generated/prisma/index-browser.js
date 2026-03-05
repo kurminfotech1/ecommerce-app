@@ -331,6 +331,18 @@ exports.Prisma.BlogScalarFieldEnum = {
   updated_at: 'updated_at'
 };
 
+exports.Prisma.AdminPermissionScalarFieldEnum = {
+  id: 'id',
+  adminId: 'adminId',
+  module: 'module',
+  canCreate: 'canCreate',
+  canRead: 'canRead',
+  canUpdate: 'canUpdate',
+  canDelete: 'canDelete',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SiteLogoScalarFieldEnum = {
   id: 'id',
   light_url: 'light_url',
@@ -400,6 +412,7 @@ exports.Prisma.ModelName = {
   Wishlist: 'Wishlist',
   BlogTag: 'BlogTag',
   Blog: 'Blog',
+  AdminPermission: 'AdminPermission',
   SiteLogo: 'SiteLogo'
 };
 

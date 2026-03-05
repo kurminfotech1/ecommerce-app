@@ -33,6 +33,7 @@ export async function POST(req: Request) {
     // ✅ Check admin exists
     const admin = await prisma.admin.findUnique({
       where: { email },
+      include: { permissions: true },
     });
 
     if (!admin) {
@@ -76,6 +77,7 @@ export async function POST(req: Request) {
           email: admin.email,
           full_name: admin.full_name,
           role: admin.role,
+          permissions: admin.permissions,
         },
       },
       { status: 200 }

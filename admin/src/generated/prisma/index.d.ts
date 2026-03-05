@@ -104,6 +104,11 @@ export type BlogTag = $Result.DefaultSelection<Prisma.$BlogTagPayload>
  */
 export type Blog = $Result.DefaultSelection<Prisma.$BlogPayload>
 /**
+ * Model AdminPermission
+ * 
+ */
+export type AdminPermission = $Result.DefaultSelection<Prisma.$AdminPermissionPayload>
+/**
  * Model SiteLogo
  * 
  */
@@ -466,6 +471,16 @@ export class PrismaClient<
     * ```
     */
   get blog(): Prisma.BlogDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.adminPermission`: Exposes CRUD operations for the **AdminPermission** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AdminPermissions
+    * const adminPermissions = await prisma.adminPermission.findMany()
+    * ```
+    */
+  get adminPermission(): Prisma.AdminPermissionDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.siteLogo`: Exposes CRUD operations for the **SiteLogo** model.
@@ -928,6 +943,7 @@ export namespace Prisma {
     Wishlist: 'Wishlist',
     BlogTag: 'BlogTag',
     Blog: 'Blog',
+    AdminPermission: 'AdminPermission',
     SiteLogo: 'SiteLogo'
   };
 
@@ -944,7 +960,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "admin" | "category" | "product" | "productVariant" | "stockLog" | "productImage" | "variantImage" | "user" | "address" | "cart" | "order" | "orderItem" | "payment" | "returnRequest" | "review" | "wishlist" | "blogTag" | "blog" | "siteLogo"
+      modelProps: "admin" | "category" | "product" | "productVariant" | "stockLog" | "productImage" | "variantImage" | "user" | "address" | "cart" | "order" | "orderItem" | "payment" | "returnRequest" | "review" | "wishlist" | "blogTag" | "blog" | "adminPermission" | "siteLogo"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2280,6 +2296,80 @@ export namespace Prisma {
           }
         }
       }
+      AdminPermission: {
+        payload: Prisma.$AdminPermissionPayload<ExtArgs>
+        fields: Prisma.AdminPermissionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AdminPermissionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminPermissionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AdminPermissionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminPermissionPayload>
+          }
+          findFirst: {
+            args: Prisma.AdminPermissionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminPermissionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AdminPermissionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminPermissionPayload>
+          }
+          findMany: {
+            args: Prisma.AdminPermissionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminPermissionPayload>[]
+          }
+          create: {
+            args: Prisma.AdminPermissionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminPermissionPayload>
+          }
+          createMany: {
+            args: Prisma.AdminPermissionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AdminPermissionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminPermissionPayload>[]
+          }
+          delete: {
+            args: Prisma.AdminPermissionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminPermissionPayload>
+          }
+          update: {
+            args: Prisma.AdminPermissionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminPermissionPayload>
+          }
+          deleteMany: {
+            args: Prisma.AdminPermissionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AdminPermissionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AdminPermissionUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminPermissionPayload>[]
+          }
+          upsert: {
+            args: Prisma.AdminPermissionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminPermissionPayload>
+          }
+          aggregate: {
+            args: Prisma.AdminPermissionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAdminPermission>
+          }
+          groupBy: {
+            args: Prisma.AdminPermissionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AdminPermissionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AdminPermissionCountArgs<ExtArgs>
+            result: $Utils.Optional<AdminPermissionCountAggregateOutputType> | number
+          }
+        }
+      }
       SiteLogo: {
         payload: Prisma.$SiteLogoPayload<ExtArgs>
         fields: Prisma.SiteLogoFieldRefs
@@ -2480,6 +2570,7 @@ export namespace Prisma {
     wishlist?: WishlistOmit
     blogTag?: BlogTagOmit
     blog?: BlogOmit
+    adminPermission?: AdminPermissionOmit
     siteLogo?: SiteLogoOmit
   }
 
@@ -2554,6 +2645,37 @@ export namespace Prisma {
   /**
    * Count Types
    */
+
+
+  /**
+   * Count Type AdminCountOutputType
+   */
+
+  export type AdminCountOutputType = {
+    permissions: number
+  }
+
+  export type AdminCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    permissions?: boolean | AdminCountOutputTypeCountPermissionsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * AdminCountOutputType without action
+   */
+  export type AdminCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminCountOutputType
+     */
+    select?: AdminCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * AdminCountOutputType without action
+   */
+  export type AdminCountOutputTypeCountPermissionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AdminPermissionWhereInput
+  }
 
 
   /**
@@ -3106,6 +3228,8 @@ export namespace Prisma {
     city?: boolean
     postal_code?: boolean
     createdAt?: boolean
+    permissions?: boolean | Admin$permissionsArgs<ExtArgs>
+    _count?: boolean | AdminCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["admin"]>
 
   export type AdminSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -3151,10 +3275,18 @@ export namespace Prisma {
   }
 
   export type AdminOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "full_name" | "password" | "role" | "phone" | "country" | "state" | "city" | "postal_code" | "createdAt", ExtArgs["result"]["admin"]>
+  export type AdminInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    permissions?: boolean | Admin$permissionsArgs<ExtArgs>
+    _count?: boolean | AdminCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type AdminIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type AdminIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $AdminPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Admin"
-    objects: {}
+    objects: {
+      permissions: Prisma.$AdminPermissionPayload<ExtArgs>[]
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       email: string
@@ -3561,6 +3693,7 @@ export namespace Prisma {
    */
   export interface Prisma__AdminClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    permissions<T extends Admin$permissionsArgs<ExtArgs> = {}>(args?: Subset<T, Admin$permissionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdminPermissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3618,6 +3751,10 @@ export namespace Prisma {
      */
     omit?: AdminOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminInclude<ExtArgs> | null
+    /**
      * Filter, which Admin to fetch.
      */
     where: AdminWhereUniqueInput
@@ -3636,6 +3773,10 @@ export namespace Prisma {
      */
     omit?: AdminOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminInclude<ExtArgs> | null
+    /**
      * Filter, which Admin to fetch.
      */
     where: AdminWhereUniqueInput
@@ -3653,6 +3794,10 @@ export namespace Prisma {
      * Omit specific fields from the Admin
      */
     omit?: AdminOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminInclude<ExtArgs> | null
     /**
      * Filter, which Admin to fetch.
      */
@@ -3702,6 +3847,10 @@ export namespace Prisma {
      */
     omit?: AdminOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminInclude<ExtArgs> | null
+    /**
      * Filter, which Admin to fetch.
      */
     where?: AdminWhereInput
@@ -3750,6 +3899,10 @@ export namespace Prisma {
      */
     omit?: AdminOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminInclude<ExtArgs> | null
+    /**
      * Filter, which Admins to fetch.
      */
     where?: AdminWhereInput
@@ -3792,6 +3945,10 @@ export namespace Prisma {
      * Omit specific fields from the Admin
      */
     omit?: AdminOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminInclude<ExtArgs> | null
     /**
      * The data needed to create a Admin.
      */
@@ -3840,6 +3997,10 @@ export namespace Prisma {
      * Omit specific fields from the Admin
      */
     omit?: AdminOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminInclude<ExtArgs> | null
     /**
      * The data needed to update a Admin.
      */
@@ -3907,6 +4068,10 @@ export namespace Prisma {
      */
     omit?: AdminOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminInclude<ExtArgs> | null
+    /**
      * The filter to search for the Admin to update in case it exists.
      */
     where: AdminWhereUniqueInput
@@ -3933,6 +4098,10 @@ export namespace Prisma {
      */
     omit?: AdminOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminInclude<ExtArgs> | null
+    /**
      * Filter which Admin to delete.
      */
     where: AdminWhereUniqueInput
@@ -3953,6 +4122,30 @@ export namespace Prisma {
   }
 
   /**
+   * Admin.permissions
+   */
+  export type Admin$permissionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminPermission
+     */
+    select?: AdminPermissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminPermission
+     */
+    omit?: AdminPermissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminPermissionInclude<ExtArgs> | null
+    where?: AdminPermissionWhereInput
+    orderBy?: AdminPermissionOrderByWithRelationInput | AdminPermissionOrderByWithRelationInput[]
+    cursor?: AdminPermissionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: AdminPermissionScalarFieldEnum | AdminPermissionScalarFieldEnum[]
+  }
+
+  /**
    * Admin without action
    */
   export type AdminDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3964,6 +4157,10 @@ export namespace Prisma {
      * Omit specific fields from the Admin
      */
     omit?: AdminOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminInclude<ExtArgs> | null
   }
 
 
@@ -23713,6 +23910,1116 @@ export namespace Prisma {
 
 
   /**
+   * Model AdminPermission
+   */
+
+  export type AggregateAdminPermission = {
+    _count: AdminPermissionCountAggregateOutputType | null
+    _min: AdminPermissionMinAggregateOutputType | null
+    _max: AdminPermissionMaxAggregateOutputType | null
+  }
+
+  export type AdminPermissionMinAggregateOutputType = {
+    id: string | null
+    adminId: string | null
+    module: string | null
+    canCreate: boolean | null
+    canRead: boolean | null
+    canUpdate: boolean | null
+    canDelete: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type AdminPermissionMaxAggregateOutputType = {
+    id: string | null
+    adminId: string | null
+    module: string | null
+    canCreate: boolean | null
+    canRead: boolean | null
+    canUpdate: boolean | null
+    canDelete: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type AdminPermissionCountAggregateOutputType = {
+    id: number
+    adminId: number
+    module: number
+    canCreate: number
+    canRead: number
+    canUpdate: number
+    canDelete: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type AdminPermissionMinAggregateInputType = {
+    id?: true
+    adminId?: true
+    module?: true
+    canCreate?: true
+    canRead?: true
+    canUpdate?: true
+    canDelete?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type AdminPermissionMaxAggregateInputType = {
+    id?: true
+    adminId?: true
+    module?: true
+    canCreate?: true
+    canRead?: true
+    canUpdate?: true
+    canDelete?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type AdminPermissionCountAggregateInputType = {
+    id?: true
+    adminId?: true
+    module?: true
+    canCreate?: true
+    canRead?: true
+    canUpdate?: true
+    canDelete?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type AdminPermissionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AdminPermission to aggregate.
+     */
+    where?: AdminPermissionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AdminPermissions to fetch.
+     */
+    orderBy?: AdminPermissionOrderByWithRelationInput | AdminPermissionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AdminPermissionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AdminPermissions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AdminPermissions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AdminPermissions
+    **/
+    _count?: true | AdminPermissionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AdminPermissionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AdminPermissionMaxAggregateInputType
+  }
+
+  export type GetAdminPermissionAggregateType<T extends AdminPermissionAggregateArgs> = {
+        [P in keyof T & keyof AggregateAdminPermission]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAdminPermission[P]>
+      : GetScalarType<T[P], AggregateAdminPermission[P]>
+  }
+
+
+
+
+  export type AdminPermissionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AdminPermissionWhereInput
+    orderBy?: AdminPermissionOrderByWithAggregationInput | AdminPermissionOrderByWithAggregationInput[]
+    by: AdminPermissionScalarFieldEnum[] | AdminPermissionScalarFieldEnum
+    having?: AdminPermissionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AdminPermissionCountAggregateInputType | true
+    _min?: AdminPermissionMinAggregateInputType
+    _max?: AdminPermissionMaxAggregateInputType
+  }
+
+  export type AdminPermissionGroupByOutputType = {
+    id: string
+    adminId: string
+    module: string
+    canCreate: boolean
+    canRead: boolean
+    canUpdate: boolean
+    canDelete: boolean
+    createdAt: Date
+    updatedAt: Date
+    _count: AdminPermissionCountAggregateOutputType | null
+    _min: AdminPermissionMinAggregateOutputType | null
+    _max: AdminPermissionMaxAggregateOutputType | null
+  }
+
+  type GetAdminPermissionGroupByPayload<T extends AdminPermissionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AdminPermissionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AdminPermissionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AdminPermissionGroupByOutputType[P]>
+            : GetScalarType<T[P], AdminPermissionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AdminPermissionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    adminId?: boolean
+    module?: boolean
+    canCreate?: boolean
+    canRead?: boolean
+    canUpdate?: boolean
+    canDelete?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    admin?: boolean | AdminDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["adminPermission"]>
+
+  export type AdminPermissionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    adminId?: boolean
+    module?: boolean
+    canCreate?: boolean
+    canRead?: boolean
+    canUpdate?: boolean
+    canDelete?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    admin?: boolean | AdminDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["adminPermission"]>
+
+  export type AdminPermissionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    adminId?: boolean
+    module?: boolean
+    canCreate?: boolean
+    canRead?: boolean
+    canUpdate?: boolean
+    canDelete?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    admin?: boolean | AdminDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["adminPermission"]>
+
+  export type AdminPermissionSelectScalar = {
+    id?: boolean
+    adminId?: boolean
+    module?: boolean
+    canCreate?: boolean
+    canRead?: boolean
+    canUpdate?: boolean
+    canDelete?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type AdminPermissionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "adminId" | "module" | "canCreate" | "canRead" | "canUpdate" | "canDelete" | "createdAt" | "updatedAt", ExtArgs["result"]["adminPermission"]>
+  export type AdminPermissionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    admin?: boolean | AdminDefaultArgs<ExtArgs>
+  }
+  export type AdminPermissionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    admin?: boolean | AdminDefaultArgs<ExtArgs>
+  }
+  export type AdminPermissionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    admin?: boolean | AdminDefaultArgs<ExtArgs>
+  }
+
+  export type $AdminPermissionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AdminPermission"
+    objects: {
+      admin: Prisma.$AdminPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      adminId: string
+      module: string
+      canCreate: boolean
+      canRead: boolean
+      canUpdate: boolean
+      canDelete: boolean
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["adminPermission"]>
+    composites: {}
+  }
+
+  type AdminPermissionGetPayload<S extends boolean | null | undefined | AdminPermissionDefaultArgs> = $Result.GetResult<Prisma.$AdminPermissionPayload, S>
+
+  type AdminPermissionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AdminPermissionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AdminPermissionCountAggregateInputType | true
+    }
+
+  export interface AdminPermissionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AdminPermission'], meta: { name: 'AdminPermission' } }
+    /**
+     * Find zero or one AdminPermission that matches the filter.
+     * @param {AdminPermissionFindUniqueArgs} args - Arguments to find a AdminPermission
+     * @example
+     * // Get one AdminPermission
+     * const adminPermission = await prisma.adminPermission.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AdminPermissionFindUniqueArgs>(args: SelectSubset<T, AdminPermissionFindUniqueArgs<ExtArgs>>): Prisma__AdminPermissionClient<$Result.GetResult<Prisma.$AdminPermissionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one AdminPermission that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AdminPermissionFindUniqueOrThrowArgs} args - Arguments to find a AdminPermission
+     * @example
+     * // Get one AdminPermission
+     * const adminPermission = await prisma.adminPermission.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AdminPermissionFindUniqueOrThrowArgs>(args: SelectSubset<T, AdminPermissionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AdminPermissionClient<$Result.GetResult<Prisma.$AdminPermissionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AdminPermission that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdminPermissionFindFirstArgs} args - Arguments to find a AdminPermission
+     * @example
+     * // Get one AdminPermission
+     * const adminPermission = await prisma.adminPermission.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AdminPermissionFindFirstArgs>(args?: SelectSubset<T, AdminPermissionFindFirstArgs<ExtArgs>>): Prisma__AdminPermissionClient<$Result.GetResult<Prisma.$AdminPermissionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AdminPermission that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdminPermissionFindFirstOrThrowArgs} args - Arguments to find a AdminPermission
+     * @example
+     * // Get one AdminPermission
+     * const adminPermission = await prisma.adminPermission.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AdminPermissionFindFirstOrThrowArgs>(args?: SelectSubset<T, AdminPermissionFindFirstOrThrowArgs<ExtArgs>>): Prisma__AdminPermissionClient<$Result.GetResult<Prisma.$AdminPermissionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more AdminPermissions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdminPermissionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AdminPermissions
+     * const adminPermissions = await prisma.adminPermission.findMany()
+     * 
+     * // Get first 10 AdminPermissions
+     * const adminPermissions = await prisma.adminPermission.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const adminPermissionWithIdOnly = await prisma.adminPermission.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AdminPermissionFindManyArgs>(args?: SelectSubset<T, AdminPermissionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdminPermissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a AdminPermission.
+     * @param {AdminPermissionCreateArgs} args - Arguments to create a AdminPermission.
+     * @example
+     * // Create one AdminPermission
+     * const AdminPermission = await prisma.adminPermission.create({
+     *   data: {
+     *     // ... data to create a AdminPermission
+     *   }
+     * })
+     * 
+     */
+    create<T extends AdminPermissionCreateArgs>(args: SelectSubset<T, AdminPermissionCreateArgs<ExtArgs>>): Prisma__AdminPermissionClient<$Result.GetResult<Prisma.$AdminPermissionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many AdminPermissions.
+     * @param {AdminPermissionCreateManyArgs} args - Arguments to create many AdminPermissions.
+     * @example
+     * // Create many AdminPermissions
+     * const adminPermission = await prisma.adminPermission.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AdminPermissionCreateManyArgs>(args?: SelectSubset<T, AdminPermissionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AdminPermissions and returns the data saved in the database.
+     * @param {AdminPermissionCreateManyAndReturnArgs} args - Arguments to create many AdminPermissions.
+     * @example
+     * // Create many AdminPermissions
+     * const adminPermission = await prisma.adminPermission.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AdminPermissions and only return the `id`
+     * const adminPermissionWithIdOnly = await prisma.adminPermission.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AdminPermissionCreateManyAndReturnArgs>(args?: SelectSubset<T, AdminPermissionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdminPermissionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a AdminPermission.
+     * @param {AdminPermissionDeleteArgs} args - Arguments to delete one AdminPermission.
+     * @example
+     * // Delete one AdminPermission
+     * const AdminPermission = await prisma.adminPermission.delete({
+     *   where: {
+     *     // ... filter to delete one AdminPermission
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AdminPermissionDeleteArgs>(args: SelectSubset<T, AdminPermissionDeleteArgs<ExtArgs>>): Prisma__AdminPermissionClient<$Result.GetResult<Prisma.$AdminPermissionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one AdminPermission.
+     * @param {AdminPermissionUpdateArgs} args - Arguments to update one AdminPermission.
+     * @example
+     * // Update one AdminPermission
+     * const adminPermission = await prisma.adminPermission.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AdminPermissionUpdateArgs>(args: SelectSubset<T, AdminPermissionUpdateArgs<ExtArgs>>): Prisma__AdminPermissionClient<$Result.GetResult<Prisma.$AdminPermissionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more AdminPermissions.
+     * @param {AdminPermissionDeleteManyArgs} args - Arguments to filter AdminPermissions to delete.
+     * @example
+     * // Delete a few AdminPermissions
+     * const { count } = await prisma.adminPermission.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AdminPermissionDeleteManyArgs>(args?: SelectSubset<T, AdminPermissionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AdminPermissions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdminPermissionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AdminPermissions
+     * const adminPermission = await prisma.adminPermission.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AdminPermissionUpdateManyArgs>(args: SelectSubset<T, AdminPermissionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AdminPermissions and returns the data updated in the database.
+     * @param {AdminPermissionUpdateManyAndReturnArgs} args - Arguments to update many AdminPermissions.
+     * @example
+     * // Update many AdminPermissions
+     * const adminPermission = await prisma.adminPermission.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more AdminPermissions and only return the `id`
+     * const adminPermissionWithIdOnly = await prisma.adminPermission.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AdminPermissionUpdateManyAndReturnArgs>(args: SelectSubset<T, AdminPermissionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdminPermissionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one AdminPermission.
+     * @param {AdminPermissionUpsertArgs} args - Arguments to update or create a AdminPermission.
+     * @example
+     * // Update or create a AdminPermission
+     * const adminPermission = await prisma.adminPermission.upsert({
+     *   create: {
+     *     // ... data to create a AdminPermission
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AdminPermission we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AdminPermissionUpsertArgs>(args: SelectSubset<T, AdminPermissionUpsertArgs<ExtArgs>>): Prisma__AdminPermissionClient<$Result.GetResult<Prisma.$AdminPermissionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of AdminPermissions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdminPermissionCountArgs} args - Arguments to filter AdminPermissions to count.
+     * @example
+     * // Count the number of AdminPermissions
+     * const count = await prisma.adminPermission.count({
+     *   where: {
+     *     // ... the filter for the AdminPermissions we want to count
+     *   }
+     * })
+    **/
+    count<T extends AdminPermissionCountArgs>(
+      args?: Subset<T, AdminPermissionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AdminPermissionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AdminPermission.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdminPermissionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AdminPermissionAggregateArgs>(args: Subset<T, AdminPermissionAggregateArgs>): Prisma.PrismaPromise<GetAdminPermissionAggregateType<T>>
+
+    /**
+     * Group by AdminPermission.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdminPermissionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AdminPermissionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AdminPermissionGroupByArgs['orderBy'] }
+        : { orderBy?: AdminPermissionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AdminPermissionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAdminPermissionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AdminPermission model
+   */
+  readonly fields: AdminPermissionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AdminPermission.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AdminPermissionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    admin<T extends AdminDefaultArgs<ExtArgs> = {}>(args?: Subset<T, AdminDefaultArgs<ExtArgs>>): Prisma__AdminClient<$Result.GetResult<Prisma.$AdminPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AdminPermission model
+   */
+  interface AdminPermissionFieldRefs {
+    readonly id: FieldRef<"AdminPermission", 'String'>
+    readonly adminId: FieldRef<"AdminPermission", 'String'>
+    readonly module: FieldRef<"AdminPermission", 'String'>
+    readonly canCreate: FieldRef<"AdminPermission", 'Boolean'>
+    readonly canRead: FieldRef<"AdminPermission", 'Boolean'>
+    readonly canUpdate: FieldRef<"AdminPermission", 'Boolean'>
+    readonly canDelete: FieldRef<"AdminPermission", 'Boolean'>
+    readonly createdAt: FieldRef<"AdminPermission", 'DateTime'>
+    readonly updatedAt: FieldRef<"AdminPermission", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AdminPermission findUnique
+   */
+  export type AdminPermissionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminPermission
+     */
+    select?: AdminPermissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminPermission
+     */
+    omit?: AdminPermissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminPermissionInclude<ExtArgs> | null
+    /**
+     * Filter, which AdminPermission to fetch.
+     */
+    where: AdminPermissionWhereUniqueInput
+  }
+
+  /**
+   * AdminPermission findUniqueOrThrow
+   */
+  export type AdminPermissionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminPermission
+     */
+    select?: AdminPermissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminPermission
+     */
+    omit?: AdminPermissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminPermissionInclude<ExtArgs> | null
+    /**
+     * Filter, which AdminPermission to fetch.
+     */
+    where: AdminPermissionWhereUniqueInput
+  }
+
+  /**
+   * AdminPermission findFirst
+   */
+  export type AdminPermissionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminPermission
+     */
+    select?: AdminPermissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminPermission
+     */
+    omit?: AdminPermissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminPermissionInclude<ExtArgs> | null
+    /**
+     * Filter, which AdminPermission to fetch.
+     */
+    where?: AdminPermissionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AdminPermissions to fetch.
+     */
+    orderBy?: AdminPermissionOrderByWithRelationInput | AdminPermissionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AdminPermissions.
+     */
+    cursor?: AdminPermissionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AdminPermissions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AdminPermissions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AdminPermissions.
+     */
+    distinct?: AdminPermissionScalarFieldEnum | AdminPermissionScalarFieldEnum[]
+  }
+
+  /**
+   * AdminPermission findFirstOrThrow
+   */
+  export type AdminPermissionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminPermission
+     */
+    select?: AdminPermissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminPermission
+     */
+    omit?: AdminPermissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminPermissionInclude<ExtArgs> | null
+    /**
+     * Filter, which AdminPermission to fetch.
+     */
+    where?: AdminPermissionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AdminPermissions to fetch.
+     */
+    orderBy?: AdminPermissionOrderByWithRelationInput | AdminPermissionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AdminPermissions.
+     */
+    cursor?: AdminPermissionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AdminPermissions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AdminPermissions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AdminPermissions.
+     */
+    distinct?: AdminPermissionScalarFieldEnum | AdminPermissionScalarFieldEnum[]
+  }
+
+  /**
+   * AdminPermission findMany
+   */
+  export type AdminPermissionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminPermission
+     */
+    select?: AdminPermissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminPermission
+     */
+    omit?: AdminPermissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminPermissionInclude<ExtArgs> | null
+    /**
+     * Filter, which AdminPermissions to fetch.
+     */
+    where?: AdminPermissionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AdminPermissions to fetch.
+     */
+    orderBy?: AdminPermissionOrderByWithRelationInput | AdminPermissionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AdminPermissions.
+     */
+    cursor?: AdminPermissionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AdminPermissions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AdminPermissions.
+     */
+    skip?: number
+    distinct?: AdminPermissionScalarFieldEnum | AdminPermissionScalarFieldEnum[]
+  }
+
+  /**
+   * AdminPermission create
+   */
+  export type AdminPermissionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminPermission
+     */
+    select?: AdminPermissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminPermission
+     */
+    omit?: AdminPermissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminPermissionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a AdminPermission.
+     */
+    data: XOR<AdminPermissionCreateInput, AdminPermissionUncheckedCreateInput>
+  }
+
+  /**
+   * AdminPermission createMany
+   */
+  export type AdminPermissionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AdminPermissions.
+     */
+    data: AdminPermissionCreateManyInput | AdminPermissionCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AdminPermission createManyAndReturn
+   */
+  export type AdminPermissionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminPermission
+     */
+    select?: AdminPermissionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminPermission
+     */
+    omit?: AdminPermissionOmit<ExtArgs> | null
+    /**
+     * The data used to create many AdminPermissions.
+     */
+    data: AdminPermissionCreateManyInput | AdminPermissionCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminPermissionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * AdminPermission update
+   */
+  export type AdminPermissionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminPermission
+     */
+    select?: AdminPermissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminPermission
+     */
+    omit?: AdminPermissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminPermissionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a AdminPermission.
+     */
+    data: XOR<AdminPermissionUpdateInput, AdminPermissionUncheckedUpdateInput>
+    /**
+     * Choose, which AdminPermission to update.
+     */
+    where: AdminPermissionWhereUniqueInput
+  }
+
+  /**
+   * AdminPermission updateMany
+   */
+  export type AdminPermissionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AdminPermissions.
+     */
+    data: XOR<AdminPermissionUpdateManyMutationInput, AdminPermissionUncheckedUpdateManyInput>
+    /**
+     * Filter which AdminPermissions to update
+     */
+    where?: AdminPermissionWhereInput
+    /**
+     * Limit how many AdminPermissions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AdminPermission updateManyAndReturn
+   */
+  export type AdminPermissionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminPermission
+     */
+    select?: AdminPermissionSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminPermission
+     */
+    omit?: AdminPermissionOmit<ExtArgs> | null
+    /**
+     * The data used to update AdminPermissions.
+     */
+    data: XOR<AdminPermissionUpdateManyMutationInput, AdminPermissionUncheckedUpdateManyInput>
+    /**
+     * Filter which AdminPermissions to update
+     */
+    where?: AdminPermissionWhereInput
+    /**
+     * Limit how many AdminPermissions to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminPermissionIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * AdminPermission upsert
+   */
+  export type AdminPermissionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminPermission
+     */
+    select?: AdminPermissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminPermission
+     */
+    omit?: AdminPermissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminPermissionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the AdminPermission to update in case it exists.
+     */
+    where: AdminPermissionWhereUniqueInput
+    /**
+     * In case the AdminPermission found by the `where` argument doesn't exist, create a new AdminPermission with this data.
+     */
+    create: XOR<AdminPermissionCreateInput, AdminPermissionUncheckedCreateInput>
+    /**
+     * In case the AdminPermission was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AdminPermissionUpdateInput, AdminPermissionUncheckedUpdateInput>
+  }
+
+  /**
+   * AdminPermission delete
+   */
+  export type AdminPermissionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminPermission
+     */
+    select?: AdminPermissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminPermission
+     */
+    omit?: AdminPermissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminPermissionInclude<ExtArgs> | null
+    /**
+     * Filter which AdminPermission to delete.
+     */
+    where: AdminPermissionWhereUniqueInput
+  }
+
+  /**
+   * AdminPermission deleteMany
+   */
+  export type AdminPermissionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AdminPermissions to delete
+     */
+    where?: AdminPermissionWhereInput
+    /**
+     * Limit how many AdminPermissions to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * AdminPermission without action
+   */
+  export type AdminPermissionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminPermission
+     */
+    select?: AdminPermissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminPermission
+     */
+    omit?: AdminPermissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminPermissionInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Model SiteLogo
    */
 
@@ -24986,6 +26293,21 @@ export namespace Prisma {
   export type BlogScalarFieldEnum = (typeof BlogScalarFieldEnum)[keyof typeof BlogScalarFieldEnum]
 
 
+  export const AdminPermissionScalarFieldEnum: {
+    id: 'id',
+    adminId: 'adminId',
+    module: 'module',
+    canCreate: 'canCreate',
+    canRead: 'canRead',
+    canUpdate: 'canUpdate',
+    canDelete: 'canDelete',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type AdminPermissionScalarFieldEnum = (typeof AdminPermissionScalarFieldEnum)[keyof typeof AdminPermissionScalarFieldEnum]
+
+
   export const SiteLogoScalarFieldEnum: {
     id: 'id',
     light_url: 'light_url',
@@ -25163,6 +26485,7 @@ export namespace Prisma {
     city?: StringNullableFilter<"Admin"> | string | null
     postal_code?: StringNullableFilter<"Admin"> | string | null
     createdAt?: DateTimeFilter<"Admin"> | Date | string
+    permissions?: AdminPermissionListRelationFilter
   }
 
   export type AdminOrderByWithRelationInput = {
@@ -25177,6 +26500,7 @@ export namespace Prisma {
     city?: SortOrderInput | SortOrder
     postal_code?: SortOrderInput | SortOrder
     createdAt?: SortOrder
+    permissions?: AdminPermissionOrderByRelationAggregateInput
   }
 
   export type AdminWhereUniqueInput = Prisma.AtLeast<{
@@ -25194,6 +26518,7 @@ export namespace Prisma {
     city?: StringNullableFilter<"Admin"> | string | null
     postal_code?: StringNullableFilter<"Admin"> | string | null
     createdAt?: DateTimeFilter<"Admin"> | Date | string
+    permissions?: AdminPermissionListRelationFilter
   }, "id" | "email">
 
   export type AdminOrderByWithAggregationInput = {
@@ -26560,6 +27885,82 @@ export namespace Prisma {
     updated_at?: DateTimeWithAggregatesFilter<"Blog"> | Date | string
   }
 
+  export type AdminPermissionWhereInput = {
+    AND?: AdminPermissionWhereInput | AdminPermissionWhereInput[]
+    OR?: AdminPermissionWhereInput[]
+    NOT?: AdminPermissionWhereInput | AdminPermissionWhereInput[]
+    id?: StringFilter<"AdminPermission"> | string
+    adminId?: StringFilter<"AdminPermission"> | string
+    module?: StringFilter<"AdminPermission"> | string
+    canCreate?: BoolFilter<"AdminPermission"> | boolean
+    canRead?: BoolFilter<"AdminPermission"> | boolean
+    canUpdate?: BoolFilter<"AdminPermission"> | boolean
+    canDelete?: BoolFilter<"AdminPermission"> | boolean
+    createdAt?: DateTimeFilter<"AdminPermission"> | Date | string
+    updatedAt?: DateTimeFilter<"AdminPermission"> | Date | string
+    admin?: XOR<AdminScalarRelationFilter, AdminWhereInput>
+  }
+
+  export type AdminPermissionOrderByWithRelationInput = {
+    id?: SortOrder
+    adminId?: SortOrder
+    module?: SortOrder
+    canCreate?: SortOrder
+    canRead?: SortOrder
+    canUpdate?: SortOrder
+    canDelete?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    admin?: AdminOrderByWithRelationInput
+  }
+
+  export type AdminPermissionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    adminId_module?: AdminPermissionAdminIdModuleCompoundUniqueInput
+    AND?: AdminPermissionWhereInput | AdminPermissionWhereInput[]
+    OR?: AdminPermissionWhereInput[]
+    NOT?: AdminPermissionWhereInput | AdminPermissionWhereInput[]
+    adminId?: StringFilter<"AdminPermission"> | string
+    module?: StringFilter<"AdminPermission"> | string
+    canCreate?: BoolFilter<"AdminPermission"> | boolean
+    canRead?: BoolFilter<"AdminPermission"> | boolean
+    canUpdate?: BoolFilter<"AdminPermission"> | boolean
+    canDelete?: BoolFilter<"AdminPermission"> | boolean
+    createdAt?: DateTimeFilter<"AdminPermission"> | Date | string
+    updatedAt?: DateTimeFilter<"AdminPermission"> | Date | string
+    admin?: XOR<AdminScalarRelationFilter, AdminWhereInput>
+  }, "id" | "adminId_module">
+
+  export type AdminPermissionOrderByWithAggregationInput = {
+    id?: SortOrder
+    adminId?: SortOrder
+    module?: SortOrder
+    canCreate?: SortOrder
+    canRead?: SortOrder
+    canUpdate?: SortOrder
+    canDelete?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: AdminPermissionCountOrderByAggregateInput
+    _max?: AdminPermissionMaxOrderByAggregateInput
+    _min?: AdminPermissionMinOrderByAggregateInput
+  }
+
+  export type AdminPermissionScalarWhereWithAggregatesInput = {
+    AND?: AdminPermissionScalarWhereWithAggregatesInput | AdminPermissionScalarWhereWithAggregatesInput[]
+    OR?: AdminPermissionScalarWhereWithAggregatesInput[]
+    NOT?: AdminPermissionScalarWhereWithAggregatesInput | AdminPermissionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AdminPermission"> | string
+    adminId?: StringWithAggregatesFilter<"AdminPermission"> | string
+    module?: StringWithAggregatesFilter<"AdminPermission"> | string
+    canCreate?: BoolWithAggregatesFilter<"AdminPermission"> | boolean
+    canRead?: BoolWithAggregatesFilter<"AdminPermission"> | boolean
+    canUpdate?: BoolWithAggregatesFilter<"AdminPermission"> | boolean
+    canDelete?: BoolWithAggregatesFilter<"AdminPermission"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"AdminPermission"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"AdminPermission"> | Date | string
+  }
+
   export type SiteLogoWhereInput = {
     AND?: SiteLogoWhereInput | SiteLogoWhereInput[]
     OR?: SiteLogoWhereInput[]
@@ -26624,6 +28025,7 @@ export namespace Prisma {
     city?: string | null
     postal_code?: string | null
     createdAt?: Date | string
+    permissions?: AdminPermissionCreateNestedManyWithoutAdminInput
   }
 
   export type AdminUncheckedCreateInput = {
@@ -26638,6 +28040,7 @@ export namespace Prisma {
     city?: string | null
     postal_code?: string | null
     createdAt?: Date | string
+    permissions?: AdminPermissionUncheckedCreateNestedManyWithoutAdminInput
   }
 
   export type AdminUpdateInput = {
@@ -26652,6 +28055,7 @@ export namespace Prisma {
     city?: NullableStringFieldUpdateOperationsInput | string | null
     postal_code?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    permissions?: AdminPermissionUpdateManyWithoutAdminNestedInput
   }
 
   export type AdminUncheckedUpdateInput = {
@@ -26666,6 +28070,7 @@ export namespace Prisma {
     city?: NullableStringFieldUpdateOperationsInput | string | null
     postal_code?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    permissions?: AdminPermissionUncheckedUpdateManyWithoutAdminNestedInput
   }
 
   export type AdminCreateManyInput = {
@@ -28154,6 +29559,89 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type AdminPermissionCreateInput = {
+    id?: string
+    module: string
+    canCreate?: boolean
+    canRead?: boolean
+    canUpdate?: boolean
+    canDelete?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    admin: AdminCreateNestedOneWithoutPermissionsInput
+  }
+
+  export type AdminPermissionUncheckedCreateInput = {
+    id?: string
+    adminId: string
+    module: string
+    canCreate?: boolean
+    canRead?: boolean
+    canUpdate?: boolean
+    canDelete?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AdminPermissionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    module?: StringFieldUpdateOperationsInput | string
+    canCreate?: BoolFieldUpdateOperationsInput | boolean
+    canRead?: BoolFieldUpdateOperationsInput | boolean
+    canUpdate?: BoolFieldUpdateOperationsInput | boolean
+    canDelete?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    admin?: AdminUpdateOneRequiredWithoutPermissionsNestedInput
+  }
+
+  export type AdminPermissionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    adminId?: StringFieldUpdateOperationsInput | string
+    module?: StringFieldUpdateOperationsInput | string
+    canCreate?: BoolFieldUpdateOperationsInput | boolean
+    canRead?: BoolFieldUpdateOperationsInput | boolean
+    canUpdate?: BoolFieldUpdateOperationsInput | boolean
+    canDelete?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AdminPermissionCreateManyInput = {
+    id?: string
+    adminId: string
+    module: string
+    canCreate?: boolean
+    canRead?: boolean
+    canUpdate?: boolean
+    canDelete?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AdminPermissionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    module?: StringFieldUpdateOperationsInput | string
+    canCreate?: BoolFieldUpdateOperationsInput | boolean
+    canRead?: BoolFieldUpdateOperationsInput | boolean
+    canUpdate?: BoolFieldUpdateOperationsInput | boolean
+    canDelete?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AdminPermissionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    adminId?: StringFieldUpdateOperationsInput | string
+    module?: StringFieldUpdateOperationsInput | string
+    canCreate?: BoolFieldUpdateOperationsInput | boolean
+    canRead?: BoolFieldUpdateOperationsInput | boolean
+    canUpdate?: BoolFieldUpdateOperationsInput | boolean
+    canDelete?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type SiteLogoCreateInput = {
     id?: string
     light_url?: string | null
@@ -28258,9 +29746,19 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
+  export type AdminPermissionListRelationFilter = {
+    every?: AdminPermissionWhereInput
+    some?: AdminPermissionWhereInput
+    none?: AdminPermissionWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
+  }
+
+  export type AdminPermissionOrderByRelationAggregateInput = {
+    _count?: SortOrder
   }
 
   export type AdminCountOrderByAggregateInput = {
@@ -29443,6 +30941,52 @@ export namespace Prisma {
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
+  export type AdminScalarRelationFilter = {
+    is?: AdminWhereInput
+    isNot?: AdminWhereInput
+  }
+
+  export type AdminPermissionAdminIdModuleCompoundUniqueInput = {
+    adminId: string
+    module: string
+  }
+
+  export type AdminPermissionCountOrderByAggregateInput = {
+    id?: SortOrder
+    adminId?: SortOrder
+    module?: SortOrder
+    canCreate?: SortOrder
+    canRead?: SortOrder
+    canUpdate?: SortOrder
+    canDelete?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AdminPermissionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    adminId?: SortOrder
+    module?: SortOrder
+    canCreate?: SortOrder
+    canRead?: SortOrder
+    canUpdate?: SortOrder
+    canDelete?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AdminPermissionMinOrderByAggregateInput = {
+    id?: SortOrder
+    adminId?: SortOrder
+    module?: SortOrder
+    canCreate?: SortOrder
+    canRead?: SortOrder
+    canUpdate?: SortOrder
+    canDelete?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
   export type SiteLogoCountOrderByAggregateInput = {
     id?: SortOrder
     light_url?: SortOrder
@@ -29467,6 +31011,20 @@ export namespace Prisma {
     updated_at?: SortOrder
   }
 
+  export type AdminPermissionCreateNestedManyWithoutAdminInput = {
+    create?: XOR<AdminPermissionCreateWithoutAdminInput, AdminPermissionUncheckedCreateWithoutAdminInput> | AdminPermissionCreateWithoutAdminInput[] | AdminPermissionUncheckedCreateWithoutAdminInput[]
+    connectOrCreate?: AdminPermissionCreateOrConnectWithoutAdminInput | AdminPermissionCreateOrConnectWithoutAdminInput[]
+    createMany?: AdminPermissionCreateManyAdminInputEnvelope
+    connect?: AdminPermissionWhereUniqueInput | AdminPermissionWhereUniqueInput[]
+  }
+
+  export type AdminPermissionUncheckedCreateNestedManyWithoutAdminInput = {
+    create?: XOR<AdminPermissionCreateWithoutAdminInput, AdminPermissionUncheckedCreateWithoutAdminInput> | AdminPermissionCreateWithoutAdminInput[] | AdminPermissionUncheckedCreateWithoutAdminInput[]
+    connectOrCreate?: AdminPermissionCreateOrConnectWithoutAdminInput | AdminPermissionCreateOrConnectWithoutAdminInput[]
+    createMany?: AdminPermissionCreateManyAdminInputEnvelope
+    connect?: AdminPermissionWhereUniqueInput | AdminPermissionWhereUniqueInput[]
+  }
+
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
@@ -29481,6 +31039,34 @@ export namespace Prisma {
 
   export type DateTimeFieldUpdateOperationsInput = {
     set?: Date | string
+  }
+
+  export type AdminPermissionUpdateManyWithoutAdminNestedInput = {
+    create?: XOR<AdminPermissionCreateWithoutAdminInput, AdminPermissionUncheckedCreateWithoutAdminInput> | AdminPermissionCreateWithoutAdminInput[] | AdminPermissionUncheckedCreateWithoutAdminInput[]
+    connectOrCreate?: AdminPermissionCreateOrConnectWithoutAdminInput | AdminPermissionCreateOrConnectWithoutAdminInput[]
+    upsert?: AdminPermissionUpsertWithWhereUniqueWithoutAdminInput | AdminPermissionUpsertWithWhereUniqueWithoutAdminInput[]
+    createMany?: AdminPermissionCreateManyAdminInputEnvelope
+    set?: AdminPermissionWhereUniqueInput | AdminPermissionWhereUniqueInput[]
+    disconnect?: AdminPermissionWhereUniqueInput | AdminPermissionWhereUniqueInput[]
+    delete?: AdminPermissionWhereUniqueInput | AdminPermissionWhereUniqueInput[]
+    connect?: AdminPermissionWhereUniqueInput | AdminPermissionWhereUniqueInput[]
+    update?: AdminPermissionUpdateWithWhereUniqueWithoutAdminInput | AdminPermissionUpdateWithWhereUniqueWithoutAdminInput[]
+    updateMany?: AdminPermissionUpdateManyWithWhereWithoutAdminInput | AdminPermissionUpdateManyWithWhereWithoutAdminInput[]
+    deleteMany?: AdminPermissionScalarWhereInput | AdminPermissionScalarWhereInput[]
+  }
+
+  export type AdminPermissionUncheckedUpdateManyWithoutAdminNestedInput = {
+    create?: XOR<AdminPermissionCreateWithoutAdminInput, AdminPermissionUncheckedCreateWithoutAdminInput> | AdminPermissionCreateWithoutAdminInput[] | AdminPermissionUncheckedCreateWithoutAdminInput[]
+    connectOrCreate?: AdminPermissionCreateOrConnectWithoutAdminInput | AdminPermissionCreateOrConnectWithoutAdminInput[]
+    upsert?: AdminPermissionUpsertWithWhereUniqueWithoutAdminInput | AdminPermissionUpsertWithWhereUniqueWithoutAdminInput[]
+    createMany?: AdminPermissionCreateManyAdminInputEnvelope
+    set?: AdminPermissionWhereUniqueInput | AdminPermissionWhereUniqueInput[]
+    disconnect?: AdminPermissionWhereUniqueInput | AdminPermissionWhereUniqueInput[]
+    delete?: AdminPermissionWhereUniqueInput | AdminPermissionWhereUniqueInput[]
+    connect?: AdminPermissionWhereUniqueInput | AdminPermissionWhereUniqueInput[]
+    update?: AdminPermissionUpdateWithWhereUniqueWithoutAdminInput | AdminPermissionUpdateWithWhereUniqueWithoutAdminInput[]
+    updateMany?: AdminPermissionUpdateManyWithWhereWithoutAdminInput | AdminPermissionUpdateManyWithWhereWithoutAdminInput[]
+    deleteMany?: AdminPermissionScalarWhereInput | AdminPermissionScalarWhereInput[]
   }
 
   export type CategoryCreateNestedOneWithoutChildrenInput = {
@@ -30685,6 +32271,20 @@ export namespace Prisma {
     deleteMany?: BlogTagScalarWhereInput | BlogTagScalarWhereInput[]
   }
 
+  export type AdminCreateNestedOneWithoutPermissionsInput = {
+    create?: XOR<AdminCreateWithoutPermissionsInput, AdminUncheckedCreateWithoutPermissionsInput>
+    connectOrCreate?: AdminCreateOrConnectWithoutPermissionsInput
+    connect?: AdminWhereUniqueInput
+  }
+
+  export type AdminUpdateOneRequiredWithoutPermissionsNestedInput = {
+    create?: XOR<AdminCreateWithoutPermissionsInput, AdminUncheckedCreateWithoutPermissionsInput>
+    connectOrCreate?: AdminCreateOrConnectWithoutPermissionsInput
+    upsert?: AdminUpsertWithoutPermissionsInput
+    connect?: AdminWhereUniqueInput
+    update?: XOR<XOR<AdminUpdateToOneWithWhereWithoutPermissionsInput, AdminUpdateWithoutPermissionsInput>, AdminUncheckedUpdateWithoutPermissionsInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -30984,6 +32584,69 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedDateTimeNullableFilter<$PrismaModel>
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type AdminPermissionCreateWithoutAdminInput = {
+    id?: string
+    module: string
+    canCreate?: boolean
+    canRead?: boolean
+    canUpdate?: boolean
+    canDelete?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AdminPermissionUncheckedCreateWithoutAdminInput = {
+    id?: string
+    module: string
+    canCreate?: boolean
+    canRead?: boolean
+    canUpdate?: boolean
+    canDelete?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AdminPermissionCreateOrConnectWithoutAdminInput = {
+    where: AdminPermissionWhereUniqueInput
+    create: XOR<AdminPermissionCreateWithoutAdminInput, AdminPermissionUncheckedCreateWithoutAdminInput>
+  }
+
+  export type AdminPermissionCreateManyAdminInputEnvelope = {
+    data: AdminPermissionCreateManyAdminInput | AdminPermissionCreateManyAdminInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type AdminPermissionUpsertWithWhereUniqueWithoutAdminInput = {
+    where: AdminPermissionWhereUniqueInput
+    update: XOR<AdminPermissionUpdateWithoutAdminInput, AdminPermissionUncheckedUpdateWithoutAdminInput>
+    create: XOR<AdminPermissionCreateWithoutAdminInput, AdminPermissionUncheckedCreateWithoutAdminInput>
+  }
+
+  export type AdminPermissionUpdateWithWhereUniqueWithoutAdminInput = {
+    where: AdminPermissionWhereUniqueInput
+    data: XOR<AdminPermissionUpdateWithoutAdminInput, AdminPermissionUncheckedUpdateWithoutAdminInput>
+  }
+
+  export type AdminPermissionUpdateManyWithWhereWithoutAdminInput = {
+    where: AdminPermissionScalarWhereInput
+    data: XOR<AdminPermissionUpdateManyMutationInput, AdminPermissionUncheckedUpdateManyWithoutAdminInput>
+  }
+
+  export type AdminPermissionScalarWhereInput = {
+    AND?: AdminPermissionScalarWhereInput | AdminPermissionScalarWhereInput[]
+    OR?: AdminPermissionScalarWhereInput[]
+    NOT?: AdminPermissionScalarWhereInput | AdminPermissionScalarWhereInput[]
+    id?: StringFilter<"AdminPermission"> | string
+    adminId?: StringFilter<"AdminPermission"> | string
+    module?: StringFilter<"AdminPermission"> | string
+    canCreate?: BoolFilter<"AdminPermission"> | boolean
+    canRead?: BoolFilter<"AdminPermission"> | boolean
+    canUpdate?: BoolFilter<"AdminPermission"> | boolean
+    canDelete?: BoolFilter<"AdminPermission"> | boolean
+    createdAt?: DateTimeFilter<"AdminPermission"> | Date | string
+    updatedAt?: DateTimeFilter<"AdminPermission"> | Date | string
   }
 
   export type CategoryCreateWithoutChildrenInput = {
@@ -33973,6 +35636,122 @@ export namespace Prisma {
     name?: StringFilter<"BlogTag"> | string
     slug?: StringFilter<"BlogTag"> | string
     created_at?: DateTimeFilter<"BlogTag"> | Date | string
+  }
+
+  export type AdminCreateWithoutPermissionsInput = {
+    id?: string
+    email: string
+    full_name?: string | null
+    password?: string | null
+    role?: $Enums.Role
+    phone?: string | null
+    country?: string | null
+    state?: string | null
+    city?: string | null
+    postal_code?: string | null
+    createdAt?: Date | string
+  }
+
+  export type AdminUncheckedCreateWithoutPermissionsInput = {
+    id?: string
+    email: string
+    full_name?: string | null
+    password?: string | null
+    role?: $Enums.Role
+    phone?: string | null
+    country?: string | null
+    state?: string | null
+    city?: string | null
+    postal_code?: string | null
+    createdAt?: Date | string
+  }
+
+  export type AdminCreateOrConnectWithoutPermissionsInput = {
+    where: AdminWhereUniqueInput
+    create: XOR<AdminCreateWithoutPermissionsInput, AdminUncheckedCreateWithoutPermissionsInput>
+  }
+
+  export type AdminUpsertWithoutPermissionsInput = {
+    update: XOR<AdminUpdateWithoutPermissionsInput, AdminUncheckedUpdateWithoutPermissionsInput>
+    create: XOR<AdminCreateWithoutPermissionsInput, AdminUncheckedCreateWithoutPermissionsInput>
+    where?: AdminWhereInput
+  }
+
+  export type AdminUpdateToOneWithWhereWithoutPermissionsInput = {
+    where?: AdminWhereInput
+    data: XOR<AdminUpdateWithoutPermissionsInput, AdminUncheckedUpdateWithoutPermissionsInput>
+  }
+
+  export type AdminUpdateWithoutPermissionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    full_name?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    postal_code?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AdminUncheckedUpdateWithoutPermissionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    full_name?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    country?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    postal_code?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AdminPermissionCreateManyAdminInput = {
+    id?: string
+    module: string
+    canCreate?: boolean
+    canRead?: boolean
+    canUpdate?: boolean
+    canDelete?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AdminPermissionUpdateWithoutAdminInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    module?: StringFieldUpdateOperationsInput | string
+    canCreate?: BoolFieldUpdateOperationsInput | boolean
+    canRead?: BoolFieldUpdateOperationsInput | boolean
+    canUpdate?: BoolFieldUpdateOperationsInput | boolean
+    canDelete?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AdminPermissionUncheckedUpdateWithoutAdminInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    module?: StringFieldUpdateOperationsInput | string
+    canCreate?: BoolFieldUpdateOperationsInput | boolean
+    canRead?: BoolFieldUpdateOperationsInput | boolean
+    canUpdate?: BoolFieldUpdateOperationsInput | boolean
+    canDelete?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AdminPermissionUncheckedUpdateManyWithoutAdminInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    module?: StringFieldUpdateOperationsInput | string
+    canCreate?: BoolFieldUpdateOperationsInput | boolean
+    canRead?: BoolFieldUpdateOperationsInput | boolean
+    canUpdate?: BoolFieldUpdateOperationsInput | boolean
+    canDelete?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CategoryCreateManyParentInput = {

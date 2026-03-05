@@ -36,17 +36,18 @@ enum ReturnStatus {
 }
 
 model Admin {
-  id          String   @id @default(uuid())
-  email       String   @unique
+  id          String            @id @default(uuid())
+  email       String            @unique
   full_name   String?
   password    String?
-  role        Role     @default(ADMIN)
+  role        Role              @default(ADMIN)
   phone       String?
   country     String?
   state       String?
   city        String?
   postal_code String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime          @default(now())
+  permissions AdminPermission[]
 }
 
 model Category {
@@ -373,6 +374,21 @@ model Blog {
   @@index([is_featured])
   @@index([published_at])
   @@index([category])
+}
+
+model AdminPermission {
+  id        String   @id @default(uuid())
+  adminId   String
+  admin     Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  module    String // e.g. "Dashboard", "Products", "Orders"
+  canCreate Boolean  @default(false)
+  canRead   Boolean  @default(true)
+  canUpdate Boolean  @default(false)
+  canDelete Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([adminId, module])
 }
 
 // Singleton row — always id = 'site-logo'
