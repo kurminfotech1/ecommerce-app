@@ -259,47 +259,35 @@ const PermissionPage = () => {
             {selectedAdminId ? (
               <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden flex flex-col h-full">
                 {/* Section Header */}
-                <div className="border-b border-gray-100 bg-gray-50/50 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+                <div className="border-b border-gray-100 bg-gray-50/50 px-4 py-4 md:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sticky top-0 z-10 transition-all duration-300">
                   <div className="flex items-center gap-3">
-                    <div className="bg-brand-500 p-2 rounded-lg text-white">
+                    <div className="bg-brand-500 p-2 rounded-lg text-white shrink-0">
                       <Shield size={20} />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                        Permissions for{" "}
-                        <span className="text-brand-600 font-extrabold capitalize">
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-gray-900 flex flex-wrap items-center gap-x-2 gap-y-0.5 leading-tight">
+                        <span className="whitespace-nowrap transition-all duration-200">Permissions for</span>{" "}
+                        <span className="text-brand-600 font-extrabold capitalize truncate max-w-[150px] sm:max-w-none">
                           {getSelectedAdmin()?.full_name?.split(" ")[0] ||
                             getSelectedAdmin()?.email}
                         </span>
                       </h3>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
                         Toggle sidebar visibility &amp; allowed actions per module
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={handleSave}
-                    disabled={saving}
-                    className="flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg hover:bg-brand-700 disabled:opacity-50 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    {saving ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <Save size={16} />
-                    )}
-                    Save Changes
-                  </button>
                 </div>
 
                 {/* Legend */}
-                <div className="px-6 py-3 bg-blue-50/60 border-b border-blue-100 flex flex-wrap gap-4 text-xs text-blue-700">
-                  <span className="flex items-center gap-1.5">
-                    <Eye size={13} className="text-indigo-500" />
-                    <strong>Sidebar Access</strong> — makes the module visible in the admin&apos;s sidebar
+                <div className="px-4 md:px-6 py-3 bg-blue-50/60 border-b border-blue-100 flex flex-col sm:flex-row flex-wrap gap-x-6 gap-y-2 text-[11px] md:text-xs text-blue-700">
+                  <span className="flex items-center gap-1.5 min-w-0">
+                    <Eye size={13} className="text-indigo-500 shrink-0" />
+                    <span className="truncate"><strong>Sidebar Access</strong> — Visibility in sidebar</span>
                   </span>
-                  <span className="flex items-center gap-1.5">
-                    <Shield size={13} className="text-gray-400" />
-                    <strong>Actions</strong> — what the admin can do inside that module
+                  <span className="flex items-center gap-1.5 min-w-0">
+                    <Shield size={13} className="text-gray-400 shrink-0" />
+                    <span className="truncate"><strong>Actions</strong> — Allowed operations</span>
                   </span>
                 </div>
 
@@ -450,7 +438,7 @@ const PermissionPage = () => {
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="flex items-center gap-2 rounded-xl bg-brand-600 px-8 py-2.5 text-sm font-bold text-white shadow hover:bg-brand-700 disabled:opacity-50 transition-all duration-200"
+                    className="flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-8 py-2.5 text-sm font-bold text-white shadow hover:bg-brand-700 disabled:opacity-50 transition-all duration-200 w-full sm:w-auto"
                   >
                     {saving ? (
                       <Loader2 size={16} className="animate-spin" />

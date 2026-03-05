@@ -2,6 +2,9 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseServer";
 import { verifyToken } from "@/lib/auth";
+import { checkApiPermission } from "@/lib/utils/apiPermission";
+
+const MODULE = "Products";
 
 const BUCKET = "products";
 
@@ -157,10 +160,8 @@ export async function GET(req: Request) {
 // ─────────────────────────────────────────────────────────────────
 export async function POST(req: Request) {
   try {
-    const user = await verifyToken();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { error } = await checkApiPermission(MODULE, "canCreate");
+    if (error) return error;
 
     const body = await req.json();
 
@@ -288,10 +289,8 @@ export async function POST(req: Request) {
 // ─────────────────────────────────────────────────────────────────
 export async function PUT(req: Request) {
   try {
-    const user = await verifyToken();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { error } = await checkApiPermission(MODULE, "canUpdate");
+    if (error) return error;
 
     const id = new URL(req.url).searchParams.get("id");
     if (!id) {
@@ -444,10 +443,8 @@ export async function PUT(req: Request) {
 // ─────────────────────────────────────────────────────────────────
 export async function DELETE(req: Request) {
   try {
-    const user = await verifyToken();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { error } = await checkApiPermission(MODULE, "canDelete");
+    if (error) return error;
 
     const id = new URL(req.url).searchParams.get("id");
     if (!id) {

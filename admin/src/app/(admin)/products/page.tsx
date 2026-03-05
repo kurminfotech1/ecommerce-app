@@ -16,6 +16,7 @@ import {
 } from "@/redux/products/productsApi";
 import Link from "next/link";
 import { getCategories, Category } from "@/redux/categories/categoriesApi";
+import { usePermission } from "@/hooks/usePermission";
 
 import {
   Search, Plus, Eye, Pencil, Trash2, X,
@@ -151,7 +152,10 @@ export default function ProductsPage() {
     useSelector((s: RootState) => s.products);
   const { categories } = useSelector((s: RootState) => s.categories);
   console.log(categories);
-  // â”€â”€ List state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+  // ── Permission flags ────────────────────────────────────────────
+  const { canCreate, canUpdate, canDelete } = usePermission("Products");
+ 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [activeFilter, setActiveFilter] = useState("");
@@ -161,14 +165,12 @@ export default function ProductsPage() {
   const [maxPriceFilter, setMaxPriceFilter] = useState("");
   const [page, setPage] = useState(1);
 
-  // â”€â”€ Modal state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
 
-  // â”€â”€ Preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // â”€â”€ Form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const emptyForm = {
     product_name: "", slug: "", short_desc: "", description: "",
     category_id: "",
@@ -221,7 +223,7 @@ export default function ProductsPage() {
     setForm((f: any) => ({ ...f, category_id: id || catL2 || catL1 }));
   };
 
-  // â”€â”€ Fetch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
   const fetchProducts = useCallback(() => {
     dispatch(getProducts({
       page,
@@ -242,7 +244,7 @@ export default function ProductsPage() {
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
   useEffect(() => { dispatch(getCategories()); }, [dispatch]);
 
-  // â”€â”€ Keyboard / scroll lock â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -259,7 +261,7 @@ export default function ProductsPage() {
     return () => { document.body.style.overflow = ""; };
   }, [previewImage, modalOpen]);
 
-  // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
   const openCreate = () => {
     setForm(emptyForm);
     setVariants([emptyVariantRow()]);
@@ -326,9 +328,7 @@ export default function ProductsPage() {
     }));
   };
 
-  // â”€â”€ File selection (local preview) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-  // â”€â”€ Variant field helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+ 
   const updateVariant = (idx: number, field: string, value: string) =>
     setVariants((prev) => prev.map((v, i) => i === idx ? { ...v, [field]: value } : v));
 
@@ -357,7 +357,7 @@ export default function ProductsPage() {
       i === variantIdx ? { ...v, uploadedImages: v.uploadedImages.filter((_, ii) => ii !== imgIdx) } : v
     ));
 
-  // â”€â”€ Submit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  
   const handleSubmit = async () => {
     if (!form.product_name || !form.category_id) {
       alert("Product name and category are required.");
@@ -433,14 +433,14 @@ export default function ProductsPage() {
     }
   };
 
-  // â”€â”€ Stock badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
   const stockBadge = (stock: number) => {
     if (stock === 0) return <Badge color="red">Out of stock</Badge>;
     if (stock < 10) return <Badge color="amber">{stock} left</Badge>;
     return <Badge color="green">{stock} in stock</Badge>;
   };
 
-  // â”€â”€ Product Card Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
   const ProductCard = ({ product }: { product: Product }) => {
     const firstVariant = product.variants?.[0];
     const firstImage = firstVariant?.images?.[0]?.image_url;
@@ -544,18 +544,25 @@ export default function ProductsPage() {
 
           {/* Action Buttons */}
           <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100">
-            <button
-              onClick={() => openEdit(product)}
-              className="flex-1 flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-[#155dfc] py-2 rounded-lg text-sm font-medium transition"
-            >
-              <Pencil size={14} />
-              Edit
-            </button>
-            <DeleteModal
-              onConfirm={() => dispatch(deleteProduct(product.id))}
-              parentTitle="Delete product?"
-              childTitle="This will permanently delete this product and all its variants."
-            />
+            {canUpdate && (
+              <button
+                onClick={() => openEdit(product)}
+                className="flex-1 flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-[#155dfc] py-2 rounded-lg text-sm font-medium transition"
+              >
+                <Pencil size={14} />
+                Edit
+              </button>
+            )}
+            {canDelete && (
+              <DeleteModal
+                onConfirm={() => dispatch(deleteProduct(product.id))}
+                parentTitle="Delete product?"
+                childTitle="This will permanently delete this product and all its variants."
+              />
+            )}
+            {!canUpdate && !canDelete && (
+              <span className="text-xs text-gray-400 italic w-full text-center py-1">Read only</span>
+            )}
           </div>
         </div>
       </div>
@@ -579,12 +586,14 @@ export default function ProductsPage() {
               </p>
             </div>
             {/* Add button */}
-            <button
-              onClick={openCreate}
-              className="flex items-center gap-2 bg-[#155dfc] hover:bg-[#1246cc] active:scale-95 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition"
-            >
-              <Plus size={16} /> Add Product
-            </button>
+            {canCreate && (
+              <button
+                onClick={openCreate}
+                className="flex items-center gap-2 bg-[#155dfc] hover:bg-[#1246cc] active:scale-95 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition"
+              >
+                <Plus size={16} /> Add Product
+              </button>
+            )}
           </div>
 
           {/* â”€â”€ Filters Bar â”€â”€ */}
@@ -716,15 +725,9 @@ export default function ProductsPage() {
       </div>
 
 
-
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-          Image Preview
-      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {previewImage && <ImagePreview url={previewImage} onClose={() => setPreviewImage(null)} />}
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-          Create / Edit Modal
-      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+     
       {modalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 w-full max-w-2xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
@@ -969,7 +972,7 @@ export default function ProductsPage() {
                           {/* Price */}
                           <div>
                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                              Price (â‚¹) *
+                              Price (₹) *
                             </label>
                             <input
                               type="number"
@@ -983,7 +986,7 @@ export default function ProductsPage() {
                           {/* Compare Price */}
                           <div>
                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                              Compare Price (â‚¹)
+                              Compare Price (₹)
                             </label>
                             <input
                               type="number"

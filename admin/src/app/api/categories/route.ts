@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import { checkApiPermission } from "@/lib/utils/apiPermission";
+
+const MODULE = "Categories";
 
 /* ================= GET ================= */
 
@@ -135,8 +137,8 @@ export async function GET(req: Request) {
 /* ================= POST ================= */
 export async function POST(req: Request) {
   try {
-    const user = await verifyToken();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { error } = await checkApiPermission(MODULE, "canCreate");
+    if (error) return error;
 
     const body = await req.json();
 
@@ -171,10 +173,8 @@ export async function POST(req: Request) {
 /* ================= PUT ================= */
 export async function PUT(req: Request) {
   try {
-    const user = await verifyToken();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { error } = await checkApiPermission(MODULE, "canUpdate");
+    if (error) return error;
 
     const id = new URL(req.url).searchParams.get("id");
     if (!id) {
@@ -218,10 +218,8 @@ export async function PUT(req: Request) {
 /* ================= PATCH (toggle active/inactive) ================= */
 export async function PATCH(req: Request) {
   try {
-    const user = await verifyToken();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { error } = await checkApiPermission(MODULE, "canUpdate");
+    if (error) return error;
 
     const id = new URL(req.url).searchParams.get("id");
     if (!id) {
@@ -258,8 +256,8 @@ export async function PATCH(req: Request) {
 /* ================= DELETE ================= */
 export async function DELETE(req: Request) {
   try {
-    const user = await verifyToken();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { error } = await checkApiPermission(MODULE, "canDelete");
+    if (error) return error;
 
     const id = new URL(req.url).searchParams.get("id");
     if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });

@@ -22,6 +22,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { DeleteModal } from "@/components/common/DeleteModal";
+import { usePermission } from "@/hooks/usePermission";
 
 // --- Custom Modal ---
 interface ModalProps {
@@ -92,6 +93,9 @@ export default function CategoriesPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { categories, loading, isSubmitting, totalRecords, currentPage, totalPages } =
     useSelector((s: RootState) => s.categories);
+
+  // ── Permission flags ─────────────────────────────────────────────
+  const { canCreate, canUpdate, canDelete } = usePermission("Categories");
 
   const [modal, setModal] = useState<ModalState | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Category | null>(null);
@@ -209,9 +213,11 @@ export default function CategoriesPage() {
             <Tag size={20} />
             Manage Categories
           </div>
-          <button className="c-btn-add" onClick={() => setModal({ type: "add" })}>
-            <Plus size={15} /> Add Category
-          </button>
+          {canCreate && (
+            <button className="c-btn-add" onClick={() => setModal({ type: "add" })}>
+              <Plus size={15} /> Add Category
+            </button>
+          )}
         </div>
 
         {/* ── Filters row ── */}
@@ -366,20 +372,27 @@ export default function CategoriesPage() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => setModal({ type: "edit", editing: cat })}
-                              className="c-icon-btn-edit"
-                              title="Edit"
-                            >
-                              <Pencil size={16} />
-                            </button>
-                            <button
-                              onClick={() => setConfirmDelete(cat)}
-                              className="c-icon-btn-del"
-                              title="Delete"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            {canUpdate && (
+                              <button
+                                onClick={() => setModal({ type: "edit", editing: cat })}
+                                className="c-icon-btn-edit"
+                                title="Edit"
+                              >
+                                <Pencil size={16} />
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button
+                                onClick={() => setConfirmDelete(cat)}
+                                className="c-icon-btn-del"
+                                title="Delete"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                            {!canUpdate && !canDelete && (
+                              <span className="text-xs text-gray-400 italic">Read only</span>
+                            )}
                           </div>
                         </td>
                       </tr>

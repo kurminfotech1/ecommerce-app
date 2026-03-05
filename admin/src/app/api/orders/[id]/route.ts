@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { checkApiPermission } from "@/lib/utils/apiPermission";
+
+const MODULE = "Orders";
 
 // GET: Get a specific order details
 export async function GET(
@@ -60,6 +63,9 @@ export async function PATCH(
     context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { error } = await checkApiPermission(MODULE, "canUpdate");
+        if (error) return error;
+
         const { id } = await context.params;
         const body = await request.json();
         const { order_status } = body;
@@ -123,6 +129,9 @@ export async function DELETE(
     context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { error } = await checkApiPermission(MODULE, "canDelete");
+        if (error) return error;
+
         const { id } = await context.params;
 
         const result = await prisma.$transaction(async (tx) => {

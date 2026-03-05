@@ -30,6 +30,7 @@ import {
 import { DeleteModal } from "@/components/common/DeleteModal";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { usePermission } from "@/hooks/usePermission";
 
 // ── Types ──────────────────────────────────────────────────────────
 type OrderStatus = "PLACED" | "CONFIRMED" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
@@ -181,7 +182,7 @@ const StatCard = ({ label, value, sub, icon, gradient, iconBg }: StatCardProps) 
 );
 
 // ── Row detail (collapsed content) ────────────────────────────────
-const OrderRowDetail = ({ order, onStatusUpdate }: { order: Order, onStatusUpdate: (id: string, st: OrderStatus) => void }) => {
+const OrderRowDetail = ({ order, onStatusUpdate, canUpdate }: { order: Order, onStatusUpdate: (id: string, st: OrderStatus) => void, canUpdate: boolean }) => {
   return (
     <tr>
       <td colSpan={7} className="px-0 pb-1 pt-0">
@@ -191,17 +192,21 @@ const OrderRowDetail = ({ order, onStatusUpdate }: { order: Order, onStatusUpdat
             <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">
               Items Summary:
             </p>
-            <div className="flex gap-2">
-              {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
-                <button
-                  key={key}
-                  onClick={() => onStatusUpdate(order.id, key as OrderStatus)}
-                  className={`text-[10px] px-2 py-1 rounded-md border transition ${order.order_status === key ? 'bg-[#155dfc] text-white border-[#155dfc]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
-                >
-                  Mark {cfg.label}
-                </button>
-              ))}
-            </div>
+            {canUpdate ? (
+              <div className="flex gap-2">
+                {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
+                  <button
+                    key={key}
+                    onClick={() => onStatusUpdate(order.id, key as OrderStatus)}
+                    className={`text-[10px] px-2 py-1 rounded-md border transition ${order.order_status === key ? 'bg-[#155dfc] text-white border-[#155dfc]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                  >
+                    Mark {cfg.label}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <span className="text-xs text-gray-400 italic">Status update not permitted</span>
+            )}
           </div>
 
           {/* Items table */}
@@ -415,8 +420,9 @@ interface RowMenuProps {
   order: Order;
   onDelete: (o: Order) => void;
   onView: (o: Order) => void;
+  canDelete: boolean;
 }
-const RowMenu = ({ order, onDelete, onView }: RowMenuProps) => {
+const RowMenu = ({ order, onDelete, onView, canDelete }: RowMenuProps) => {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, right: 0 });
   const btnRef = React.useRef<HTMLButtonElement>(null);
@@ -460,13 +466,17 @@ const RowMenu = ({ order, onDelete, onView }: RowMenuProps) => {
             >
               <Printer size={13} /> Generate Invoice
             </button>
-            <div className="my-1 border-t border-gray-100" />
-            <button
-              onClick={() => { onDelete(order); setOpen(false); }}
-              className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50 transition"
-            >
-              <Trash2 size={13} /> Delete Order
-            </button>
+            {canDelete && (
+              <>
+                <div className="my-1 border-t border-gray-100" />
+                <button
+                  onClick={() => { onDelete(order); setOpen(false); }}
+                  className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50 transition"
+                >
+                  <Trash2 size={13} /> Delete Order
+                </button>
+              </>
+            )}
           </div>
         </>
       )}
@@ -597,6 +607,9 @@ export default function OrdersPage() {
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+
+  // ── Permission flags ────────────────────────────────────────────
+  const { canUpdate, canDelete } = usePermission("Orders");
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
@@ -936,13 +949,14 @@ export default function OrdersPage() {
                                   order={order}
                                   onDelete={(o) => setDeleteOrder(o)}
                                   onView={(o) => setViewOrder(o)}
+                                  canDelete={canDelete}
                                 />
                               </div>
                             </td>
                           </tr>
 
                           {/* ── Expanded Row ── */}
-                          {isExpanded && <OrderRowDetail key={`${order.id}-detail`} order={order} onStatusUpdate={handleStatusUpdate} />}
+                          {isExpanded && <OrderRowDetail key={`${order.id}-detail`} order={order} onStatusUpdate={handleStatusUpdate} canUpdate={canUpdate} />}
                         </React.Fragment>
                       );
                     })}
