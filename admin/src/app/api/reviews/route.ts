@@ -31,48 +31,54 @@ export async function GET(req: Request) {
       ];
     }
 
-    const [totalRecords, rawReviews] = await Promise.all([
+    const [totalRecords, reviewIdsQuery] = await Promise.all([
       prisma.review.count({ where }),
       prisma.review.findMany({
         where,
-        select: {
-          id: true,
-          rating: true,
-          title: true,
-          body: true,
-          status: true,
-          created_at: true,
-          user: {
-            select: {
-              full_name: true,
-              email: true,
-            },
-          },
-          product: {
-            select: {
-              product_name: true,
-              category: {
-                select: { name: true },
-              },
-              variants: {
-                orderBy: { created_at: "asc" },
-                take: 1,
-                select: {
-                  images: {
-                    orderBy: { sort_order: "asc" },
-                    take: 1,
-                    select: { image_url: true },
-                  },
-                },
-              },
-            },
-          },
-        },
+        select: { id: true },
         orderBy: { created_at: "desc" },
         skip: limit ? skip : undefined,
         take: limit ? limit : undefined,
       }),
     ]);
+
+    const reviewIds = reviewIdsQuery.map(r => r.id);
+
+    const rawReviews = reviewIds.length > 0 ? await prisma.review.findMany({
+      where: { id: { in: reviewIds } },
+      select: {
+        id: true,
+        rating: true,
+        title: true,
+        body: true,
+        status: true,
+        created_at: true,
+        user: {
+          select: {
+            full_name: true,
+            email: true,
+          },
+        },
+        product: {
+          select: {
+            product_name: true,
+            category: {
+              select: { name: true },
+            },
+            variants: {
+              orderBy: { created_at: "asc" },
+              select: {
+                images: {
+                  orderBy: { sort_order: "asc" },
+                  select: { image_url: true },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { created_at: "desc" },
+    }) : [];
 
     const formattedReviews = rawReviews.map((r) => ({
       id: r.id,
