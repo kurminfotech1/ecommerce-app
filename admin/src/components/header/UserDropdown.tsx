@@ -66,7 +66,7 @@ useEffect(() => {
         onClick={toggleDropdown}
         className="flex items-center group focus:outline-none"
       >
-        <span className="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white font-bold text-sm shadow-sm group-hover:bg-blue-700 transition-colors">
+        <span className="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#157f3c] text-white font-bold text-sm shadow-sm group-hover:bg-[#0f6b30] transition-colors">
           {admins?.full_name ? admins.full_name.charAt(0).toUpperCase() : "N"}
         </span>
 
@@ -110,11 +110,11 @@ useEffect(() => {
             onItemClick={closeDropdown}
             tag="a"
             href="/profile"
-            className="flex items-center gap-3 px-3 py-2.5 font-semibold text-gray-700 dark:text-gray-300 rounded-xl group text-[14px] hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-white/5 transition-all"
+            className="flex items-center gap-3 px-3 py-2.5 font-semibold text-gray-700 dark:text-gray-300 rounded-xl group text-[14px] hover:bg-green-50 hover:text-[#157f3c] dark:hover:bg-white/5 transition-all"
           >
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 group-hover:bg-green-100 dark:group-hover:bg-green-900/30 transition-colors">
               <svg
-                className="text-gray-500 group-hover:text-blue-600 transition-colors"
+                className="text-gray-500 group-hover:text-[#157f3c] transition-colors"
                 width="18"
                 height="18"
                 viewBox="0 0 24 24"

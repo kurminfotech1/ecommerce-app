@@ -57,6 +57,26 @@ export async function GET(
     }
 }
 
+// ── Status transition rules (forward-only, no going back) ──────────
+const STATUS_RANK: Record<string, number> = {
+    PLACED: 1,
+    CONFIRMED: 2,
+    PROCESSING: 3,
+    SHIPPED: 4,
+    DELIVERED: 5,
+    CANCELLED: 6,
+};
+
+// Explicit allowed next states for each current state
+const ALLOWED_NEXT: Record<string, string[]> = {
+    PLACED:     ["CONFIRMED", "CANCELLED"],
+    CONFIRMED:  ["PROCESSING", "CANCELLED"],
+    PROCESSING: ["SHIPPED", "CANCELLED"],
+    SHIPPED:    ["DELIVERED", "CANCELLED"],
+    DELIVERED:  [],          // terminal — no further changes
+    CANCELLED:  [],          // terminal — no further changes
+};
+
 // PATCH: Update order status (Admin)
 export async function PATCH(
     request: Request,
@@ -77,6 +97,10 @@ export async function PATCH(
         // Normalize status for comparisons
         const normalizedTargetStatus = order_status.toUpperCase();
 
+        if (!STATUS_RANK[normalizedTargetStatus]) {
+            return NextResponse.json({ error: "Invalid order status" }, { status: 400 });
+        }
+
         const updatedOrder = await prisma.$transaction(async (tx) => {
             // Get current order state INSIDE transaction for consistency
             const currentOrder = await tx.order.findUnique({
@@ -88,8 +112,23 @@ export async function PATCH(
                 throw new Error("Order not found");
             }
 
+            const currentStatus = currentOrder.order_status.toUpperCase();
+
+            // ── Enforce transition rules ────────────────────────────
+            if (currentStatus === normalizedTargetStatus) {
+                throw new Error(`Order is already ${normalizedTargetStatus}`);
+            }
+
+            const allowedNext = ALLOWED_NEXT[currentStatus] ?? [];
+            if (!allowedNext.includes(normalizedTargetStatus)) {
+                throw new Error(
+                    `Cannot move order from ${currentStatus} to ${normalizedTargetStatus}. ` +
+                    `Allowed transitions: ${allowedNext.length ? allowedNext.join(", ") : "none (terminal status)"}`
+                );
+            }
+
             // Restore Stock if moving to CANCELLED from any non-cancelled status
-            if (normalizedTargetStatus === "CANCELLED" && currentOrder.order_status !== "CANCELLED") {
+            if (normalizedTargetStatus === "CANCELLED") {
                 for (const item of currentOrder.items) {
                     if (item.variant_id) {
                         await tx.productVariant.update({
@@ -120,6 +159,13 @@ export async function PATCH(
         console.error("PATCH_ORDER_STATUS_ERROR", error);
         if (error.message === "Order not found") {
             return NextResponse.json({ error: "Order not found" }, { status: 404 });
+        }
+        // Return transition errors as 422 so frontend knows it's a business-rule rejection
+        if (
+            error.message?.startsWith("Cannot move order") ||
+            error.message?.startsWith("Order is already")
+        ) {
+            return NextResponse.json({ error: error.message }, { status: 422 });
         }
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }

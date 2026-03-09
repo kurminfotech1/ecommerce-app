@@ -86,6 +86,16 @@ const STATUS_CONFIG: Record<
   CANCELLED: { label: "Cancelled", color: "text-red-600", bg: "bg-red-50", border: "border-red-200", IconComp: XCircle },
 };
 
+// ── Allowed status transitions (mirrors backend logic) ──────────────
+const ALLOWED_NEXT: Record<OrderStatus, OrderStatus[]> = {
+  PLACED:     ["CONFIRMED", "CANCELLED"],
+  CONFIRMED:  ["PROCESSING", "CANCELLED"],
+  PROCESSING: ["SHIPPED", "CANCELLED"],
+  SHIPPED:    ["DELIVERED", "CANCELLED"],
+  DELIVERED:  [],
+  CANCELLED:  [],
+};
+
 // ── Helpers ────────────────────────────────────────────────────────
 const formatDate = (iso: string) => {
   if (!iso) return { date: "N/A", time: "" };
@@ -181,28 +191,89 @@ const StatCard = ({ label, value, sub, icon, gradient, iconBg }: StatCardProps) 
   </div>
 );
 
+// ── Status Update Loading Popup ────────────────────────────────────
+const StatusUpdatingPopup = () => (
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999]">
+    <div className="bg-white rounded-2xl shadow-2xl px-8 py-7 flex flex-col items-center gap-4 min-w-[220px]">
+      <div className="w-12 h-12 rounded-full border-4 border-gray-100 border-t-[#157f3c] animate-spin" />
+      <div className="text-center">
+        <p className="font-semibold text-gray-800 text-sm">Updating Status…</p>
+        <p className="text-xs text-gray-400 mt-0.5">Please wait</p>
+      </div>
+    </div>
+  </div>
+);
+
 // ── Row detail (collapsed content) ────────────────────────────────
-const OrderRowDetail = ({ order, onStatusUpdate, canUpdate }: { order: Order, onStatusUpdate: (id: string, st: OrderStatus) => void, canUpdate: boolean }) => {
+const OrderRowDetail = ({
+  order,
+  onStatusUpdate,
+  canUpdate,
+  isUpdating,
+}: {
+  order: Order;
+  onStatusUpdate: (id: string, st: OrderStatus) => void;
+  canUpdate: boolean;
+  isUpdating: boolean;
+}) => {
+  const currentStatus = order.order_status;
+  const allowedNext = ALLOWED_NEXT[currentStatus] ?? [];
+  const isTerminal = allowedNext.length === 0;
+
   return (
     <tr>
       <td colSpan={7} className="px-0 pb-1 pt-0">
         <div className="mx-4 mb-3 bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
           {/* Inner header */}
-          <div className="px-5 py-3 border-b border-gray-100 flex justify-between items-center">
+          <div className="px-5 py-3 border-b border-gray-100 flex justify-between items-center flex-wrap gap-2">
             <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">
               Items Summary:
             </p>
             {canUpdate ? (
-              <div className="flex gap-2">
-                {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
-                  <button
-                    key={key}
-                    onClick={() => onStatusUpdate(order.id, key as OrderStatus)}
-                    className={`text-[10px] px-2 py-1 rounded-md border transition ${order.order_status === key ? 'bg-[#155dfc] text-white border-[#155dfc]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
-                  >
-                    Mark {cfg.label}
-                  </button>
-                ))}
+              <div className="flex gap-1.5 flex-wrap">
+                {(Object.entries(STATUS_CONFIG) as [OrderStatus, typeof STATUS_CONFIG[OrderStatus]][]).map(([key, cfg]) => {
+                  const isCurrent = key === currentStatus;
+                  const isAllowed = allowedNext.includes(key);
+                  const isDisabled = isUpdating || isCurrent || (!isAllowed && !isCurrent);
+
+                  let btnCls: string;
+                  if (isCurrent) {
+                    // Active / current status — highlighted green
+                    btnCls = "bg-[#157f3c] text-white border-[#157f3c] cursor-default opacity-100";
+                  } else if (!isAllowed || isTerminal) {
+                    // Not reachable from current status — greyed out
+                    btnCls = "bg-gray-50 text-gray-300 border-gray-200 cursor-not-allowed line-through";
+                  } else {
+                    // Clickable next step
+                    btnCls = "bg-white text-gray-600 border-gray-200 hover:bg-gray-100 hover:border-gray-300";
+                  }
+
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => !isDisabled && onStatusUpdate(order.id, key)}
+                      disabled={isDisabled}
+                      title={
+                        isCurrent
+                          ? `Current status: ${cfg.label}`
+                          : isTerminal
+                          ? `Order is ${currentStatus} (terminal — no further changes)`
+                          : !isAllowed
+                          ? `Cannot go back to ${cfg.label}`
+                          : `Mark as ${cfg.label}`
+                      }
+                      className={`text-[10px] px-2.5 py-1 rounded-md border transition font-medium ${btnCls}`}
+                    >
+                      {isUpdating && isAllowed ? (
+                        <span className="flex items-center gap-1">
+                          <Loader2 size={9} className="animate-spin" /> {cfg.label}
+                        </span>
+                      ) : (
+                        `Mark ${cfg.label}`
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             ) : (
               <span className="text-xs text-gray-400 italic">Status update not permitted</span>
@@ -660,6 +731,9 @@ export default function OrdersPage() {
       return next;
     });
 
+  // ── Status update loading lock (prevents multi-click) ─────────
+  const [statusUpdating, setStatusUpdating] = useState<string | null>(null); // holds orderId being updated
+
   // ── Delete modal state ─────────────────────────────────────────
   const [deleteOrder, setDeleteOrder] = useState<Order | null>(null);
 
@@ -701,6 +775,8 @@ export default function OrdersPage() {
   };
 
   const handleStatusUpdate = async (id: string, newStatus: OrderStatus) => {
+    if (statusUpdating) return; // already updating another order
+    setStatusUpdating(id);
     try {
       const res = await axios.patch(`/api/orders/${id}`, { order_status: newStatus });
       const updatedStatus = res.data.order_status;
@@ -709,7 +785,10 @@ export default function OrdersPage() {
       toast.success(`Order marked as ${newStatus}`);
     } catch (err: any) {
       console.error("Status update failed:", err);
-      toast.error("Failed to update status");
+      const msg = err.response?.data?.error || "Failed to update status";
+      toast.error(msg);
+    } finally {
+      setStatusUpdating(null);
     }
   };
 
@@ -956,7 +1035,7 @@ export default function OrdersPage() {
                           </tr>
 
                           {/* ── Expanded Row ── */}
-                          {isExpanded && <OrderRowDetail key={`${order.id}-detail`} order={order} onStatusUpdate={handleStatusUpdate} canUpdate={canUpdate} />}
+                          {isExpanded && <OrderRowDetail key={`${order.id}-detail`} order={order} onStatusUpdate={handleStatusUpdate} canUpdate={canUpdate} isUpdating={statusUpdating === order.id} />}
                         </React.Fragment>
                       );
                     })}
@@ -1049,6 +1128,9 @@ export default function OrdersPage() {
       {viewOrder && (
         <OrderDetailModal order={viewOrder} onClose={() => setViewOrder(null)} />
       )}
+
+      {/* ── Status Updating Popup ── */}
+      {statusUpdating && <StatusUpdatingPopup />}
     </>
   );
 }

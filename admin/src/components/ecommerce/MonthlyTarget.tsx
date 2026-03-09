@@ -38,7 +38,7 @@ export default function MonthlyTarget({ targetData, loading }: MonthlyTargetProp
   const isGrowing = targetData ? targetData.thisMonthRevenue >= targetData.lastMonthRevenue : true;
 
   const options: ApexOptions = {
-    colors: ["#465FFF"],
+    colors: ["#157f3c"],
     chart: {
       fontFamily: "Outfit, sans-serif",
       type: "radialBar",
@@ -68,7 +68,7 @@ export default function MonthlyTarget({ targetData, loading }: MonthlyTargetProp
         },
       },
     },
-    fill: { type: "solid", colors: ["#465FFF"] },
+    fill: { type: "solid", colors: ["#157f3c"] },
     stroke: { lineCap: "round" },
     labels: ["Progress"],
   };

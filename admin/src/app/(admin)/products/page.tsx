@@ -62,7 +62,7 @@ const Field = ({ label, children, span = 1 }: { label: string; children: React.R
   </div>
 );
 
-const inputCls = "w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#155dfc] focus:bg-white dark:focus:bg-gray-700 transition placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-white";
+const inputCls = "w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#157f3c] focus:bg-white dark:focus:bg-gray-700 transition placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-white";
 const selectCls = `${inputCls} cursor-pointer`;
 
 const TagInput = ({ tags, setTags, placeholder }: { tags: string[], setTags: (t: string[]) => void, placeholder: string }) => {
@@ -78,7 +78,22 @@ const TagInput = ({ tags, setTags, placeholder }: { tags: string[], setTags: (t:
       <div className="flex gap-2">
         <input
           value={val}
-          onChange={e => setVal(e.target.value)}
+          onChange={e => {
+            const newValue = e.target.value;
+            if (newValue.includes(",")) {
+              const newTags = newValue
+                .split(",")
+                .map((t) => t.trim())
+                .filter((t) => t && !tags.includes(t));
+              
+              if (newTags.length > 0) {
+                setTags([...tags, ...newTags]);
+              }
+              setVal("");
+            } else {
+              setVal(newValue);
+            }
+          }}
           onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), add())}
           placeholder={placeholder}
           className={inputCls}
@@ -93,9 +108,9 @@ const TagInput = ({ tags, setTags, placeholder }: { tags: string[], setTags: (t:
       </div>
       <div className="flex flex-wrap gap-2">
         {tags.map((t, i) => (
-          <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 dark:bg-blue-500/10 text-[#155dfc] dark:text-violet-400 rounded-lg text-[13px] font-medium border border-violet-100 dark:border-violet-500/20">
+          <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 dark:bg-green-500/10 text-[#157f3c] dark:text-green-400 rounded-lg text-[13px] font-medium border border-green-100 dark:border-green-500/20">
             {t}
-            <button type="button" onClick={() => setTags(tags.filter((_, idx) => idx !== i))} className="hover:text-[#0d3fa6] dark:hover:text-white transition">
+            <button type="button" onClick={() => setTags(tags.filter((_, idx) => idx !== i))} className="hover:text-[#0f6b30] dark:hover:text-white transition">
               <X size={12} />
             </button>
           </span>
@@ -137,7 +152,7 @@ const EmptyState = ({ onAdd }: { onAdd: () => void }) => (
     </div>
     <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-1">No products yet</p>
     <p className="text-sm text-gray-400 dark:text-gray-500 mb-6">Start adding products to your inventory.</p>
-    <button onClick={onAdd} className="bg-[#155dfc] hover:bg-[#1246cc] text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm">
+    <button onClick={onAdd} className="bg-[#157f3c] hover:bg-[#0f6b30] text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm">
       + Add First Product
     </button>
   </div>
@@ -498,7 +513,7 @@ export default function ProductsPage() {
 
         <div className="p-4">
           <Link href={`/products/${product.id}`} className="block">
-            <h3 className="font-semibold text-gray-800 mb-1 line-clamp-2 group-hover:text-[#155dfc] transition-colors">
+            <h3 className="font-semibold text-gray-800 mb-1 line-clamp-2 group-hover:text-[#157f3c] transition-colors">
               {product.product_name}
             </h3>
           </Link>
@@ -547,7 +562,7 @@ export default function ProductsPage() {
             {canUpdate && (
               <button
                 onClick={() => openEdit(product)}
-                className="flex-1 flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-[#155dfc] py-2 rounded-lg text-sm font-medium transition"
+                className="flex-1 flex items-center justify-center gap-1.5 bg-green-50 hover:bg-green-100 text-[#157f3c] py-2 rounded-lg text-sm font-medium transition"
               >
                 <Pencil size={14} />
                 Edit
@@ -598,7 +613,7 @@ export default function ProductsPage() {
             {canCreate && (
               <button
                 onClick={openCreate}
-                className="flex items-center gap-2 bg-[#155dfc] hover:bg-[#1246cc] active:scale-95 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition"
+                className="flex items-center gap-2 bg-[#157f3c] hover:bg-[#0f6b30] active:scale-95 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition"
               >
                 <Plus size={16} /> Add Product
               </button>
@@ -614,7 +629,7 @@ export default function ProductsPage() {
                 placeholder="Search products..."
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                className="pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[#155dfc] w-full transition"
+                className="pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[#157f3c] w-full transition"
               />
             </div>
 
@@ -622,7 +637,7 @@ export default function ProductsPage() {
             <select
               value={categoryFilter}
               onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
-              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition min-w-[200px]"
+              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#157f3c] transition min-w-[200px]"
             >
               <option value="">All categories</option>
               {categories.map((c: any) => (
@@ -635,7 +650,7 @@ export default function ProductsPage() {
               placeholder="Weight (e.g. 100g, 250g)"
               value={weightFilter}
               onChange={(e) => { setWeightFilter(e.target.value); setPage(1); }}
-              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl w-44 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
+              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl w-44 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#157f3c] transition"
             />
 
             {/* Price filter */}
@@ -645,7 +660,7 @@ export default function ProductsPage() {
                 placeholder="Min ₹"
                 value={minPriceFilter}
                 onChange={(e) => { setMinPriceFilter(e.target.value); setPage(1); }}
-                className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl w-32 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
+                className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl w-32 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#157f3c] transition"
               />
               <span className="text-gray-400 dark:text-gray-500">-</span>
               <input
@@ -653,7 +668,7 @@ export default function ProductsPage() {
                 placeholder="Max ₹"
                 value={maxPriceFilter}
                 onChange={(e) => { setMaxPriceFilter(e.target.value); setPage(1); }}
-                className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl w-32 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
+                className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl w-32 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#157f3c] transition"
               />
             </div>
 
@@ -661,7 +676,7 @@ export default function ProductsPage() {
             <select
               value={activeFilter}
               onChange={(e) => { setActiveFilter(e.target.value); setPage(1); }}
-              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
+              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#157f3c] transition"
             >
               <option value="">Status: All</option>
               <option value="true">Active</option>
@@ -672,7 +687,7 @@ export default function ProductsPage() {
             <select
               value={typeFilter}
               onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
-              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition"
+              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-sm px-3 py-2 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#157f3c] transition"
             >
               <option value="">Type: All</option>
               <option value="featured">Featured</option>

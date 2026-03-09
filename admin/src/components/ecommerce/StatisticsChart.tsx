@@ -80,7 +80,7 @@ export default function StatisticsChart({ rawData, loading }: StatisticsChartPro
 
   const options: ApexOptions = {
     legend: { show: false, position: "top", horizontalAlign: "left" },
-    colors: ["#465FFF", "#9CB9FF"],
+    colors: ["#157f3c", "#9dd4b2"],
     chart: {
       fontFamily: "Outfit, sans-serif",
       height: 310,
@@ -193,8 +193,8 @@ export default function StatisticsChart({ rawData, loading }: StatisticsChartPro
                 [145, 60], [165, 78],
               ] as [number, number][]).map(([h1, h2], i) => (
                 <div key={i} className="flex-1 flex flex-col gap-1 items-center">
-                  <div className="w-full bg-blue-100 dark:bg-blue-900/30 rounded animate-pulse" style={{ height: h1 }} />
-                  <div className="w-full bg-indigo-100 dark:bg-indigo-900/30 rounded animate-pulse" style={{ height: h2 }} />
+                  <div className="w-full bg-green-100 dark:bg-green-900/30 rounded animate-pulse" style={{ height: h1 }} />
+                  <div className="w-full bg-green-200 dark:bg-green-900/20 rounded animate-pulse" style={{ height: h2 }} />
                 </div>
               ))}
             </div>

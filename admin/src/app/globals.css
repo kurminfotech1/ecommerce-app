@@ -40,18 +40,18 @@
   --color-white: #ffffff;
   --color-black: #101828;
 
-  --color-brand-25: #f2f7ff;
-  --color-brand-50: #ecf3ff;
-  --color-brand-100: #dde9ff;
-  --color-brand-200: #c2d6ff;
-  --color-brand-300: #9cb9ff;
-  --color-brand-400: #7592ff;
-  --color-brand-500: #465fff;
-  --color-brand-600: #3641f5;
-  --color-brand-700: #2a31d8;
-  --color-brand-800: #252dae;
-  --color-brand-900: #262e89;
-  --color-brand-950: #161950;
+  --color-brand-25: #f0faf4;
+  --color-brand-50: #e6f5ec;
+  --color-brand-100: #c3e6cf;
+  --color-brand-200: #9dd4b2;
+  --color-brand-300: #6abf8d;
+  --color-brand-400: #3aaa6d;
+  --color-brand-500: #157f3c;
+  --color-brand-600: #0f6b30;
+  --color-brand-700: #0a5626;
+  --color-brand-800: #06401c;
+  --color-brand-900: #032d12;
+  --color-brand-950: #011a09;
 
   --color-blue-light-25: #f5fbff;
   --color-blue-light-50: #f0f9ff;
@@ -150,7 +150,7 @@
     0px 20px 24px -4px rgba(16, 24, 40, 0.08),
     0px 8px 8px -4px rgba(16, 24, 40, 0.03);
   --shadow-datepicker: -5px 0 0 #262d3c, 5px 0 0 #262d3c;
-  --shadow-focus-ring: 0px 0px 0px 4px rgba(70, 95, 255, 0.12);
+  --shadow-focus-ring: 0px 0px 0px 4px rgba(21, 127, 60, 0.12);
   --shadow-slider-navigation:
     0px 1px 2px 0px rgba(16, 24, 40, 0.1), 0px 1px 3px 0px rgba(16, 24, 40, 0.1);
   --shadow-tooltip:
@@ -471,13 +471,13 @@ span.flatpickr-weekday,
 .flatpickr-day.selected.nextMonthDay,
 .flatpickr-day.startRange.nextMonthDay,
 .flatpickr-day.endRange.nextMonthDay {
-  background: #465fff;
+  background: #157f3c;
   @apply !border-brand-500 !bg-brand-500 hover:!border-brand-50 hover:!bg-brand-500;
 }
 .flatpickr-day.selected.startRange + .endRange:not(:nth-child(7n + 1)),
 .flatpickr-day.startRange.startRange + .endRange:not(:nth-child(7n + 1)),
 .flatpickr-day.endRange.startRange + .endRange:not(:nth-child(7n + 1)) {
-  box-shadow: -10px 0 0 #465fff;
+  box-shadow: -10px 0 0 #157f3c;
 }
 
 .flatpickr-months .flatpickr-prev-month svg,
@@ -897,14 +897,14 @@ span.flatpickr-weekday,
 
 
 .c-btn-add {
-  @apply flex items-center gap-2 bg-[#155dfc] text-white
+  @apply flex items-center gap-2 bg-[#157f3c] text-white
          font-semibold text-sm rounded-lg px-4 py-2
          cursor-pointer transition-all duration-150
-         shadow-[0_2px_10px_rgba(21,93,252,.28)];
+         shadow-[0_2px_10px_rgba(21,127,60,.28)];
 }
 .c-btn-add:hover {
-  @apply bg-[#1246cc] -translate-y-px
-         shadow-[0_4px_14px_rgba(21,93,252,.38)];
+  @apply bg-[#0f6b30] -translate-y-px
+         shadow-[0_4px_14px_rgba(21,127,60,.38)];
 }
 
 /* ── main card ───────────────────────────────────────────── */
@@ -918,7 +918,7 @@ span.flatpickr-weekday,
   transition: box-shadow .2s;
 }
 .c-card:hover {
-  box-shadow: 0 4px 20px rgba(21,93,252,.13), 0 1px 4px rgba(0,0,0,.07);
+  box-shadow: 0 4px 20px rgba(21,127,60,.13), 0 1px 4px rgba(0,0,0,.07);
 }
 
 .c-card-header {
@@ -932,12 +932,12 @@ span.flatpickr-weekday,
   font-size: 20px;      /* largest — main category */
   font-weight: 800;
   letter-spacing: .08em;
-  color: #053880;          /* deep indigo */
+  color: #032d12;          /* deep green */
 }
 
 
 .c-name-edit-btn {
-  @apply cursor-pointer text-[#053880]
+  @apply cursor-pointer text-[#032d12]
          flex items-center px-1  rounded 
          transition-all duration-150;
           border-radius: 6px;
@@ -962,9 +962,9 @@ span.flatpickr-weekday,
   transition: background .15s, border-color .15s, color .15s, transform .1s;
 }
 .c-three-dot:hover {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #2563eb;
+  background: #e6f5ec;
+  border-color: #9dd4b2;
+  color: #157f3c;
   transform: translateY(-1px);
 }
 
@@ -988,8 +988,8 @@ span.flatpickr-weekday,
   .c-sub-grid { grid-template-columns: repeat(3, 1fr); }
 }
 .c-sub-grid .c-sub-col {
-  background:  #f0f5ff;
-  border: 1px solid #d1e5f5;
+  background:  #f0faf4;
+  border: 1px solid #c3e6cf;
   border-radius: 10px;
   padding: 15px 12px;
   overflow: visible; /* keep context menus visible */
@@ -1011,15 +1011,15 @@ span.flatpickr-weekday,
   font-size: 0.82rem;      /* medium — sub-category */
   font-weight: 700;
   letter-spacing: .06em;
-  color: #1d4ed8;          /* vivid blue */
+  color: #157f3c;          /* vivid green */
 }
-.c-sub-title svg { color: #053880; }
+.c-sub-title svg { color: #032d12; }
 .c-sub-ctx { position: relative; }  
 
 /* accent line — ALWAYS visible, rendered outside the collapse wrapper */
 .c-sub-accent {
   height: 1.5px;
-  background: #155dfc;
+  background: #157f3c;
   opacity: 0.4;
   border-radius: 2px;
   margin-top: 8px;
@@ -1045,7 +1045,7 @@ span.flatpickr-weekday,
          border-b border-gray-50 gap-1.5 last:border-b-0;
 }
 .c-child-left  { @apply flex items-center gap-1.5 min-w-0 flex-1; }
-.c-child-dot   { @apply w-1.5 h-1.5 rounded-full bg-[#155dfc] shrink-0 opacity-60; }
+.c-child-dot   { @apply w-1.5 h-1.5 rounded-full bg-[#157f3c] shrink-0 opacity-60; }
 .c-child-name {
   font-size: 0.95rem;      /* smallest — child category */
   font-weight: 500;
@@ -1074,13 +1074,13 @@ span.flatpickr-weekday,
 .ib:hover  { transform: translateY(-1px); }
 .ib:active { transform: scale(.93); }
 
-/* blue — edit */
+/* green — edit */
 .ib-blue {
-  color: #2563eb;
-  border-color: #bfdbfe;
-  background: #eff6ff;
+  color: #157f3c;
+  border-color: #9dd4b2;
+  background: #e6f5ec;
 }
-.ib-blue:hover { background: #dbeafe; border-color: #93c5fd; }
+.ib-blue:hover { background: #c3e6cf; border-color: #6abf8d; }
 
 /* red — delete */
 .ib-red {
@@ -1101,12 +1101,12 @@ span.flatpickr-weekday,
 /* backward-compat aliases — written as plain CSS (can't @apply custom classes) */
 .c-icon-btn-edit {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 26px; height: 26px; border-radius: 6px; border: 1.5px solid #bfdbfe;
+  width: 26px; height: 26px; border-radius: 6px; border: 1.5px solid #9dd4b2;
   cursor: pointer; flex-shrink: 0; padding: 0;
-  color: #2563eb; background: #eff6ff;
+  color: #157f3c; background: #e6f5ec;
   transition: background .15s, transform .1s;
 }
-.c-icon-btn-edit:hover { background: #dbeafe; border-color: #93c5fd; transform: translateY(-1px); }
+.c-icon-btn-edit:hover { background: #c3e6cf; border-color: #6abf8d; transform: translateY(-1px); }
 
 .c-icon-btn-del {
   display: inline-flex; align-items: center; justify-content: center;
@@ -1144,7 +1144,7 @@ span.flatpickr-weekday,
   border: 0;
   font-size: .83rem;
   font-weight: 500;
-  color: #2563eb;           /* default = blue (Edit) */
+  color: #157f3c;           /* default = green (Edit) */
   cursor: pointer;
   text-align: left;
   transition: background .1s;
@@ -1164,7 +1164,7 @@ span.flatpickr-weekday,
   background: transparent;
 }
 
-.c-ctx-item:hover    { background: #eff6ff; }
+.c-ctx-item:hover    { background: #e6f5ec; }
 .c-ctx-item.danger   { color: #ef4444; }
 .c-ctx-item.danger:hover { background: #fef2f2; }
 .c-ctx-item.success  { color: #16a34a; }
@@ -1204,7 +1204,7 @@ span.flatpickr-weekday,
   box-sizing: border-box;
 }
 .c-input:focus {
-  @apply border-[#155dfc] shadow-[0_0_0_3px_rgba(21,93,252,.08)];
+  @apply border-[#157f3c] shadow-[0_0_0_3px_rgba(21,127,60,.08)];
 }
 
 .c-modal-foot { @apply flex justify-end gap-2.5 mt-4; }
@@ -1218,10 +1218,10 @@ span.flatpickr-weekday,
 
 .c-btn-primary {
   @apply flex items-center gap-1.5 px-5 py-2 rounded-lg border-0
-         bg-[#155dfc] text-white text-[.84rem] font-semibold
+         bg-[#157f3c] text-white text-[.84rem] font-semibold
          cursor-pointer transition-colors duration-150;
 }
-.c-btn-primary:hover:not(:disabled) { @apply bg-[#1246cc]; }
+.c-btn-primary:hover:not(:disabled) { @apply bg-[#0f6b30]; }
 .c-btn-primary:disabled { @apply opacity-40 cursor-not-allowed; }
 
 .c-btn-danger {

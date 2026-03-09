@@ -65,8 +65,15 @@ const inputCls = "w-full border border-gray-200 dark:border-gray-700 bg-white da
 const TagInput = ({ tags, setTags, placeholder }: { tags: string[], setTags: (t: string[]) => void, placeholder: string }) => {
   const [val, setVal] = useState("");
   const add = () => {
-    if (val.trim() && !tags.includes(val.trim())) {
-      setTags([...tags, val.trim()]);
+    if (val.trim()) {
+      const newTags = val
+        .split(",")
+        .map((t) => t.trim())
+        .filter((t) => t && !tags.includes(t));
+      
+      if (newTags.length > 0) {
+        setTags([...tags, ...newTags]);
+      }
       setVal("");
     }
   };
@@ -75,7 +82,22 @@ const TagInput = ({ tags, setTags, placeholder }: { tags: string[], setTags: (t:
       <div className="flex gap-2">
         <input
           value={val}
-          onChange={e => setVal(e.target.value)}
+          onChange={e => {
+            const newValue = e.target.value;
+            if (newValue.includes(",")) {
+              const newTags = newValue
+                .split(",")
+                .map((t) => t.trim())
+                .filter((t) => t && !tags.includes(t));
+              
+              if (newTags.length > 0) {
+                setTags([...tags, ...newTags]);
+              }
+              setVal("");
+            } else {
+              setVal(newValue);
+            }
+          }}
           onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), add())}
           placeholder={placeholder}
           className={inputCls}
