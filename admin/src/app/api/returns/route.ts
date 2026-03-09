@@ -63,8 +63,7 @@ import { checkApiPermission } from "@/lib/utils/apiPermission";
 const MODULE = "Returns";
 
 export async function DELETE(
-    request: Request,
-    { params }: { params: { id?: string } }
+    request: Request
 ) {
     try {
         const { error } = await checkApiPermission(MODULE, "canDelete");

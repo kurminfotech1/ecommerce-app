@@ -91,18 +91,20 @@ export async function PATCH(
             // Restore Stock if moving to CANCELLED from any non-cancelled status
             if (normalizedTargetStatus === "CANCELLED" && currentOrder.order_status !== "CANCELLED") {
                 for (const item of currentOrder.items) {
-                    await tx.productVariant.update({
-                        where: { id: item.variant_id },
-                        data: { stock: { increment: item.quantity } }
-                    });
+                    if (item.variant_id) {
+                        await tx.productVariant.update({
+                            where: { id: item.variant_id },
+                            data: { stock: { increment: item.quantity } }
+                        });
 
-                    await tx.stockLog.create({
-                        data: {
-                            variant_id: item.variant_id,
-                            change: item.quantity,
-                            reason: `Stock restored - Order #${currentOrder.order_number} cancelled by status update`
-                        }
-                    });
+                        await tx.stockLog.create({
+                            data: {
+                                variant_id: item.variant_id,
+                                change: item.quantity,
+                                reason: `Stock restored - Order #${currentOrder.order_number} cancelled by status update`
+                            }
+                        });
+                    }
                 }
             }
 
