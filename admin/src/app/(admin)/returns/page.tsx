@@ -14,10 +14,14 @@ import {
     User,
     AlertCircle,
     MoreVertical,
+    Trash2,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { usePermission } from "@/hooks/usePermission";
+import { DeleteModal } from "@/components/common/DeleteModal";
 
 // -- Types --
 type ReturnStatus = "REQUESTED" | "APPROVED" | "REJECTED" | "COMPLETED";
@@ -93,20 +97,32 @@ export default function ReturnsPage() {
     const [statusFilter, setStatusFilter] = useState("All");
 
     // ── Permission flags ──
-    const { canUpdate } = usePermission("Returns");
+    const { canUpdate, canDelete } = usePermission("Returns");
+
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const limit = 10;
 
     const fetchReturns = useCallback(async () => {
         try {
             setLoading(true);
-            const res = await axios.get("/api/returns");
-            setReturns(res.data || []);
+            const res = await axios.get("/api/returns", {
+                params: {
+                    page,
+                    limit,
+                    search,
+                    status: statusFilter !== "All" ? statusFilter : undefined
+                }
+            });
+            setReturns(res.data.data || []);
+            setTotalPages(res.data.totalPages || 1);
         } catch (error) {
             console.error("Fetch returns failed:", error);
             toast.error("Failed to load return requests");
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [page, search, statusFilter]);
 
     useEffect(() => {
         fetchReturns();
@@ -125,14 +141,23 @@ export default function ReturnsPage() {
         }
     };
 
-    const filteredReturns = returns.filter((r) => {
-        const matchesSearch =
-            r.order.order_number.toLowerCase().includes(search.toLowerCase()) ||
-            r.user.full_name.toLowerCase().includes(search.toLowerCase()) ||
-            r.reason.toLowerCase().includes(search.toLowerCase());
-        const matchesStatus = statusFilter === "All" || r.status === statusFilter;
-        return matchesSearch && matchesStatus;
-    });
+    const handleDelete = async (id: string) => {
+        try {
+            await axios.delete(`/api/returns/${id}`);
+            toast.success("Return request deleted");
+            if (returns.length === 1 && page > 1) {
+                setPage(page - 1);
+            } else {
+                fetchReturns();
+            }
+        } catch (error) {
+            console.error("Delete failed:", error);
+            toast.error("Failed to delete request");
+        }
+    };
+
+    // We no longer manually filter, because the backend will handle search/status via pagination.
+    const filteredReturns = returns;
 
     return (
         <div className="min-h-screen bg-gray-50/60 p-4 md:p-8">
@@ -158,13 +183,13 @@ export default function ReturnsPage() {
                             <input
                                 placeholder="Search order #, customer..."
                                 value={search}
-                                onChange={(e) => setSearch(e.target.value)}
+                                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                                 className="pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] w-64 shadow-sm transition"
                             />
                         </div>
                         <select
                             value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
+                            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
                             className="px-4 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] shadow-sm"
                         >
                             <option value="All">All Statuses</option>
@@ -202,6 +227,7 @@ export default function ReturnsPage() {
                                         <th className="px-6 py-4 text-left">Reason</th>
                                         <th className="px-6 py-4 text-left">Requested On</th>
                                         <th className="px-6 py-4 text-left">Status</th>
+                                        <th className="px-6 py-4 text-left">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -237,31 +263,34 @@ export default function ReturnsPage() {
                                                     {formatDate(req.created_at)}
                                                 </td>
                                                 <td className="px-6 py-4">
+                                                    <span
+                                                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${cfg.color} ${cfg.bg} ${cfg.border}`}
+                                                    >
+                                                        <Icon size={12} />
+                                                        {cfg.label}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4">
                                                     <div className="flex flex-wrap items-center gap-2">
-                                                      <span
-                                                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${cfg.color} ${cfg.bg} ${cfg.border}`}
-                                                      >
-                                                          <Icon size={12} />
-                                                          {cfg.label}
-                                                      </span>
                                                       {canUpdate && (
-                                                        <div className="flex gap-1 flex-wrap">
-                                                          {Object.entries(STATUS_CONFIG)
-                                                            .filter(([key]) => key !== req.status)
-                                                            .map(([key, c]) => {
-                                                              const BtnIcon = c.icon;
-                                                              return (
-                                                                <button
-                                                                  key={key}
-                                                                  onClick={() => handleStatusUpdate(req.id, key as ReturnStatus)}
-                                                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold border transition hover:opacity-80 ${c.color} ${c.bg} ${c.border}`}
-                                                                  title={`Mark as ${c.label}`}
-                                                                >
-                                                                  <BtnIcon size={10} /> {c.label}
-                                                                </button>
-                                                              );
-                                                            })}
-                                                        </div>
+                                                        <select
+                                                          value={req.status}
+                                                          onChange={(e) => handleStatusUpdate(req.id, e.target.value as ReturnStatus)}
+                                                          className="px-2.5 py-1.5 text-xs font-medium border border-gray-200 rounded-lg bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#155dfc]/50 cursor-pointer shadow-sm transition"
+                                                        >
+                                                          {Object.entries(STATUS_CONFIG).map(([key, c]) => (
+                                                            <option key={key} value={key}>
+                                                              {c.label}
+                                                            </option>
+                                                          ))}
+                                                        </select>
+                                                      )}
+                                                      {canDelete && (
+                                                          <DeleteModal
+                                                            onConfirm={() => handleDelete(req.id)}
+                                                            parentTitle="Delete return request?"
+                                                            childTitle="This will permanently delete this return request from the database."
+                                                          />
                                                       )}
                                                     </div>
                                                 </td>
@@ -273,6 +302,31 @@ export default function ReturnsPage() {
                         </div>
                     )}
                 </div>
+
+                {/* Pagination */}
+                {!loading && totalPages > 1 && (
+                  <div className="flex items-center justify-between mt-4">
+                    <p className="text-sm text-gray-500">
+                      Page {page} of {totalPages}
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        disabled={page === 1}
+                        onClick={() => setPage(p => p - 1)}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition rounded-lg"
+                      >
+                        <ChevronLeft size={14} /> Prev
+                      </button>
+                      <button
+                        disabled={page === totalPages}
+                        onClick={() => setPage(p => p + 1)}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition rounded-lg"
+                      >
+                        Next <ChevronRight size={14} />
+                      </button>
+                    </div>
+                  </div>
+                )}
             </div>
         </div>
     );

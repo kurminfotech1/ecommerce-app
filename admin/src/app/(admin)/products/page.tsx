@@ -555,7 +555,16 @@ export default function ProductsPage() {
             )}
             {canDelete && (
               <DeleteModal
-                onConfirm={() => dispatch(deleteProduct(product.id))}
+                onConfirm={async () => {
+                  const res = await dispatch(deleteProduct(product.id));
+                  if (deleteProduct.fulfilled.match(res)) {
+                    if (products.length === 1 && page > 1) {
+                      setPage(page - 1);
+                    } else {
+                      fetchProducts();
+                    }
+                  }
+                }}
                 parentTitle="Delete product?"
                 childTitle="This will permanently delete this product and all its variants."
               />

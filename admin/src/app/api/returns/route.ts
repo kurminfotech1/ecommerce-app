@@ -1,33 +1,93 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-// GET: List return requests (optionally by userId or orderId)
+// GET: List return requests
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
-        const userId = searchParams.get("userId");
-        const orderId = searchParams.get("orderId");
+        
+        // 1. Pagination Params
+        const page = Math.max(1, Number(searchParams.get("page") || 1));
+        const limit = Math.max(1, Number(searchParams.get("limit") || 10));
+        const skip = (page - 1) * limit;
 
-        const returns = await prisma.returnRequest.findMany({
-            where: {
-                ...(userId ? { user_id: userId } : {}),
-                ...(orderId ? { order_id: orderId } : {})
-            },
-            include: {
-                order: true,
-                user: {
-                    select: {
-                        full_name: true,
-                        email: true
+        // 2. Filter Params
+        const search = searchParams.get("search")?.trim() || "";
+        const status = searchParams.get("status");
+
+        const whereClause: any = {
+            ...(status ? { status } : {}),
+            ...(search ? {
+                OR: [
+                    { reason: { contains: search, mode: "insensitive" } },
+                    { order: { order_number: { contains: search, mode: "insensitive" } } },
+                    { user: { full_name: { contains: search, mode: "insensitive" } } },
+                ]
+            } : {})
+        };
+
+        const [totalRecords, returns] = await Promise.all([
+            prisma.returnRequest.count({ where: whereClause }),
+            prisma.returnRequest.findMany({
+                where: whereClause,
+                include: {
+                    order: true,
+                    user: {
+                        select: {
+                            full_name: true,
+                            email: true
+                        }
                     }
-                }
-            },
-            orderBy: { created_at: 'desc' }
-        });
+                },
+                orderBy: { created_at: 'desc' },
+                skip,
+                take: limit,
+            })
+        ]);
 
-        return NextResponse.json(returns, { status: 200 });
+        return NextResponse.json({
+            data: returns,
+            totalRecords,
+            totalPages: Math.ceil(totalRecords / limit),
+            currentPage: page
+        }, { status: 200 });
+
     } catch (error: any) {
         console.error("GET_RETURNS_ERROR", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}
+
+// DELETE: Delete a return request
+import { checkApiPermission } from "@/lib/utils/apiPermission";
+const MODULE = "Returns";
+
+export async function DELETE(
+    request: Request,
+    { params }: { params: { id?: string } }
+) {
+    try {
+        const { error } = await checkApiPermission(MODULE, "canDelete");
+        if (error) return error;
+
+        // Try getting id from URL path string /api/returns/[id] or from searchParams /api/returns?id=
+        const urlObj = new URL(request.url);
+        const urlParts = urlObj.pathname.split('/');
+        const idFromPath = urlParts[urlParts.length - 1] === 'returns' ? null : urlParts[urlParts.length - 1];
+        
+        const id = idFromPath || urlObj.searchParams.get("id");
+
+        if (!id) {
+            return NextResponse.json({ error: "Return Request ID is required" }, { status: 400 });
+        }
+
+        await prisma.returnRequest.delete({
+            where: { id }
+        });
+
+        return NextResponse.json({ success: true, message: "Deleted successfully" }, { status: 200 });
+    } catch (err: any) {
+        console.error("DELETE_RETURN_ERROR", err);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

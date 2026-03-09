@@ -32,17 +32,19 @@ export async function PATCH(
             // Only restock if moving TO completed and it wasn't already completed
             if (status === "COMPLETED" && currentReturn.status !== "COMPLETED") {
                 for (const item of currentReturn.order.items) {
-                    await tx.productVariant.update({
-                        where: { id: item.variant_id },
-                        data: { stock: { increment: item.quantity } }
-                    });
-                    await tx.stockLog.create({
-                        data: {
-                            variant_id: item.variant_id,
-                            change: item.quantity,
-                            reason: `Order Return: ${currentReturn.order.order_number}`
-                        }
-                    });
+                    if (item.variant_id) {
+                        await tx.productVariant.update({
+                            where: { id: item.variant_id },
+                            data: { stock: { increment: item.quantity } }
+                        });
+                        await tx.stockLog.create({
+                            data: {
+                                variant_id: item.variant_id,
+                                change: item.quantity,
+                                reason: `Order Return: ${currentReturn.order.order_number}`
+                            }
+                        });
+                    }
                 }
             }
 

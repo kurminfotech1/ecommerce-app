@@ -34,7 +34,7 @@ export function DeleteModal({
     <AlertDialog open={open} onOpenChange={(val) => !val && onClose?.()}>
       {!isControlled && (
         <AlertDialogTrigger asChild>
-          <button className="p-2 hover:bg-red-100 rounded-lg text-red-600">
+          <button className="c-icon-btn-del">
             <Trash2 size={18} />
           </button>
         </AlertDialogTrigger>

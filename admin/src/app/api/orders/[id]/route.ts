@@ -145,30 +145,30 @@ export async function DELETE(
                 throw new Error("Order not found");
             }
 
-            // 2. Safeguard status (Only PLACED orders can be removed by users)
-            if (order.order_status !== "PLACED" && order.order_status !== "CANCELLED") {
-                throw new Error("Only orders with 'PLACED' or 'CANCELLED' status can be removed.");
-            }
+            // 2. Admin can delete orders of any status; we just need to optionally restore stock
+            // if it was previously occupying inventory (e.g. PLACED, CONFIRMED, PROCESSING)
+            const shouldRestoreStock = ["PLACED", "CONFIRMED", "PROCESSING"].includes(order.order_status);
 
-            // 3. Restore stock IF the order was PLACED (meaning stock was deducted and not yet restored)
-            if (order.order_status === "PLACED") {
+            if (shouldRestoreStock) {
                 for (const item of order.items) {
-                    await tx.productVariant.update({
-                        where: { id: item.variant_id },
-                        data: { stock: { increment: item.quantity } }
-                    });
+                    if (item.variant_id) {
+                        await tx.productVariant.update({
+                            where: { id: item.variant_id },
+                            data: { stock: { increment: item.quantity } }
+                        });
 
-                    await tx.stockLog.create({
-                        data: {
-                            variant_id: item.variant_id,
-                            change: item.quantity,
-                            reason: `Stock restored - Order #${order.order_number} removed from user panel`
-                        }
-                    });
+                        await tx.stockLog.create({
+                            data: {
+                                variant_id: item.variant_id,
+                                change: item.quantity,
+                                reason: `Stock restored - Order #${order.order_number} deleted by admin`
+                            }
+                        });
+                    }
                 }
             }
 
-            // 4. Delete the order
+            // 3. Delete the order
             await tx.order.delete({
                 where: { id }
             });
@@ -181,9 +181,6 @@ export async function DELETE(
         console.error("DELETE_ORDER_ERROR", error);
         if (error.message === "Order not found") {
             return NextResponse.json({ error: "Order not found" }, { status: 404 });
-        }
-        if (error.message.includes("Only orders with")) {
-            return NextResponse.json({ error: error.message }, { status: 400 });
         }
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
