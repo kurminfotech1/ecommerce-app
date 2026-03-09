@@ -115,15 +115,18 @@ export async function GET(req: Request) {
       ...(Object.keys(variantFilters).length > 0 ? { variants: { some: variantFilters } } : {}),
     };
 
-    const allProducts = await prisma.product.findMany({
-      where,
-      include: productInclude,
-      orderBy: { created_at: "desc" },
-    });
+    const [totalRecords, paginatedData] = await Promise.all([
+      prisma.product.count({ where }),
+      prisma.product.findMany({
+        where,
+        include: productInclude,
+        orderBy: { created_at: "desc" },
+        skip,
+        take: limit,
+      }),
+    ]);
 
-    const totalRecords = allProducts.length;
     const totalPages = Math.ceil(totalRecords / limit);
-    const paginatedData = allProducts.slice(skip, skip + limit);
 
     return NextResponse.json({
       totalRecords,

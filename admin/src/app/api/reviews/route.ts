@@ -35,15 +35,35 @@ export async function GET(req: Request) {
       prisma.review.count({ where }),
       prisma.review.findMany({
         where,
-        include: {
-          user: true,
+        select: {
+          id: true,
+          rating: true,
+          title: true,
+          body: true,
+          status: true,
+          created_at: true,
+          user: {
+            select: {
+              full_name: true,
+              email: true,
+            },
+          },
           product: {
-            include: {
-              category: true,
+            select: {
+              product_name: true,
+              category: {
+                select: { name: true },
+              },
               variants: {
                 orderBy: { created_at: "asc" },
                 take: 1,
-                include: { images: { orderBy: { sort_order: "asc" }, take: 1 } },
+                select: {
+                  images: {
+                    orderBy: { sort_order: "asc" },
+                    take: 1,
+                    select: { image_url: true },
+                  },
+                },
               },
             },
           },
