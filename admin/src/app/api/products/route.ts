@@ -61,10 +61,16 @@ export async function GET(req: Request) {
 
     // ── Single product ──────────────────────────────────────────
     if (id) {
-      const product = await prisma.product.findUnique({
-        where: { id },
-        include: productInclude,
-      });
+      const [product, reviews] = await Promise.all([
+        prisma.product.findUnique({
+          where: { id },
+          include: productInclude,
+        }),
+        prisma.review.findMany({
+          where: { product_id: id, status: "Approved" },
+          select: { rating: true }
+        })
+      ]);
 
       if (!product) {
         return NextResponse.json(
@@ -73,20 +79,10 @@ export async function GET(req: Request) {
         );
       }
 
-      // Aggregate live review stats for this single product
-      const reviewStats = await prisma.review.aggregate({
-        where: { product_id: id, status: "Approved" },
-        _avg: { rating: true },
-        _count: { _all: true },
-      });
+      const rating_count = reviews.length;
+      const rating_avg = rating_count > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / rating_count : 0;
 
-      const processedProduct = {
-        ...product,
-        rating_avg: reviewStats._avg?.rating || 0,
-        rating_count: reviewStats._count?._all || 0,
-      };
-
-      return NextResponse.json({ data: processedProduct });
+      return NextResponse.json({ data: { ...product, rating_avg, rating_count } });
     }
 
     // ── List / search ───────────────────────────────────────────
@@ -141,20 +137,20 @@ export async function GET(req: Request) {
 
     const productIds = products.map((p) => p.id);
     
-    // N+1 Optimization: Aggregate all ratings via groupBy in one efficient query
-    const reviewStats = await prisma.review.groupBy({
-      by: ["product_id"],
+    // Fetch all approved reviews for these products (fast lightweight lookup)
+    const activeReviews = await prisma.review.findMany({
       where: { product_id: { in: productIds }, status: "Approved" },
-      _avg: { rating: true },
-      _count: { _all: true },
+      select: { product_id: true, rating: true }
     });
 
     const paginatedData = products.map((p) => {
-      const stats = reviewStats.find((s) => s.product_id === p.id);
+      const prodReviews = activeReviews.filter((r) => r.product_id === p.id);
+      const rating_count = prodReviews.length;
+      const rating_avg = rating_count > 0 ? prodReviews.reduce((sum, r) => sum + r.rating, 0) / rating_count : 0;
       return {
         ...p,
-        rating_avg: stats?._avg?.rating || 0,
-        rating_count: stats?._count?._all || 0,
+        rating_avg,
+        rating_count,
       };
     });
 
