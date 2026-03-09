@@ -73,7 +73,20 @@ export async function GET(req: Request) {
         );
       }
 
-      return NextResponse.json({ data: product });
+      // Aggregate live review stats for this single product
+      const reviewStats = await prisma.review.aggregate({
+        where: { product_id: id, status: "Approved" },
+        _avg: { rating: true },
+        _count: { _all: true },
+      });
+
+      const processedProduct = {
+        ...product,
+        rating_avg: reviewStats._avg?.rating || 0,
+        rating_count: reviewStats._count?._all || 0,
+      };
+
+      return NextResponse.json({ data: processedProduct });
     }
 
     // ── List / search ───────────────────────────────────────────
@@ -115,7 +128,7 @@ export async function GET(req: Request) {
       ...(Object.keys(variantFilters).length > 0 ? { variants: { some: variantFilters } } : {}),
     };
 
-    const [totalRecords, paginatedData] = await Promise.all([
+    const [totalRecords, products] = await Promise.all([
       prisma.product.count({ where }),
       prisma.product.findMany({
         where,
@@ -125,6 +138,25 @@ export async function GET(req: Request) {
         take: limit,
       }),
     ]);
+
+    const productIds = products.map((p) => p.id);
+    
+    // N+1 Optimization: Aggregate all ratings via groupBy in one efficient query
+    const reviewStats = await prisma.review.groupBy({
+      by: ["product_id"],
+      where: { product_id: { in: productIds }, status: "Approved" },
+      _avg: { rating: true },
+      _count: { _all: true },
+    });
+
+    const paginatedData = products.map((p) => {
+      const stats = reviewStats.find((s) => s.product_id === p.id);
+      return {
+        ...p,
+        rating_avg: stats?._avg?.rating || 0,
+        rating_count: stats?._count?._all || 0,
+      };
+    });
 
     const totalPages = Math.ceil(totalRecords / limit);
 
