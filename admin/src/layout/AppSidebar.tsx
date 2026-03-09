@@ -429,20 +429,13 @@ const AppSidebar: React.FC = () => {
           !isExpanded && !isHovered ? "lg:justify-center px-4" : "justify-start px-6"
         }`}
       >
-        <Link href="/" className="w-full flex items-center">
-          {isExpanded || isHovered || isMobileOpen ? (
+        <Link href="/" className="w-full flex items-center min-h-[48px]">
+          {(isExpanded || isHovered || isMobileOpen) && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               className="w-full object-cover"
               src={logoData?.light_url ?? "/images/logo/e-comm-logo-resize.png"}
               alt="Logo"
-            />
-          ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={logoData?.favicon_url ?? logoData?.light_url ?? "/icon.png"}
-              alt="Logo"
-              className="w-12 h-12 mx-auto object-cover"
             />
           )}
         </Link>
