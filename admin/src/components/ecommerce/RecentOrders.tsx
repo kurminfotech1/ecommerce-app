@@ -146,21 +146,28 @@ export default function RecentOrders({ orders, loading }: RecentOrdersProps) {
                           )}
                         </div>
                         <div>
-                          <div className="relative group/tooltip inline-block max-w-[140px]">
-                            <p className="font-medium text-gray-800 text-theme-sm dark:text-white/90 truncate max-w-[140px] cursor-default">
-                              {order.product_name}
-                            </p>
-                            {/* Tooltip */}
-                            <div className="pointer-events-none absolute bottom-full left-0 mb-2 z-50 hidden group-hover/tooltip:block">
-                              <div className="bg-gray-900 dark:bg-gray-700 text-white text-xs font-medium rounded-lg px-3 py-1.5 whitespace-nowrap shadow-lg max-w-[260px] break-words">
+                          <div className="min-w-0 flex flex-col justify-center">
+                            <div className="relative group/tooltip inline-block max-w-[220px]">
+                              <p className="font-medium text-gray-800 text-theme-sm dark:text-white/90 truncate cursor-default">
                                 {order.product_name}
-                                {/* Arrow */}
-                                <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700" />
+                              </p>
+                              {/* Tooltip */}
+                              <div className="pointer-events-none absolute bottom-full left-0 mb-2 z-50 hidden group-hover/tooltip:block">
+                                <div className="bg-gray-900 dark:bg-gray-700 text-white text-xs font-medium rounded-lg px-3 py-1.5 shadow-lg w-max max-w-[260px] break-words text-left">
+                                  {order.product_name}
+                                  {/* Arrow */}
+                                  <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700" />
+                                </div>
                               </div>
                             </div>
-                            <span className="text-gray-500 text-theme-xs dark:text-gray-400">
-                              {order.order_number}
-                            </span>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-gray-500 text-[11px] font-medium tracking-wide dark:text-gray-400">
+                                {order.order_number}
+                              </span>
+                              <span className="inline-flex items-center rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-[2px] text-[10px] font-semibold text-gray-600 dark:text-gray-300">
+                                {order.items_count} item{order.items_count !== 1 ? "s" : ""}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>

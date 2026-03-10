@@ -105,6 +105,7 @@ export async function GET() {
                 orderBy: { created_at: "desc" },
                 include: {
                     user: { select: { full_name: true, email: true } },
+                    _count: { select: { items: true } },
                     items: {
                         take: 1,
                         include: {
@@ -203,7 +204,7 @@ export async function GET() {
                 total_amount: order.total_amount,
                 status: order.order_status,
                 created_at: order.created_at,
-                items_count: order.items.length,
+                items_count: order._count.items,
             };
         });
 
