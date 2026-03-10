@@ -40,8 +40,8 @@ interface OrderItem {
   variant: {
     product: {
       product_name: string;
-      images: { image_url: string }[];
     };
+    images: { image_url: string }[];
     weight?: string;
     size?: string;
     sku: string;
@@ -297,8 +297,8 @@ const OrderRowDetail = ({
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
-                          {item.variant.product.images[0]?.image_url ? (
-                            <img src={item.variant.product.images[0].image_url} alt="" className="w-full h-full object-cover" />
+                          {item.variant.images[0]?.image_url ? (
+                            <img src={item.variant.images[0].image_url} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <Package size={16} className="text-gray-400" />
                           )}
@@ -615,8 +615,8 @@ const OrderDetailModal = ({ order, onClose }: { order: Order; onClose: () => voi
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden text-base shrink-0">
-                          {item.variant.product.images[0]?.image_url ? (
-                            <img src={item.variant.product.images[0].image_url} alt="" className="w-full h-full object-cover" />
+                          {item.variant.images[0]?.image_url ? (
+                            <img src={item.variant.images[0].image_url} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <Package size={14} className="text-gray-400" />
                           )}
