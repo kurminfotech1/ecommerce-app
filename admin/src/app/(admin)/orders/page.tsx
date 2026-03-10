@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import React, { useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import {
   Search,
   ChevronDown,
@@ -513,26 +514,29 @@ const RowMenu = ({ order, onDelete, onView, canDelete }: RowMenuProps) => {
     <div>
       <button
         ref={btnRef}
-        onClick={handleOpen}
+        onClick={(e) => { e.stopPropagation(); handleOpen(); }}
         className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition"
+        type="button"
       >
         <MoreVertical size={15} />
       </button>
-      {open && (
+      {open && typeof document !== "undefined" && createPortal(
         <>
-          <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
+          <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setOpen(false); }} />
           <div
             style={{ top: pos.top, right: pos.right }}
             className="fixed z-[9999] bg-white rounded-xl border border-gray-100 shadow-2xl py-1 min-w-[170px]"
           >
             <button
-              onClick={() => { onView(order); setOpen(false); }}
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onView(order); setOpen(false); }}
               className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition"
             >
               <Eye size={13} /> View Details
             </button>
             <button
-              onClick={() => { generateInvoice(order); setOpen(false); }}
+              type="button"
+              onClick={(e) => { e.stopPropagation(); generateInvoice(order); setOpen(false); }}
               className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition"
             >
               <Printer size={13} /> Generate Invoice
@@ -541,7 +545,8 @@ const RowMenu = ({ order, onDelete, onView, canDelete }: RowMenuProps) => {
               <>
                 <div className="my-1 border-t border-gray-100" />
                 <button
-                  onClick={() => { onDelete(order); setOpen(false); }}
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onDelete(order); setOpen(false); }}
                   className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50 transition"
                 >
                   <Trash2 size={13} /> Delete Order
@@ -549,7 +554,8 @@ const RowMenu = ({ order, onDelete, onView, canDelete }: RowMenuProps) => {
               </>
             )}
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   );

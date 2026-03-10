@@ -513,32 +513,31 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
           {/* Product Details Tabs */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
             <div className="border-b border-gray-200 dark:border-gray-700">
-              <nav className="flex -mb-px">
+              <nav className="flex flex-nowrap overflow-x-auto w-full -mb-px scrollbar-hide">
                 <button
-                  className={`py-4 px-6 text-center font-medium text-sm ${activeTab === 'description' ? 'text-[#155dfc] border-b-2 border-[#155dfc]' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm ${activeTab === 'description' ? 'text-[#155dfc] border-b-2 border-[#155dfc]' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
                   onClick={() => setActiveTab('description')}
                 >
                   Description
                 </button>
                 <button
-                  className={`py-4 px-6 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'additional' ? 'text-[#155dfc] border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'additional' ? 'text-[#155dfc] border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
                   onClick={() => setActiveTab('additional')}
                 >
                   Additional Info
                 </button>
                 <button
-                  className={`py-4 px-6 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'benefits' ? 'text-[#155dfc] border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'benefits' ? 'text-[#155dfc] border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
                   onClick={() => setActiveTab('benefits')}
                 >
                   Benefits
                 </button>
                 <button
-                  className={`py-4 px-6 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'certifications' ? 'text-[#155dfc] border-b-2 border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'certifications' ? 'text-[#155dfc] border-b-2 border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
                   onClick={() => setActiveTab('certifications')}
                 >
                   Certifications
                 </button>
-               
               </nav>
             </div>
             
