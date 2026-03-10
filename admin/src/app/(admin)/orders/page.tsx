@@ -502,7 +502,7 @@ const RowMenu = ({ order, onDelete, onView, canDelete }: RowMenuProps) => {
     if (!open && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect();
       setPos({
-        top: rect.bottom + window.scrollY + 4,
+        top: rect.bottom + 4,
         right: window.innerWidth - rect.right,
       });
     }
