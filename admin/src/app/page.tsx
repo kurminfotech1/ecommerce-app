@@ -16,7 +16,7 @@ export default function SignIn() {
         <SignInForm />
         <div className="lg:w-1/2 w-full h-full hidden lg:block relative">
           <Image
-             src="/images/logo/login-page-bg.png"
+             src="/images/logo/login-b.jpeg"
             alt="Login Background"
             fill
             className="object-cover"

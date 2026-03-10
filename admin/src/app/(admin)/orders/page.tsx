@@ -349,10 +349,10 @@ const OrderRowDetail = ({
 // ── Generate Invoice ───────────────────────────────────────────────
 const generateInvoice = (order: Order) => {
   const { date } = formatDate(order.created_at);
-  const subtotal = order.items.reduce((s, i) => s + i.price * i.quantity, 0);
-  const tax = Math.round(subtotal * 0.18 * 100) / 100; // 18% GST
-  const shipping = 0; // free shipping
   const total = order.total_amount;
+  const subtotal = Math.round((total / 1.05) * 100) / 100; // pre-GST price
+  const tax = Math.round((total - subtotal) * 100) / 100; // 5% GST (included in total)
+  const shipping = 0; // free shipping
 
   const itemRows = order.items
     .map(
@@ -364,7 +364,7 @@ const generateInvoice = (order: Order) => {
         </td>
         <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;text-align:center;color:#555">${item.quantity}</td>
         <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;text-align:right;color:#555">&#8377;${item.price.toFixed(2)}</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:600;color:#4f46e5">&#8377;${(item.price * item.quantity).toFixed(2)}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:600;color:#157f3c">&#8377;${(item.price * item.quantity).toFixed(2)}</td>
       </tr>`
     )
     .join("");
@@ -397,24 +397,24 @@ const generateInvoice = (order: Order) => {
         <div><strong>Invoice #:</strong> ${order.order_number}</div>
         <div><strong>Date:</strong> ${date}</div>
         <div><strong>Status:</strong>
-          <span style="background:#e0e7ff;color:#4f46e5;padding:1px 8px;border-radius:20px;font-size:11px;font-weight:600">${order.order_status}</span>
+          <span style="background:#d1fae5;color:#157f3c;padding:1px 8px;border-radius:20px;font-size:11px;font-weight:600">${order.order_status}</span>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Divider -->
-  <div style="height:3px;background:linear-gradient(90deg,#4f46e5,#818cf8,transparent);border-radius:4px;margin-bottom:32px"></div>
+  <div style="height:3px;background:linear-gradient(90deg,#157f3c,#4ade80,transparent);border-radius:4px;margin-bottom:32px"></div>
 
   <!-- Bill To + Ship To -->
   <div style="display:flex;gap:40px;margin-bottom:32px">
     <div style="flex:1">
-      <div style="font-size:11px;font-weight:700;color:#4f46e5;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Bill To</div>
+      <div style="font-size:11px;font-weight:700;color:#157f3c;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Bill To</div>
       <div style="font-weight:600;font-size:14px;color:#1a1a2e">${order.user?.full_name || 'Guest'}</div>
       <div style="color:#666;margin-top:2px">${order.user?.email || ''}</div>
     </div>
     <div style="flex:1">
-      <div style="font-size:11px;font-weight:700;color:#4f46e5;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Ship To</div>
+      <div style="font-size:11px;font-weight:700;color:#157f3c;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Ship To</div>
       <div style="color:#555;line-height:1.6">
         ${order.shipping_address}<br/>
         ${order.shipping_city}, ${order.shipping_state} – ${order.shipping_pincode}<br/>
@@ -422,7 +422,7 @@ const generateInvoice = (order: Order) => {
       </div>
     </div>
     <div style="flex:1">
-      <div style="font-size:11px;font-weight:700;color:#4f46e5;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Payment</div>
+      <div style="font-size:11px;font-weight:700;color:#157f3c;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Payment</div>
       <div style="color:#555;line-height:1.6">
         <div>Method: <strong>${order.payment?.payment_method || 'N/A'}</strong></div>
         <div>Status: <strong>${order.payment?.status || 'PENDING'}</strong></div>
@@ -433,7 +433,7 @@ const generateInvoice = (order: Order) => {
   <!-- Items Table -->
   <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
     <thead>
-      <tr style="background:#4f46e5;color:#fff">
+      <tr style="background:#157f3c;color:#fff">
         <th style="padding:12px;text-align:left;border-radius:8px 0 0 0;font-size:12px">Item</th>
         <th style="padding:12px;text-align:center;font-size:12px">Qty</th>
         <th style="padding:12px;text-align:right;font-size:12px">Unit Price</th>
@@ -450,12 +450,12 @@ const generateInvoice = (order: Order) => {
         <span>Subtotal</span><span>&#8377;${subtotal.toFixed(2)}</span>
       </div>
       <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;color:#555">
-        <span>GST (18%)</span><span>&#8377;${tax.toFixed(2)}</span>
+        <span>GST (5%)</span><span>&#8377;${tax.toFixed(2)}</span>
       </div>
       <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;color:#555">
         <span>Shipping</span><span>${shipping === 0 ? 'Free' : '&#8377;' + shipping}</span>
       </div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-weight:700;color:#4f46e5">
+      <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-weight:700;color:#157f3c">
         <span>Total</span><span>&#8377;${total.toFixed(2)}</span>
       </div>
     </div>
@@ -469,7 +469,7 @@ const generateInvoice = (order: Order) => {
 
   <!-- Print Button -->
   <div class="no-print" style="text-align:center;margin-top:32px">
-    <button onclick="window.print()" style="background:#4f46e5;color:#fff;border:none;padding:12px 32px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">&#128438; Print / Save as PDF</button>
+    <button onclick="window.print()" style="background:#157f3c;color:#fff;border:none;padding:12px 32px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">&#128438; Print / Save as PDF</button>
   </div>
 
 </div>
