@@ -220,6 +220,10 @@ export async function POST(req: Request) {
         storage_info: body.storage_info ?? null,
         allergen_info: body.allergen_info ?? null,
 
+        key_benefits: body.key_benefits ?? [],
+        why_choose_us: body.why_choose_us ?? [],
+        how_to_use: body.how_to_use ?? [],
+
         is_active: body.is_active ?? true,
         is_featured: body.is_featured ?? false,
         is_bestseller: body.is_bestseller ?? false,
@@ -347,6 +351,10 @@ export async function PUT(req: Request) {
         ...(body.expiry_months !== undefined && { expiry_months: body.expiry_months ? Number(body.expiry_months) : null }),
         ...(body.storage_info !== undefined && { storage_info: body.storage_info }),
         ...(body.allergen_info !== undefined && { allergen_info: body.allergen_info }),
+
+        ...(body.key_benefits !== undefined && { key_benefits: body.key_benefits }),
+        ...(body.why_choose_us !== undefined && { why_choose_us: body.why_choose_us }),
+        ...(body.how_to_use !== undefined && { how_to_use: body.how_to_use }),
 
         ...(body.is_active !== undefined && { is_active: body.is_active }),
         ...(body.is_featured !== undefined && { is_featured: body.is_featured }),

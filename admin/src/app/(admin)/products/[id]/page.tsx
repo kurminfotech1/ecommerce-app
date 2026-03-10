@@ -78,7 +78,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
   const { product, loading } = useSelector((state: RootState) => state.products);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState<'description' | 'additional' | 'benefits' | 'certifications' | 'reviews'>('description');
+  const [activeTab, setActiveTab] = useState<'description' | 'additional' | 'benefits' | 'certifications' | 'key_benefits' | 'why_choose_us' | 'how_to_use'>('description');
   
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
@@ -538,6 +538,24 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                 >
                   Certifications
                 </button>
+                <button
+                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'key_benefits' ? 'text-[#155dfc] border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                  onClick={() => setActiveTab('key_benefits')}
+                >
+                  Key Benefits
+                </button>
+                <button
+                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'why_choose_us' ? 'text-[#155dfc] border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                  onClick={() => setActiveTab('why_choose_us')}
+                >
+                  Why Choose Us
+                </button>
+                <button
+                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'how_to_use' ? 'text-[#155dfc] border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                  onClick={() => setActiveTab('how_to_use')}
+                >
+                  How To Use
+                </button>
               </nav>
             </div>
             
@@ -634,7 +652,78 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                   )}
                 </div>
               )}
-              
+
+              {activeTab === 'key_benefits' && (() => {
+                const items = (product as any).key_benefits as { title: string; description: string }[] | undefined;
+                return (
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Key Benefits</h2>
+                    {items && items.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {items.map((item, i) => (
+                          <div key={i} className="flex items-start gap-3 p-4 bg-[#157f3c]/5 dark:bg-[#157f3c]/10 rounded-xl border border-[#157f3c]/20">
+                            <CheckCircle2 size={18} className="text-[#157f3c] shrink-0 mt-0.5" />
+                            <div>
+                              <p className="font-semibold text-gray-900 dark:text-white text-sm">{item.title}</p>
+                              {item.description && <p className="text-gray-600 dark:text-gray-300 text-xs mt-0.5">{item.description}</p>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 dark:text-gray-400 italic">No key benefits listed for this product.</p>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {activeTab === 'why_choose_us' && (() => {
+                const items = (product as any).why_choose_us as { title: string; description: string }[] | undefined;
+                return (
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Why Choose Us</h2>
+                    {items && items.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {items.map((item, i) => (
+                          <div key={i} className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-500/5 rounded-xl border border-blue-100 dark:border-blue-500/10">
+                            <Star size={18} className="text-blue-500 shrink-0 mt-0.5" fill="currentColor" />
+                            <div>
+                              <p className="font-semibold text-gray-900 dark:text-white text-sm">{item.title}</p>
+                              {item.description && <p className="text-gray-600 dark:text-gray-300 text-xs mt-0.5">{item.description}</p>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 dark:text-gray-400 italic">No &quot;Why Choose Us&quot; entries listed for this product.</p>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {activeTab === 'how_to_use' && (() => {
+                const items = (product as any).how_to_use as { title: string; description: string }[] | undefined;
+                return (
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">How To Use</h2>
+                    {items && items.length > 0 ? (
+                      <div className="space-y-4">
+                        {items.map((item, i) => (
+                          <div key={i} className="flex items-start gap-4">
+                            <div className="w-8 h-8 rounded-full bg-[#157f3c] text-white text-sm font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</div>
+                            <div className="flex-1 pb-4 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                              <p className="font-semibold text-gray-900 dark:text-white">{item.title}</p>
+                              {item.description && <p className="text-gray-600 dark:text-gray-300 text-sm mt-0.5">{item.description}</p>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 dark:text-gray-400 italic">No usage instructions listed for this product.</p>
+                    )}
+                  </div>
+                );
+              })()}
          
             </div>
           </div>

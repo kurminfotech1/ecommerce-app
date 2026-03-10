@@ -89,6 +89,11 @@ model Product {
   storage_info      String?
   allergen_info     String?
 
+  // Rich Content Sections (stored as JSON array of {title, description})
+  key_benefits  Json @default("[]")
+  why_choose_us Json @default("[]")
+  how_to_use    Json @default("[]")
+
   // Sales Metrics
   sold_count   Int   @default(0)
   rating_avg   Float @default(0)

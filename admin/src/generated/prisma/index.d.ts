@@ -5417,6 +5417,9 @@ export namespace Prisma {
     expiry_months: number
     storage_info: number
     allergen_info: number
+    key_benefits: number
+    why_choose_us: number
+    how_to_use: number
     sold_count: number
     rating_avg: number
     rating_count: number
@@ -5513,6 +5516,9 @@ export namespace Prisma {
     expiry_months?: true
     storage_info?: true
     allergen_info?: true
+    key_benefits?: true
+    why_choose_us?: true
+    how_to_use?: true
     sold_count?: true
     rating_avg?: true
     rating_count?: true
@@ -5628,6 +5634,9 @@ export namespace Prisma {
     expiry_months: number | null
     storage_info: string | null
     allergen_info: string | null
+    key_benefits: JsonValue
+    why_choose_us: JsonValue
+    how_to_use: JsonValue
     sold_count: number
     rating_avg: number
     rating_count: number
@@ -5675,6 +5684,9 @@ export namespace Prisma {
     expiry_months?: boolean
     storage_info?: boolean
     allergen_info?: boolean
+    key_benefits?: boolean
+    why_choose_us?: boolean
+    how_to_use?: boolean
     sold_count?: boolean
     rating_avg?: boolean
     rating_count?: boolean
@@ -5709,6 +5721,9 @@ export namespace Prisma {
     expiry_months?: boolean
     storage_info?: boolean
     allergen_info?: boolean
+    key_benefits?: boolean
+    why_choose_us?: boolean
+    how_to_use?: boolean
     sold_count?: boolean
     rating_avg?: boolean
     rating_count?: boolean
@@ -5738,6 +5753,9 @@ export namespace Prisma {
     expiry_months?: boolean
     storage_info?: boolean
     allergen_info?: boolean
+    key_benefits?: boolean
+    why_choose_us?: boolean
+    how_to_use?: boolean
     sold_count?: boolean
     rating_avg?: boolean
     rating_count?: boolean
@@ -5767,6 +5785,9 @@ export namespace Prisma {
     expiry_months?: boolean
     storage_info?: boolean
     allergen_info?: boolean
+    key_benefits?: boolean
+    why_choose_us?: boolean
+    how_to_use?: boolean
     sold_count?: boolean
     rating_avg?: boolean
     rating_count?: boolean
@@ -5781,7 +5802,7 @@ export namespace Prisma {
     updated_at?: boolean
   }
 
-  export type ProductOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "category_id" | "product_name" | "slug" | "short_desc" | "description" | "ingredient" | "benefits" | "certifications" | "country_of_origin" | "expiry_months" | "storage_info" | "allergen_info" | "sold_count" | "rating_avg" | "rating_count" | "is_active" | "is_featured" | "is_bestseller" | "is_new" | "is_upcoming" | "meta_title" | "meta_desc" | "created_at" | "updated_at", ExtArgs["result"]["product"]>
+  export type ProductOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "category_id" | "product_name" | "slug" | "short_desc" | "description" | "ingredient" | "benefits" | "certifications" | "country_of_origin" | "expiry_months" | "storage_info" | "allergen_info" | "key_benefits" | "why_choose_us" | "how_to_use" | "sold_count" | "rating_avg" | "rating_count" | "is_active" | "is_featured" | "is_bestseller" | "is_new" | "is_upcoming" | "meta_title" | "meta_desc" | "created_at" | "updated_at", ExtArgs["result"]["product"]>
   export type ProductInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     category?: boolean | CategoryDefaultArgs<ExtArgs>
     images?: boolean | Product$imagesArgs<ExtArgs>
@@ -5820,6 +5841,9 @@ export namespace Prisma {
       expiry_months: number | null
       storage_info: string | null
       allergen_info: string | null
+      key_benefits: Prisma.JsonValue
+      why_choose_us: Prisma.JsonValue
+      how_to_use: Prisma.JsonValue
       sold_count: number
       rating_avg: number
       rating_count: number
@@ -6273,6 +6297,9 @@ export namespace Prisma {
     readonly expiry_months: FieldRef<"Product", 'Int'>
     readonly storage_info: FieldRef<"Product", 'String'>
     readonly allergen_info: FieldRef<"Product", 'String'>
+    readonly key_benefits: FieldRef<"Product", 'Json'>
+    readonly why_choose_us: FieldRef<"Product", 'Json'>
+    readonly how_to_use: FieldRef<"Product", 'Json'>
     readonly sold_count: FieldRef<"Product", 'Int'>
     readonly rating_avg: FieldRef<"Product", 'Float'>
     readonly rating_count: FieldRef<"Product", 'Int'>
@@ -26091,6 +26118,9 @@ export namespace Prisma {
     expiry_months: 'expiry_months',
     storage_info: 'storage_info',
     allergen_info: 'allergen_info',
+    key_benefits: 'key_benefits',
+    why_choose_us: 'why_choose_us',
+    how_to_use: 'how_to_use',
     sold_count: 'sold_count',
     rating_avg: 'rating_avg',
     rating_count: 'rating_count',
@@ -26346,6 +26376,13 @@ export namespace Prisma {
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+  export const JsonNullValueInput: {
+    JsonNull: typeof JsonNull
+  };
+
+  export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
   export const QueryMode: {
     default: 'default',
     insensitive: 'insensitive'
@@ -26360,6 +26397,15 @@ export namespace Prisma {
   };
 
   export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+  export const JsonNullValueFilter: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull,
+    AnyNull: typeof AnyNull
+  };
+
+  export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
   /**
@@ -26427,6 +26473,20 @@ export namespace Prisma {
    * Reference to a field of type 'Int[]'
    */
   export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+  /**
+   * Reference to a field of type 'QueryMode'
+   */
+  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 
@@ -26662,6 +26722,9 @@ export namespace Prisma {
     expiry_months?: IntNullableFilter<"Product"> | number | null
     storage_info?: StringNullableFilter<"Product"> | string | null
     allergen_info?: StringNullableFilter<"Product"> | string | null
+    key_benefits?: JsonFilter<"Product">
+    why_choose_us?: JsonFilter<"Product">
+    how_to_use?: JsonFilter<"Product">
     sold_count?: IntFilter<"Product"> | number
     rating_avg?: FloatFilter<"Product"> | number
     rating_count?: IntFilter<"Product"> | number
@@ -26695,6 +26758,9 @@ export namespace Prisma {
     expiry_months?: SortOrderInput | SortOrder
     storage_info?: SortOrderInput | SortOrder
     allergen_info?: SortOrderInput | SortOrder
+    key_benefits?: SortOrder
+    why_choose_us?: SortOrder
+    how_to_use?: SortOrder
     sold_count?: SortOrder
     rating_avg?: SortOrder
     rating_count?: SortOrder
@@ -26731,6 +26797,9 @@ export namespace Prisma {
     expiry_months?: IntNullableFilter<"Product"> | number | null
     storage_info?: StringNullableFilter<"Product"> | string | null
     allergen_info?: StringNullableFilter<"Product"> | string | null
+    key_benefits?: JsonFilter<"Product">
+    why_choose_us?: JsonFilter<"Product">
+    how_to_use?: JsonFilter<"Product">
     sold_count?: IntFilter<"Product"> | number
     rating_avg?: FloatFilter<"Product"> | number
     rating_count?: IntFilter<"Product"> | number
@@ -26764,6 +26833,9 @@ export namespace Prisma {
     expiry_months?: SortOrderInput | SortOrder
     storage_info?: SortOrderInput | SortOrder
     allergen_info?: SortOrderInput | SortOrder
+    key_benefits?: SortOrder
+    why_choose_us?: SortOrder
+    how_to_use?: SortOrder
     sold_count?: SortOrder
     rating_avg?: SortOrder
     rating_count?: SortOrder
@@ -26800,6 +26872,9 @@ export namespace Prisma {
     expiry_months?: IntNullableWithAggregatesFilter<"Product"> | number | null
     storage_info?: StringNullableWithAggregatesFilter<"Product"> | string | null
     allergen_info?: StringNullableWithAggregatesFilter<"Product"> | string | null
+    key_benefits?: JsonWithAggregatesFilter<"Product">
+    why_choose_us?: JsonWithAggregatesFilter<"Product">
+    how_to_use?: JsonWithAggregatesFilter<"Product">
     sold_count?: IntWithAggregatesFilter<"Product"> | number
     rating_avg?: FloatWithAggregatesFilter<"Product"> | number
     rating_count?: IntWithAggregatesFilter<"Product"> | number
@@ -28224,6 +28299,9 @@ export namespace Prisma {
     expiry_months?: number | null
     storage_info?: string | null
     allergen_info?: string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: number
     rating_avg?: number
     rating_count?: number
@@ -28257,6 +28335,9 @@ export namespace Prisma {
     expiry_months?: number | null
     storage_info?: string | null
     allergen_info?: string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: number
     rating_avg?: number
     rating_count?: number
@@ -28288,6 +28369,9 @@ export namespace Prisma {
     expiry_months?: NullableIntFieldUpdateOperationsInput | number | null
     storage_info?: NullableStringFieldUpdateOperationsInput | string | null
     allergen_info?: NullableStringFieldUpdateOperationsInput | string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: IntFieldUpdateOperationsInput | number
     rating_avg?: FloatFieldUpdateOperationsInput | number
     rating_count?: IntFieldUpdateOperationsInput | number
@@ -28321,6 +28405,9 @@ export namespace Prisma {
     expiry_months?: NullableIntFieldUpdateOperationsInput | number | null
     storage_info?: NullableStringFieldUpdateOperationsInput | string | null
     allergen_info?: NullableStringFieldUpdateOperationsInput | string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: IntFieldUpdateOperationsInput | number
     rating_avg?: FloatFieldUpdateOperationsInput | number
     rating_count?: IntFieldUpdateOperationsInput | number
@@ -28353,6 +28440,9 @@ export namespace Prisma {
     expiry_months?: number | null
     storage_info?: string | null
     allergen_info?: string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: number
     rating_avg?: number
     rating_count?: number
@@ -28380,6 +28470,9 @@ export namespace Prisma {
     expiry_months?: NullableIntFieldUpdateOperationsInput | number | null
     storage_info?: NullableStringFieldUpdateOperationsInput | string | null
     allergen_info?: NullableStringFieldUpdateOperationsInput | string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: IntFieldUpdateOperationsInput | number
     rating_avg?: FloatFieldUpdateOperationsInput | number
     rating_count?: IntFieldUpdateOperationsInput | number
@@ -28408,6 +28501,9 @@ export namespace Prisma {
     expiry_months?: NullableIntFieldUpdateOperationsInput | number | null
     storage_info?: NullableStringFieldUpdateOperationsInput | string | null
     allergen_info?: NullableStringFieldUpdateOperationsInput | string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: IntFieldUpdateOperationsInput | number
     rating_avg?: FloatFieldUpdateOperationsInput | number
     rating_count?: IntFieldUpdateOperationsInput | number
@@ -29968,6 +30064,29 @@ export namespace Prisma {
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
+  export type JsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
@@ -30050,6 +30169,9 @@ export namespace Prisma {
     expiry_months?: SortOrder
     storage_info?: SortOrder
     allergen_info?: SortOrder
+    key_benefits?: SortOrder
+    why_choose_us?: SortOrder
+    how_to_use?: SortOrder
     sold_count?: SortOrder
     rating_avg?: SortOrder
     rating_count?: SortOrder
@@ -30144,6 +30266,32 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+  export type JsonWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedJsonFilter<$PrismaModel>
+    _max?: NestedJsonFilter<$PrismaModel>
   }
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -32487,6 +32635,29 @@ export namespace Prisma {
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
+  export type NestedJsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
@@ -32747,6 +32918,9 @@ export namespace Prisma {
     expiry_months?: number | null
     storage_info?: string | null
     allergen_info?: string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: number
     rating_avg?: number
     rating_count?: number
@@ -32778,6 +32952,9 @@ export namespace Prisma {
     expiry_months?: number | null
     storage_info?: string | null
     allergen_info?: string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: number
     rating_avg?: number
     rating_count?: number
@@ -32901,6 +33078,9 @@ export namespace Prisma {
     expiry_months?: IntNullableFilter<"Product"> | number | null
     storage_info?: StringNullableFilter<"Product"> | string | null
     allergen_info?: StringNullableFilter<"Product"> | string | null
+    key_benefits?: JsonFilter<"Product">
+    why_choose_us?: JsonFilter<"Product">
+    how_to_use?: JsonFilter<"Product">
     sold_count?: IntFilter<"Product"> | number
     rating_avg?: FloatFilter<"Product"> | number
     rating_count?: IntFilter<"Product"> | number
@@ -33224,6 +33404,9 @@ export namespace Prisma {
     expiry_months?: number | null
     storage_info?: string | null
     allergen_info?: string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: number
     rating_avg?: number
     rating_count?: number
@@ -33256,6 +33439,9 @@ export namespace Prisma {
     expiry_months?: number | null
     storage_info?: string | null
     allergen_info?: string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: number
     rating_avg?: number
     rating_count?: number
@@ -33400,6 +33586,9 @@ export namespace Prisma {
     expiry_months?: NullableIntFieldUpdateOperationsInput | number | null
     storage_info?: NullableStringFieldUpdateOperationsInput | string | null
     allergen_info?: NullableStringFieldUpdateOperationsInput | string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: IntFieldUpdateOperationsInput | number
     rating_avg?: FloatFieldUpdateOperationsInput | number
     rating_count?: IntFieldUpdateOperationsInput | number
@@ -33432,6 +33621,9 @@ export namespace Prisma {
     expiry_months?: NullableIntFieldUpdateOperationsInput | number | null
     storage_info?: NullableStringFieldUpdateOperationsInput | string | null
     allergen_info?: NullableStringFieldUpdateOperationsInput | string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: IntFieldUpdateOperationsInput | number
     rating_avg?: FloatFieldUpdateOperationsInput | number
     rating_count?: IntFieldUpdateOperationsInput | number
@@ -33659,6 +33851,9 @@ export namespace Prisma {
     expiry_months?: number | null
     storage_info?: string | null
     allergen_info?: string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: number
     rating_avg?: number
     rating_count?: number
@@ -33691,6 +33886,9 @@ export namespace Prisma {
     expiry_months?: number | null
     storage_info?: string | null
     allergen_info?: string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: number
     rating_avg?: number
     rating_count?: number
@@ -33737,6 +33935,9 @@ export namespace Prisma {
     expiry_months?: NullableIntFieldUpdateOperationsInput | number | null
     storage_info?: NullableStringFieldUpdateOperationsInput | string | null
     allergen_info?: NullableStringFieldUpdateOperationsInput | string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: IntFieldUpdateOperationsInput | number
     rating_avg?: FloatFieldUpdateOperationsInput | number
     rating_count?: IntFieldUpdateOperationsInput | number
@@ -33769,6 +33970,9 @@ export namespace Prisma {
     expiry_months?: NullableIntFieldUpdateOperationsInput | number | null
     storage_info?: NullableStringFieldUpdateOperationsInput | string | null
     allergen_info?: NullableStringFieldUpdateOperationsInput | string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: IntFieldUpdateOperationsInput | number
     rating_avg?: FloatFieldUpdateOperationsInput | number
     rating_count?: IntFieldUpdateOperationsInput | number
@@ -35145,6 +35349,9 @@ export namespace Prisma {
     expiry_months?: number | null
     storage_info?: string | null
     allergen_info?: string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: number
     rating_avg?: number
     rating_count?: number
@@ -35177,6 +35384,9 @@ export namespace Prisma {
     expiry_months?: number | null
     storage_info?: string | null
     allergen_info?: string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: number
     rating_avg?: number
     rating_count?: number
@@ -35266,6 +35476,9 @@ export namespace Prisma {
     expiry_months?: NullableIntFieldUpdateOperationsInput | number | null
     storage_info?: NullableStringFieldUpdateOperationsInput | string | null
     allergen_info?: NullableStringFieldUpdateOperationsInput | string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: IntFieldUpdateOperationsInput | number
     rating_avg?: FloatFieldUpdateOperationsInput | number
     rating_count?: IntFieldUpdateOperationsInput | number
@@ -35298,6 +35511,9 @@ export namespace Prisma {
     expiry_months?: NullableIntFieldUpdateOperationsInput | number | null
     storage_info?: NullableStringFieldUpdateOperationsInput | string | null
     allergen_info?: NullableStringFieldUpdateOperationsInput | string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: IntFieldUpdateOperationsInput | number
     rating_avg?: FloatFieldUpdateOperationsInput | number
     rating_count?: IntFieldUpdateOperationsInput | number
@@ -35365,6 +35581,9 @@ export namespace Prisma {
     expiry_months?: number | null
     storage_info?: string | null
     allergen_info?: string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: number
     rating_avg?: number
     rating_count?: number
@@ -35397,6 +35616,9 @@ export namespace Prisma {
     expiry_months?: number | null
     storage_info?: string | null
     allergen_info?: string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: number
     rating_avg?: number
     rating_count?: number
@@ -35486,6 +35708,9 @@ export namespace Prisma {
     expiry_months?: NullableIntFieldUpdateOperationsInput | number | null
     storage_info?: NullableStringFieldUpdateOperationsInput | string | null
     allergen_info?: NullableStringFieldUpdateOperationsInput | string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: IntFieldUpdateOperationsInput | number
     rating_avg?: FloatFieldUpdateOperationsInput | number
     rating_count?: IntFieldUpdateOperationsInput | number
@@ -35518,6 +35743,9 @@ export namespace Prisma {
     expiry_months?: NullableIntFieldUpdateOperationsInput | number | null
     storage_info?: NullableStringFieldUpdateOperationsInput | string | null
     allergen_info?: NullableStringFieldUpdateOperationsInput | string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: IntFieldUpdateOperationsInput | number
     rating_avg?: FloatFieldUpdateOperationsInput | number
     rating_count?: IntFieldUpdateOperationsInput | number
@@ -35802,6 +36030,9 @@ export namespace Prisma {
     expiry_months?: number | null
     storage_info?: string | null
     allergen_info?: string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: number
     rating_avg?: number
     rating_count?: number
@@ -35860,6 +36091,9 @@ export namespace Prisma {
     expiry_months?: NullableIntFieldUpdateOperationsInput | number | null
     storage_info?: NullableStringFieldUpdateOperationsInput | string | null
     allergen_info?: NullableStringFieldUpdateOperationsInput | string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: IntFieldUpdateOperationsInput | number
     rating_avg?: FloatFieldUpdateOperationsInput | number
     rating_count?: IntFieldUpdateOperationsInput | number
@@ -35891,6 +36125,9 @@ export namespace Prisma {
     expiry_months?: NullableIntFieldUpdateOperationsInput | number | null
     storage_info?: NullableStringFieldUpdateOperationsInput | string | null
     allergen_info?: NullableStringFieldUpdateOperationsInput | string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: IntFieldUpdateOperationsInput | number
     rating_avg?: FloatFieldUpdateOperationsInput | number
     rating_count?: IntFieldUpdateOperationsInput | number
@@ -35922,6 +36159,9 @@ export namespace Prisma {
     expiry_months?: NullableIntFieldUpdateOperationsInput | number | null
     storage_info?: NullableStringFieldUpdateOperationsInput | string | null
     allergen_info?: NullableStringFieldUpdateOperationsInput | string | null
+    key_benefits?: JsonNullValueInput | InputJsonValue
+    why_choose_us?: JsonNullValueInput | InputJsonValue
+    how_to_use?: JsonNullValueInput | InputJsonValue
     sold_count?: IntFieldUpdateOperationsInput | number
     rating_avg?: FloatFieldUpdateOperationsInput | number
     rating_count?: IntFieldUpdateOperationsInput | number

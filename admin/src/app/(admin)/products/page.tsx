@@ -193,6 +193,9 @@ export default function ProductsPage() {
     country_of_origin: "", expiry_months: "", storage_info: "", allergen_info: "",
     meta_title: "", meta_desc: "",
     is_active: true, is_featured: false, is_bestseller: false, is_new: false, is_upcoming: false,
+    key_benefits: [] as { title: string; description: string }[],
+    why_choose_us: [] as { title: string; description: string }[],
+    how_to_use: [] as { title: string; description: string }[],
   };
 
   type VariantRow = {
@@ -309,6 +312,9 @@ export default function ProductsPage() {
       is_bestseller: p.is_bestseller ?? false,
       is_new: p.is_new ?? false,
       is_upcoming: p.is_upcoming ?? false,
+      key_benefits: (p.key_benefits as any) ?? [],
+      why_choose_us: (p.why_choose_us as any) ?? [],
+      how_to_use: (p.how_to_use as any) ?? [],
     });
     // Pre-fill variants â€” including their existing images
     if (p.variants && p.variants.length > 0) {
@@ -421,6 +427,10 @@ export default function ProductsPage() {
       expiry_months: form.expiry_months ? Number(form.expiry_months) : null,
       storage_info: form.storage_info || null,
       allergen_info: form.allergen_info || null,
+
+      key_benefits: form.key_benefits,
+      why_choose_us: form.why_choose_us,
+      how_to_use: form.how_to_use,
 
       is_active: form.is_active,
       is_featured: form.is_featured,
@@ -882,7 +892,7 @@ export default function ProductsPage() {
               {/* â”€â”€ Section: Lifestyle/Organic â”€â”€ */}
               <div>
                 <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                  ðŸŒ± Wellness & Organic Details
+                  Wellness & Organic Details
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Ingredients" span={2}>
@@ -941,6 +951,115 @@ export default function ProductsPage() {
                       setTags={t => setForm({ ...form, certifications: t })}
                     />
                   </Field>
+                </div>
+              </div>
+
+              {/* ── Section: Key Benefits ── */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                    Key Benefits
+                    <span className="ml-1 px-1.5 py-0.5 bg-[#157f3c]/10 text-[#157f3c] rounded-full text-[10px] font-bold">{form.key_benefits.length}</span>
+                  </p>
+                  <button type="button"
+                    onClick={() => setForm((f: any) => ({ ...f, key_benefits: [...f.key_benefits, { title: "", description: "" }] }))}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-[#157f3c] bg-[#157f3c]/10 hover:bg-[#157f3c]/20 px-3 py-1.5 rounded-lg transition"
+                  ><Plus size={12} /> Add Row</button>
+                </div>
+                <div className="space-y-3">
+                  {form.key_benefits.map((item: any, i: number) => (
+                    <div key={i} className="flex gap-2 items-start border border-gray-200 dark:border-gray-700 rounded-xl p-3 bg-gray-50 dark:bg-gray-700/30">
+                      <div className="flex-1 grid grid-cols-2 gap-2">
+                        <input
+                          placeholder="Title (e.g. Rich in Antioxidants)"
+                          value={item.title}
+                          onChange={e => { const arr = [...form.key_benefits]; arr[i] = { ...arr[i], title: e.target.value }; setForm((f: any) => ({ ...f, key_benefits: arr })); }}
+                          className={inputCls}
+                        />
+                        <input
+                          placeholder="Description"
+                          value={item.description}
+                          onChange={e => { const arr = [...form.key_benefits]; arr[i] = { ...arr[i], description: e.target.value }; setForm((f: any) => ({ ...f, key_benefits: arr })); }}
+                          className={inputCls}
+                        />
+                      </div>
+                      <button type="button" onClick={() => setForm((f: any) => ({ ...f, key_benefits: f.key_benefits.filter((_: any, idx: number) => idx !== i) }))} className="mt-1 p-1 rounded-lg text-red-400 hover:bg-red-50 transition"><X size={14} /></button>
+                    </div>
+                  ))}
+                  {form.key_benefits.length === 0 && <p className="text-xs text-gray-400 italic">No key benefits added yet.</p>}
+                </div>
+              </div>
+
+              {/* ── Section: Why Choose Us ── */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                    Why Choose Us
+                    <span className="ml-1 px-1.5 py-0.5 bg-[#157f3c]/10 text-[#157f3c] rounded-full text-[10px] font-bold">{form.why_choose_us.length}</span>
+                  </p>
+                  <button type="button"
+                    onClick={() => setForm((f: any) => ({ ...f, why_choose_us: [...f.why_choose_us, { title: "", description: "" }] }))}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-[#157f3c] bg-[#157f3c]/10 hover:bg-[#157f3c]/20 px-3 py-1.5 rounded-lg transition"
+                  ><Plus size={12} /> Add Row</button>
+                </div>
+                <div className="space-y-3">
+                  {form.why_choose_us.map((item: any, i: number) => (
+                    <div key={i} className="flex gap-2 items-start border border-gray-200 dark:border-gray-700 rounded-xl p-3 bg-gray-50 dark:bg-gray-700/30">
+                      <div className="flex-1 grid grid-cols-2 gap-2">
+                        <input
+                          placeholder="Title (e.g. 100% Natural)"
+                          value={item.title}
+                          onChange={e => { const arr = [...form.why_choose_us]; arr[i] = { ...arr[i], title: e.target.value }; setForm((f: any) => ({ ...f, why_choose_us: arr })); }}
+                          className={inputCls}
+                        />
+                        <input
+                          placeholder="Description"
+                          value={item.description}
+                          onChange={e => { const arr = [...form.why_choose_us]; arr[i] = { ...arr[i], description: e.target.value }; setForm((f: any) => ({ ...f, why_choose_us: arr })); }}
+                          className={inputCls}
+                        />
+                      </div>
+                      <button type="button" onClick={() => setForm((f: any) => ({ ...f, why_choose_us: f.why_choose_us.filter((_: any, idx: number) => idx !== i) }))} className="mt-1 p-1 rounded-lg text-red-400 hover:bg-red-50 transition"><X size={14} /></button>
+                    </div>
+                  ))}
+                  {form.why_choose_us.length === 0 && <p className="text-xs text-gray-400 italic">No entries added yet.</p>}
+                </div>
+              </div>
+
+              {/* ── Section: How To Use ── */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                    How To Use
+                    <span className="ml-1 px-1.5 py-0.5 bg-[#157f3c]/10 text-[#157f3c] rounded-full text-[10px] font-bold">{form.how_to_use.length}</span>
+                  </p>
+                  <button type="button"
+                    onClick={() => setForm((f: any) => ({ ...f, how_to_use: [...f.how_to_use, { title: "", description: "" }] }))}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-[#157f3c] bg-[#157f3c]/10 hover:bg-[#157f3c]/20 px-3 py-1.5 rounded-lg transition"
+                  ><Plus size={12} /> Add Step</button>
+                </div>
+                <div className="space-y-3">
+                  {form.how_to_use.map((item: any, i: number) => (
+                    <div key={i} className="flex gap-2 items-start border border-gray-200 dark:border-gray-700 rounded-xl p-3 bg-gray-50 dark:bg-gray-700/30">
+                      <div className="w-6 h-6 rounded-full bg-[#157f3c] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-1.5">{i + 1}</div>
+                      <div className="flex-1 grid grid-cols-2 gap-2">
+                        <input
+                          placeholder="Step Title (e.g. Mix with water)"
+                          value={item.title}
+                          onChange={e => { const arr = [...form.how_to_use]; arr[i] = { ...arr[i], title: e.target.value }; setForm((f: any) => ({ ...f, how_to_use: arr })); }}
+                          className={inputCls}
+                        />
+                        <input
+                          placeholder="Step Detail"
+                          value={item.description}
+                          onChange={e => { const arr = [...form.how_to_use]; arr[i] = { ...arr[i], description: e.target.value }; setForm((f: any) => ({ ...f, how_to_use: arr })); }}
+                          className={inputCls}
+                        />
+                      </div>
+                      <button type="button" onClick={() => setForm((f: any) => ({ ...f, how_to_use: f.how_to_use.filter((_: any, idx: number) => idx !== i) }))} className="mt-1 p-1 rounded-lg text-red-400 hover:bg-red-50 transition"><X size={14} /></button>
+                    </div>
+                  ))}
+                  {form.how_to_use.length === 0 && <p className="text-xs text-gray-400 italic">No steps added yet.</p>}
                 </div>
               </div>
 

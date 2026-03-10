@@ -158,6 +158,9 @@ exports.Prisma.ProductScalarFieldEnum = {
   expiry_months: 'expiry_months',
   storage_info: 'storage_info',
   allergen_info: 'allergen_info',
+  key_benefits: 'key_benefits',
+  why_choose_us: 'why_choose_us',
+  how_to_use: 'how_to_use',
   sold_count: 'sold_count',
   rating_avg: 'rating_avg',
   rating_count: 'rating_count',
@@ -356,6 +359,10 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
+exports.Prisma.JsonNullValueInput = {
+  JsonNull: Prisma.JsonNull
+};
+
 exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
@@ -364,6 +371,12 @@ exports.Prisma.QueryMode = {
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
+};
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
 };
 exports.Role = exports.$Enums.Role = {
   ADMIN: 'ADMIN',

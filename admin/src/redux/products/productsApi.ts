@@ -62,6 +62,10 @@ export interface Product {
   storage_info?: string | null;
   allergen_info?: string | null;
 
+  key_benefits?: { title: string; description: string }[];
+  why_choose_us?: { title: string; description: string }[];
+  how_to_use?: { title: string; description: string }[];
+
   is_active: boolean;
   is_featured: boolean;
   is_bestseller: boolean;
