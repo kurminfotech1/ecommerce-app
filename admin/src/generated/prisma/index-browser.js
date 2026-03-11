@@ -158,9 +158,6 @@ exports.Prisma.ProductScalarFieldEnum = {
   expiry_months: 'expiry_months',
   storage_info: 'storage_info',
   allergen_info: 'allergen_info',
-  key_benefits: 'key_benefits',
-  why_choose_us: 'why_choose_us',
-  how_to_use: 'how_to_use',
   sold_count: 'sold_count',
   rating_avg: 'rating_avg',
   rating_count: 'rating_count',
@@ -172,7 +169,10 @@ exports.Prisma.ProductScalarFieldEnum = {
   meta_title: 'meta_title',
   meta_desc: 'meta_desc',
   created_at: 'created_at',
-  updated_at: 'updated_at'
+  updated_at: 'updated_at',
+  how_to_use: 'how_to_use',
+  key_benefits: 'key_benefits',
+  why_choose_us: 'why_choose_us'
 };
 
 exports.Prisma.ProductVariantScalarFieldEnum = {
