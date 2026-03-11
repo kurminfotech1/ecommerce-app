@@ -267,7 +267,12 @@ exports.Prisma.OrderItemScalarFieldEnum = {
   order_id: 'order_id',
   variant_id: 'variant_id',
   quantity: 'quantity',
-  price: 'price'
+  price: 'price',
+  product_name: 'product_name',
+  sku: 'sku',
+  weight: 'weight',
+  size: 'size',
+  image_url: 'image_url'
 };
 
 exports.Prisma.PaymentScalarFieldEnum = {

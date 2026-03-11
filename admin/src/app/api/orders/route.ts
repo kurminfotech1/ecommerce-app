@@ -9,12 +9,27 @@ export async function GET(request: Request) {
         const userId = searchParams.get("userId") ?? undefined;
         const search = searchParams.get("search")?.trim() ?? "";
         const status = searchParams.get("status") ?? "";   // e.g. "PLACED"
+        const timeFilter = searchParams.get("timeFilter") ?? "all";
         const page = Math.max(1, Number(searchParams.get("page") || 1));
         const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") || 20)));
         const skip = (page - 1) * limit;
 
+        // ── Build time filter ───────────────────────────────────────
+        const timeWhere: any = {};
+        const now = new Date();
+        if (timeFilter === "today") {
+            const start = new Date(); start.setHours(0, 0, 0, 0);
+            timeWhere.created_at = { gte: start };
+        } else if (timeFilter === "weekly") {
+            const start = new Date(); start.setDate(start.getDate() - 7);
+            timeWhere.created_at = { gte: start };
+        } else if (timeFilter === "monthly") {
+            const start = new Date(now.getFullYear(), now.getMonth(), 1);
+            timeWhere.created_at = { gte: start };
+        }
+
         // ── Build where clause ──────────────────────────────────────
-        const where: any = {};
+        const where: any = { ...timeWhere };
 
         if (userId) where.user_id = userId;
 
@@ -55,7 +70,7 @@ export async function GET(request: Request) {
                         },
                     },
                     payment: true,
-                    user: { select: { id: true, full_name: true, email: true } },
+                    user: { select: { id: true, full_name: true, email: true, phone: true } },
                 },
                 orderBy: { created_at: "desc" },
             }),
@@ -96,7 +111,16 @@ export async function POST(request: Request) {
         // 1. Get user's cart items
         const cartItems = await prisma.cart.findMany({
             where: { user_id },
-            include: { variant: true }
+            include: { 
+                variant: {
+                    include: {
+                        product: {
+                            include: { images: { take: 1, orderBy: { sort_order: "asc" } } }
+                        },
+                        images: { take: 1, orderBy: { sort_order: "asc" } }
+                    }
+                } 
+            }
         });
 
         if (cartItems.length === 0) {
@@ -126,11 +150,20 @@ export async function POST(request: Request) {
                     shipping_pincode,
                     shipping_country,
                     items: {
-                        create: cartItems.map((item) => ({
-                            variant_id: item.variant_id,
-                            quantity: item.quantity,
-                            price: item.price
-                        }))
+                        create: cartItems.map((item) => {
+                            const variantImage = item.variant.images?.[0]?.image_url;
+                            const productImage = item.variant.product?.images?.[0]?.image_url;
+                            return {
+                                variant_id: item.variant_id,
+                                quantity: item.quantity,
+                                price: item.price,
+                                product_name: item.variant.product?.product_name || "Unknown Product",
+                                sku: item.variant.sku,
+                                weight: item.variant.weight,
+                                size: item.variant.size,
+                                image_url: variantImage || productImage || null,
+                            };
+                        })
                     }
                 },
                 include: {

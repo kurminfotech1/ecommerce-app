@@ -28,21 +28,21 @@ export const EcommerceMetrics = ({ data, loading }: EcommerceMetricsProps) => {
               {loading ? (
                 <span className="inline-block w-16 h-7 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
               ) : (
-                formatNumber(data?.customers.total ?? 0)
+                formatNumber(data?.customers?.total ?? 0)
               )}
             </h4>
           </div>
           {loading ? (
             <span className="inline-block w-16 h-6 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />
-          ) : data?.customers.isGrowing ? (
+          ) : data?.customers?.isGrowing ? (
             <Badge color="success">
               <ArrowUpIcon />
-              {Math.abs(data.customers.growth)}%
+              {Math.abs(data.customers?.growth)}%
             </Badge>
           ) : (
             <Badge color="error">
               <ArrowDownIcon className="text-error-500" />
-              {Math.abs(data?.customers.growth ?? 0)}%
+              {Math.abs(data?.customers?.growth ?? 0)}%
             </Badge>
           )}
         </div>
@@ -62,21 +62,21 @@ export const EcommerceMetrics = ({ data, loading }: EcommerceMetricsProps) => {
               {loading ? (
                 <span className="inline-block w-16 h-7 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
               ) : (
-                formatNumber(data?.orders.total ?? 0)
+                formatNumber(data?.orders?.total ?? 0)
               )}
             </h4>
           </div>
           {loading ? (
             <span className="inline-block w-16 h-6 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />
-          ) : data?.orders.isGrowing ? (
+          ) : data?.orders?.isGrowing ? (
             <Badge color="success">
               <ArrowUpIcon />
-              {Math.abs(data.orders.growth)}%
+              {Math.abs(data.orders?.growth)}%
             </Badge>
           ) : (
             <Badge color="error">
               <ArrowDownIcon className="text-error-500" />
-              {Math.abs(data?.orders.growth ?? 0)}%
+              {Math.abs(data?.orders?.growth ?? 0)}%
             </Badge>
           )}
         </div>

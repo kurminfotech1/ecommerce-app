@@ -176,11 +176,11 @@ export default function BlogDetailPage() {
                   {blog.is_featured && (
                     <Badge color="amber"><Star size={10} fill="currentColor" /> Featured</Badge>
                   )}
-                  {blog.tags && blog.tags.length > 0 && blog.tags.map((tag) => (
+                  {/* {blog.tags && blog.tags.length > 0 && blog.tags.map((tag) => (
                     <Badge key={tag.id} color="blue">
                       <Tag size={9} /> {tag.name}
                     </Badge>
-                  ))}
+                  ))} */}
                 </div>
               </div>
 

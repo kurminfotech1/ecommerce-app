@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { DashboardData } from "@/types/dashboard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -12,6 +13,7 @@ interface StatusOrder {
   order_number: string;
   customer: string;
   email: string;
+  phone: string;
   product_name: string;
   product_image: string | null;
   total_amount: number;
@@ -53,7 +55,7 @@ function getInitials(name: string) {
   return name.slice(0, 2).toUpperCase();
 }
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 5;
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 2 }).format(amount);
@@ -113,6 +115,8 @@ function SkeletonRow() {
 // ─── Order Row ────────────────────────────────────────────────────────────────
 
 function OrderRow({ order }: { order: StatusOrder }) {
+  const router = useRouter();
+
   const cfg = STATUS_CONFIG[order.status] ?? {
     label: order.status,
     icon: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
@@ -130,7 +134,10 @@ function OrderRow({ order }: { order: StatusOrder }) {
 
       {/* ── Order Number ── */}
       <td className="px-4 py-3.5">
-        <span className="text-xs font-bold text-blue-600 dark:text-blue-400 font-mono tracking-tight">
+        <span 
+          onClick={() => router.push(`/orders?open_order=${order.id}`)}
+          className="text-xs font-bold text-blue-600 dark:text-blue-400 font-mono tracking-tight cursor-pointer hover:underline"
+        >
           {order.order_number}
         </span>
       </td>
@@ -185,6 +192,7 @@ function OrderRow({ order }: { order: StatusOrder }) {
           <div className="min-w-0">
             <p className="text-xs font-semibold text-gray-800 dark:text-white/90 truncate">{order.customer}</p>
             <p className="text-[10px] text-gray-400 dark:text-gray-500 truncate">{order.email}</p>
+            <p className="text-[10px] text-gray-400 dark:text-gray-500 truncate">{order.phone}</p>
           </div>
         </div>
       </td>
@@ -245,22 +253,25 @@ export default function StatusWiseOrder({ data, loading }: StatusWiseOrderProps)
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [timeFilter, setTimeFilter] = useState("all");
+  const [dynamicBreakdown, setDynamicBreakdown] = useState<{status: string, count: number}[] | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
 
-  // Build count map from dashboard statusBreakdown (no extra fetch)
+  // Build count map from dashboard statusBreakdown or locally fetched breakdown
   const countMap = React.useMemo(() => {
     const map: Record<string, number> = {};
     let totalAll = 0;
-    for (const s of data?.statusBreakdown ?? []) {
+    const breakdownToUse = dynamicBreakdown ?? data?.statusBreakdown ?? [];
+    for (const s of breakdownToUse) {
       map[s.status] = s.count;
       totalAll += s.count;
     }
     map[ALL_KEY] = totalAll;
     return map;
-  }, [data?.statusBreakdown]);
+  }, [data?.statusBreakdown, dynamicBreakdown]);
 
-  const fetchOrders = useCallback(async (status: string, pageNum: number) => {
+  const fetchOrders = useCallback(async (status: string, pageNum: number, timeFilt: string) => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -268,13 +279,14 @@ export default function StatusWiseOrder({ data, loading }: StatusWiseOrderProps)
     setFetchLoading(true);
     try {
       const statusParam = status === ALL_KEY ? "" : status;
-      const url = `/api/dashboard/orders-by-status?status=${statusParam}&page=${pageNum}&limit=${PAGE_SIZE}`;
+      const url = `/api/dashboard/orders-by-status?status=${statusParam}&page=${pageNum}&limit=${PAGE_SIZE}&timeFilter=${timeFilt}`;
       const res = await fetch(url, { signal: controller.signal });
       if (!res.ok) throw new Error("Failed");
       const json = await res.json();
       setOrders(json.data ?? []);
       setTotal(json.total ?? 0);
       setTotalPages(json.totalPages ?? 1);
+      if (json.statusBreakdown) setDynamicBreakdown(json.statusBreakdown);
     } catch (err: any) {
       if (err.name !== "AbortError") setOrders([]);
     } finally {
@@ -283,8 +295,8 @@ export default function StatusWiseOrder({ data, loading }: StatusWiseOrderProps)
   }, []);
 
   useEffect(() => {
-    fetchOrders(activeTab, page);
-  }, [activeTab, page, fetchOrders]);
+    fetchOrders(activeTab, page, timeFilter);
+  }, [activeTab, page, timeFilter, fetchOrders]);
 
   const handleTabChange = (key: string) => {
     if (key === activeTab) return;
@@ -312,15 +324,31 @@ export default function StatusWiseOrder({ data, loading }: StatusWiseOrderProps)
             )}
           </p>
         </div>
-        <Link
-          href="/orders"
-          className="self-start sm:self-auto inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 transition-colors"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
-          View All Orders
-        </Link>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <select
+            value={timeFilter}
+            onChange={(e) => {
+              setTimeFilter(e.target.value);
+              setPage(1);
+            }}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+          >
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+
+          <Link
+            href="/orders"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            View All Orders
+          </Link>
+        </div>
       </div>
 
       {/* ── Status Tabs ── */}

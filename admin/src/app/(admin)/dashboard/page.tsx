@@ -35,7 +35,7 @@ export default function Ecommerce() {
       <div className="col-span-12 xl:col-span-7 space-y-6">
         <EcommerceMetrics data={data} loading={loading} />
         <MonthlySalesChart
-          salesData={data?.monthlySales.sales ?? new Array(12).fill(0)}
+          salesData={data?.monthlySales?.sales ?? new Array(12).fill(0)}
           loading={loading}
         />
       </div>

@@ -1,11 +1,9 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import {
   Search,
-  ChevronDown,
-  ChevronUp,
   MoreVertical,
   Eye,
   FileText,
@@ -22,7 +20,6 @@ import {
   Package,
   MapPin,
   Calendar,
-  User,
   ShieldCheck,
   AlertCircle,
   Loader2,
@@ -46,7 +43,12 @@ interface OrderItem {
     weight?: string;
     size?: string;
     sku: string;
-  };
+  } | null;
+  product_name?: string;
+  sku?: string;
+  weight?: string;
+  size?: string;
+  image_url?: string;
   quantity: number;
   price: number;
 }
@@ -57,6 +59,7 @@ interface Order {
   user: {
     full_name: string;
     email: string;
+    phone: string;
   };
   order_status: OrderStatus;
   created_at: string;
@@ -220,7 +223,7 @@ const OrderRowDetail = ({
   const currentStatus = order.order_status;
   const allowedNext = ALLOWED_NEXT[currentStatus] ?? [];
   const isTerminal = allowedNext.length === 0;
-
+  console.log("order", order.items);
   return (
     <tr>
       <td colSpan={7} className="px-0 pb-1 pt-0">
@@ -298,21 +301,21 @@ const OrderRowDetail = ({
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
-                          {item.variant.images[0]?.image_url ? (
-                            <img src={item.variant.images[0].image_url} alt="" className="w-full h-full object-cover" />
+                          {item.variant?.images?.[0]?.image_url || item.image_url ? (
+                            <img src={item.variant?.images?.[0]?.image_url || item.image_url!} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <Package size={16} className="text-gray-400" />
                           )}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-800">{item.variant.product.product_name}</p>
-                          <p className="text-[10px] text-gray-400">{item.variant.weight || item.variant.size || "Standard"}</p>
+                          <p className="font-medium text-gray-800">{item.variant?.product?.product_name || item.product_name || "Unknown Product"}</p>
+                          <p className="text-[10px] text-gray-400">{item.variant?.weight || item.weight || item.variant?.size || item.size || "Standard"}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-5 py-3">
                       <code className="text-xs bg-white text-gray-500 px-2 py-0.5 rounded-md border border-gray-200 font-mono">
-                        {item.variant.sku}
+                        {item.variant?.sku || item.sku || "N/A"}
                       </code>
                     </td>
                     <td className="px-5 py-3 text-gray-600">{item.quantity}</td>
@@ -360,8 +363,8 @@ const generateInvoice = (order: Order) => {
       (item) => `
       <tr>
         <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0">
-          <div style="font-weight:600;color:#1a1a2e">${item.variant.product.product_name}</div>
-          <div style="font-size:11px;color:#888;margin-top:2px">${item.variant.weight || item.variant.size || "Standard"} &nbsp;|&nbsp; SKU: ${item.variant.sku}</div>
+          <div style="font-weight:600;color:#1a1a2e">${item.variant?.product?.product_name || item.product_name || "Unknown Product"}</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">${item.variant?.weight || item.weight || item.variant?.size || item.size || "Standard"} &nbsp;|&nbsp; SKU: ${item.variant?.sku || item.sku || "N/A"}</div>
         </td>
         <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;text-align:center;color:#555">${item.quantity}</td>
         <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;text-align:right;color:#555">&#8377;${item.price.toFixed(2)}</td>
@@ -596,6 +599,7 @@ const OrderDetailModal = ({ order, onClose }: { order: Order; onClose: () => voi
             <div>
               <p className="font-semibold text-gray-800">{order.user?.full_name || "Guest User"}</p>
               <p className="text-xs text-gray-500 mt-0.5">{order.user?.email || "No email provided"}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{order.user?.phone || "No phone provided"}</p>
               <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
                 <MapPin size={11} />
                 {order.shipping_address}, {order.shipping_city}, {order.shipping_state} - {order.shipping_pincode}
@@ -621,20 +625,20 @@ const OrderDetailModal = ({ order, onClose }: { order: Order; onClose: () => voi
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden text-base shrink-0">
-                          {item.variant.images[0]?.image_url ? (
-                            <img src={item.variant.images[0].image_url} alt="" className="w-full h-full object-cover" />
+                          {item.variant?.images?.[0]?.image_url || item.image_url ? (
+                            <img src={item.variant?.images?.[0]?.image_url || item.image_url!} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <Package size={14} className="text-gray-400" />
                           )}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-800 text-xs">{item.variant.product.product_name}</p>
-                          <p className="text-[10px] text-gray-400">{item.variant.weight || item.variant.size || "Standard"}</p>
+                          <p className="font-medium text-gray-800 text-xs">{item.variant?.product?.product_name || item.product_name || "Unknown Product"}</p>
+                          <p className="text-[10px] text-gray-400">{item.variant?.weight || item.weight || item.variant?.size || item.size || "Standard"}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <code className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-mono">{item.variant.sku}</code>
+                      <code className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-mono">{item.variant?.sku || item.sku || "N/A"}</code>
                     </td>
                     <td className="px-4 py-3 text-center text-gray-600">{item.quantity}</td>
                     <td className="px-4 py-3 text-right text-gray-700">{formatCurrency(item.price)}</td>
@@ -702,6 +706,25 @@ export default function OrdersPage() {
     }).catch(() => { });
   }, []);
 
+  // ── Auto-open order detail modal ───────────────
+  const hasAutoOpened = React.useRef(false);
+  React.useEffect(() => {
+    if (typeof window !== "undefined" && allOrders.length > 0 && !hasAutoOpened.current) {
+      const params = new URLSearchParams(window.location.search);
+      const openOrderId = params.get("open_order");
+      if (openOrderId) {
+        const orderToOpen = allOrders.find((o) => o.id === openOrderId);
+        if (orderToOpen) {
+          setViewOrder(orderToOpen);
+          hasAutoOpened.current = true;
+          // Clean the URL so reload or re-renders don't keep opening the modal
+          const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+          window.history.replaceState({ path: newUrl }, '', newUrl);
+        }
+      }
+    }
+  }, [allOrders]);
+
   // ── Fetch Data (server-side filtered + paginated) ─────────────────
   const fetchOrders = React.useCallback(async () => {
     try {
@@ -728,14 +751,28 @@ export default function OrdersPage() {
 
   React.useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
-  // ── Collapse/expand state ──────────────────────────────────────
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const toggleRow = (id: string) =>
-    setExpandedRows((prev) => {
+  // ── Selected rows for bulk actions ────────────────────────────
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const toggleSelect = (id: string) =>
+    setSelectedIds((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+  const toggleSelectAll = () => {
+    if (selectedIds.size === paginated.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paginated.map((o) => o.id)));
+    }
+  };
+  const handleBulkStatus = async (newStatus: OrderStatus) => {
+    if (statusUpdating || selectedIds.size === 0) return;
+    for (const id of Array.from(selectedIds)) {
+      await handleStatusUpdate(id, newStatus);
+    }
+    setSelectedIds(new Set());
+  };
 
   // ── Status update loading lock (prevents multi-click) ─────────
   const [statusUpdating, setStatusUpdating] = useState<string | null>(null); // holds orderId being updated
@@ -939,110 +976,199 @@ export default function OrdersPage() {
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+
+              {/* ── Bulk Action Bar ── */}
+              {selectedIds.size > 0 && (
+                <div className="flex items-center gap-3 px-4 py-2.5 bg-blue-50 border-b border-blue-100">
+                  <span className="text-xs font-semibold text-blue-700">{selectedIds.size} selected</span>
+                  <button
+                    onClick={() => handleBulkStatus("CONFIRMED")}
+                    disabled={!!statusUpdating}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition disabled:opacity-50"
+                  >
+                    <CheckCircle2 size={12} /> Confirm
+                  </button>
+                  <button
+                    onClick={() => handleBulkStatus("CANCELLED")}
+                    disabled={!!statusUpdating}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition disabled:opacity-50"
+                  >
+                    <XCircle size={12} /> Cancel
+                  </button>
+                  <button
+                    onClick={() => setSelectedIds(new Set())}
+                    className="ml-auto text-xs text-blue-500 hover:text-blue-700 font-medium transition"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
+
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      <th className="px-3 py-3 text-left w-8">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.size === paginated.length && paginated.length > 0}
+                          onChange={toggleSelectAll}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                      </th>
                       <th className="px-4 py-3 text-left">Order #</th>
+                      <th className="px-4 py-3 text-left">Product</th>
                       <th className="px-4 py-3 text-left">Customer</th>
                       <th className="px-4 py-3 text-left">Status</th>
+                      <th className="px-4 py-3 text-center">Qty</th>
+                      <th className="px-4 py-3 text-right">Price</th>
                       <th className="px-4 py-3 text-left">Date</th>
-                      <th className="px-4 py-3 text-left">Amount</th>
                       <th className="px-4 py-3 text-left">Location</th>
                       <th className="px-4 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {paginated.map((order) => {
-                      const isExpanded = expandedRows.has(order.id);
                       const { date, time } = formatDate(order.created_at);
+                      const firstItem = order.items[0];
+                      const productName = firstItem?.variant?.product?.product_name || firstItem?.product_name || "—";
+                      const productImg = firstItem?.variant?.images?.[1]?.image_url || firstItem?.variant?.images?.[0]?.image_url || firstItem?.image_url || null;
+                      const sku = firstItem?.variant?.sku || firstItem?.sku || "—";
+                      const qty = firstItem?.quantity ?? 0;
+                      const price = firstItem?.price ?? 0;
+                      const isSelected = selectedIds.has(order.id);
+                      const allowedNext = ALLOWED_NEXT[order.order_status] ?? [];
                       return (
-                        <React.Fragment key={order.id}>
-                          <tr
-                            className="hover:bg-blue-50/30 transition group"
-                          >
-                            {/* Order Number */}
-                            <td className="px-4 py-3">
-                              <span className="font-mono text-[10px] font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded-lg">
-                                {order.order_number}
-                              </span>
-                            </td>
+                        <tr
+                          key={order.id}
+                          className={`hover:bg-blue-50/30 transition group ${isSelected ? "bg-blue-50/60" : ""}`}
+                        >
+                          {/* Checkbox */}
+                          <td className="px-3 py-3">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleSelect(order.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                            />
+                          </td>
 
-                            {/* Customer */}
-                            <td className="px-4 py-3">
-                              <div className="flex items-center gap-2.5">
-                                <div
-                                  className={`w-8 h-8 rounded-full ${avatarColor(order.user?.full_name || "Guest")} flex items-center justify-center text-white text-xs font-bold shrink-0`}
-                                >
-                                  {initials(order.user?.full_name || "Guest")}
-                                </div>
-                                <div>
-                                  <p className="font-semibold text-gray-800 leading-tight text-[11px]">
-                                    {order.user?.full_name || "Guest User"}
-                                  </p>
-                                  <p className="text-[9px] text-gray-400">{order.user?.email || "N/A"}</p>
-                                </div>
+                          {/* Order Number */}
+                          <td className="px-4 py-3">
+                            <span
+                              onClick={() => setViewOrder(order)}
+                              className="font-mono text-[10px] font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 cursor-pointer px-2 py-1 rounded-lg transition-colors border border-blue-100 hover:border-blue-200"
+                            >
+                              {order.order_number}
+                            </span>
+                          </td>
+
+                          {/* Product */}
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2.5 min-w-[160px]">
+                              <div className="w-9 h-9 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center overflow-hidden shrink-0">
+                                {productImg ? (
+                                  <img src={productImg} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                  <Package size={14} className="text-gray-300" />
+                                )}
                               </div>
-                            </td>
+                              <div className="min-w-0">
+                                <p className="text-[11px] font-medium text-gray-800 line-clamp-2 leading-tight">{productName}</p>
+                                {order.items.length > 1 && (
+                                  <p className="text-[9px] text-gray-400 mt-0.5">+{order.items.length - 1} more item(s)</p>
+                                )}
+                              </div>
+                            </div>
+                          </td>
 
-                            {/* Status */}
-                            <td className="px-4 py-3">
+                          {/* Customer */}
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className={`w-8 h-8 rounded-full ${avatarColor(order.user?.full_name || "Guest")} flex items-center justify-center text-white text-xs font-bold shrink-0`}>
+                                {initials(order.user?.full_name || "Guest")}
+                              </div>
+                              <div>
+                                <p className="font-semibold text-gray-800 leading-tight text-[11px]">{order.user?.full_name || "Guest User"}</p>
+                                <p className="text-[9px] text-gray-400">{order.user?.email || "N/A"}</p>
+                                <p className="text-[9px] text-gray-400">{order.user?.phone || "N/A"}</p>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Status dropdown */}
+                          <td className="px-4 py-3">
+                            {canUpdate ? (
+                              <select
+                                value={order.order_status}
+                                disabled={!!statusUpdating}
+                                onChange={(e) => handleStatusUpdate(order.id, e.target.value as OrderStatus)}
+                                className={`text-[10px] font-semibold px-2 py-1 rounded-lg border cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-400 transition ${
+                                  order.order_status === "PLACED" ? "bg-amber-50 text-amber-700 border-amber-200" :
+                                  order.order_status === "CONFIRMED" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                                  order.order_status === "PROCESSING" ? "bg-indigo-50 text-indigo-700 border-indigo-200" :
+                                  order.order_status === "SHIPPED" ? "bg-purple-50 text-purple-700 border-purple-200" :
+                                  order.order_status === "DELIVERED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                                  "bg-red-50 text-red-600 border-red-200"
+                                }`}
+                              >
+                                {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
+                                  <option
+                                    key={key}
+                                    value={key}
+                                    disabled={key !== order.order_status && !allowedNext.includes(key as OrderStatus)}
+                                  >
+                                    {cfg.label}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
                               <StatusBadge status={order.order_status} />
-                            </td>
+                            )}
+                          </td>
 
-                            {/* Date */}
-                            <td className="px-4 py-3">
-                              <div className="flex items-start gap-1.5">
-                                <Calendar size={12} className="text-gray-400 mt-0.5 shrink-0" />
-                                <div>
-                                  <p className="text-[11px] font-medium text-gray-700">{date}</p>
-                                  <p className="text-[9px] text-gray-400">{time}</p>
-                                </div>
+
+                          {/* Qty */}
+                          <td className="px-4 py-3 text-center text-xs text-gray-600 font-medium">{qty}</td>
+
+                          {/* Price */}
+                          <td className="px-4 py-3 text-right text-xs font-semibold text-gray-700">{formatCurrency(price)}</td>
+
+                          {/* Date */}
+                          <td className="px-4 py-3">
+                            <div className="flex items-start gap-1.5">
+                              <Calendar size={12} className="text-gray-400 mt-0.5 shrink-0" />
+                              <div>
+                                <p className="text-[11px] font-medium text-gray-700">{date}</p>
+                                <p className="text-[9px] text-gray-400">{time}</p>
                               </div>
-                            </td>
+                            </div>
+                          </td>
 
-                            {/* Amount */}
-                            <td className="px-4 py-3">
-                              <span className="font-semibold text-gray-900 text-xs">
-                                {formatCurrency(order.total_amount)}
+
+                          {/* Location */}
+                          <td className="px-4 py-3">
+                            <div className="flex items-start gap-1.5 max-w-[150px]">
+                              <MapPin size={12} className="text-gray-400 mt-0.5 shrink-0" />
+                              <span className="text-[10px] text-gray-600 leading-snug line-clamp-2">
+                                {order.shipping_city}, {order.shipping_state}
                               </span>
-                            </td>
+                            </div>
+                          </td>
 
-                            {/* Address */}
-                            <td className="px-4 py-3">
-                              <div className="flex items-start gap-1.5 max-w-[180px]">
-                                <MapPin size={12} className="text-gray-400 mt-0.5 shrink-0" />
-                                <span className="text-[10px] text-gray-600 leading-snug line-clamp-2">
-                                  {order.shipping_city}, {order.shipping_state}
-                                </span>
-                              </div>
-                            </td>
-
-                            {/* Actions */}
-                            <td className="px-4 py-3">
-                              <div className="flex items-center justify-end gap-0.5">
-                                {/* Expand/collapse chevron */}
-                                <button
-                                  onClick={() => toggleRow(order.id)}
-                                  title={isExpanded ? "Collapse" : "Expand"}
-                                  className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition"
-                                >
-                                  {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                                </button>
-                                {/* 3-dot menu */}
-                                <RowMenu
-                                  order={order}
-                                  onDelete={(o) => setDeleteOrder(o)}
-                                  onView={(o) => setViewOrder(o)}
-                                  canDelete={canDelete}
-                                />
-                              </div>
-                            </td>
-                          </tr>
-
-                          {/* ── Expanded Row ── */}
-                          {isExpanded && <OrderRowDetail key={`${order.id}-detail`} order={order} onStatusUpdate={handleStatusUpdate} canUpdate={canUpdate} isUpdating={statusUpdating === order.id} />}
-                        </React.Fragment>
+                          {/* Actions */}
+                          <td className="px-4 py-3">
+                            <div className="flex items-center justify-end">
+                              <RowMenu
+                                order={order}
+                                onDelete={(o) => setDeleteOrder(o)}
+                                onView={(o) => setViewOrder(o)}
+                                canDelete={canDelete}
+                              />
+                            </div>
+                          </td>
+                        </tr>
                       );
                     })}
                   </tbody>

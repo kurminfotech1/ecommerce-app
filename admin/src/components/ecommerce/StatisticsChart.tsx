@@ -49,8 +49,8 @@ export default function StatisticsChart({ rawData, loading }: StatisticsChartPro
   }, []);
 
   // ── Derive series + categories based on active tab ──────────────────────
-  const monthlySales = rawData?.monthlySales.sales ?? new Array(12).fill(0);
-  const monthlyRevenue = rawData?.monthlySales.revenue ?? new Array(12).fill(0);
+  const monthlySales = rawData?.monthlySales?.sales ?? new Array(12).fill(0);
+  const monthlyRevenue = rawData?.monthlySales?.revenue ?? new Array(12).fill(0);
 
   let categories: string[];
   let salesSeries: number[];
