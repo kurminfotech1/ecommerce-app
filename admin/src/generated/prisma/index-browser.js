@@ -346,6 +346,14 @@ exports.Prisma.AdminPermissionScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.OtpVerificationScalarFieldEnum = {
+  id: 'id',
+  email: 'email',
+  otp: 'otp',
+  expires_at: 'expires_at',
+  created_at: 'created_at'
+};
+
 exports.Prisma.SiteLogoScalarFieldEnum = {
   id: 'id',
   light_url: 'light_url',
@@ -426,6 +434,7 @@ exports.Prisma.ModelName = {
   BlogTag: 'BlogTag',
   Blog: 'Blog',
   AdminPermission: 'AdminPermission',
+  OtpVerification: 'OtpVerification',
   SiteLogo: 'SiteLogo'
 };
 

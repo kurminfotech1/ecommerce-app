@@ -396,6 +396,15 @@ model AdminPermission {
   @@unique([adminId, module])
 }
 
+// Temporary OTP store for email verification during registration
+model OtpVerification {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  otp        String
+  expires_at DateTime
+  created_at DateTime @default(now())
+}
+
 // Singleton row — always id = 'site-logo'
 model SiteLogo {
   id          String   @id @default("site-logo")
