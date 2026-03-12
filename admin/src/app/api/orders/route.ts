@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { sendOrderStatusEmail } from "@/lib/mailer";
 
 // GET: Get all orders with server-side search, status filter & pagination
 export async function GET(request: Request) {
@@ -170,7 +171,13 @@ export async function POST(request: Request) {
                     }
                 },
                 include: {
-                    items: true
+                    items: true,
+                    user: {
+                        select: {
+                            email: true,
+                            full_name: true
+                        }
+                    }
                 }
             });
 
@@ -201,6 +208,21 @@ export async function POST(request: Request) {
 
             return order;
         });
+
+        // Send email notification (non-blocking)
+        if (result.user?.email) {
+            sendOrderStatusEmail(result.user.email, {
+                orderNumber: result.order_number,
+                status: result.order_status,
+                userName: result.user.full_name || "Valued Customer",
+                total: result.total_amount,
+                items: result.items.map((item: any) => ({
+                    productName: item.product_name || "Product",
+                    quantity: item.quantity,
+                    price: item.price
+                }))
+            }).catch(err => console.error("EMAIL_ORDER_PLACED_ERROR", err));
+        }
 
         return NextResponse.json(result, { status: 201 });
     } catch (error: any) {

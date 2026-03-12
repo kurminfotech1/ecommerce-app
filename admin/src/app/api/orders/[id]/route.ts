@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { checkApiPermission } from "@/lib/utils/apiPermission";
+import { sendOrderStatusEmail } from "@/lib/mailer";
 
 const MODULE = "Orders";
 
@@ -150,9 +151,34 @@ export async function PATCH(
             // Perform the status update
             return await tx.order.update({
                 where: { id },
-                data: { order_status: normalizedTargetStatus as any }
+                data: { order_status: normalizedTargetStatus as any },
+                include: {
+                    user: { select: { email: true, full_name: true } },
+                    items: {
+                        select: {
+                            product_name: true,
+                            quantity: true,
+                            price: true
+                        }
+                    }
+                }
             });
         });
+
+        // Send email notification (non-blocking)
+        if (updatedOrder.user?.email) {
+            sendOrderStatusEmail(updatedOrder.user.email, {
+                orderNumber: updatedOrder.order_number,
+                status: updatedOrder.order_status,
+                userName: updatedOrder.user.full_name || "Valued Customer",
+                total: updatedOrder.total_amount,
+                items: updatedOrder.items.map((item: any) => ({
+                    productName: item.product_name || "Product",
+                    quantity: item.quantity,
+                    price: item.price
+                }))
+            }).catch(err => console.error("EMAIL_STATUS_UPDATE_ERROR", err));
+        }
 
         return NextResponse.json(updatedOrder, { status: 200 });
     } catch (error: any) {

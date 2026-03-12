@@ -225,46 +225,6 @@ export async function sendPasswordResetEmail(to: string, resetLink: string) {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Order Confirmation Email  (ready to use when needed)
-// Usage: sendOrderConfirmationEmail("user@example.com", { orderNumber, items, total })
-// ─────────────────────────────────────────────────────────────────
-export async function sendOrderConfirmationEmail(
-  to: string,
-  order: { orderNumber: string; total: number; name: string }
-) {
-  const html = emailWrapper(`
-    <h2 style="margin:0 0 8px;font-size:22px;color:#1a3d1a;font-weight:700;">
-      Order Confirmed! 🎉
-    </h2>
-    <p style="margin:0 0 16px;font-size:15px;color:#4a5c4a;line-height:1.6;">
-      Hi <strong>${order.name}</strong>, thank you for your order from
-      <strong style="color:#2d6b2d;">Avshdh Organics</strong>!
-    </p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f9f0;border-radius:8px;padding:16px;margin:0 0 24px;">
-      <tr>
-        <td style="padding:6px 0;font-size:14px;color:#4a5c4a;">Order Number</td>
-        <td style="padding:6px 0;font-size:14px;color:#1a3d1a;font-weight:700;text-align:right;">#${order.orderNumber}</td>
-      </tr>
-      <tr>
-        <td style="padding:6px 0;font-size:14px;color:#4a5c4a;">Total Amount</td>
-        <td style="padding:6px 0;font-size:14px;color:#1a3d1a;font-weight:700;text-align:right;">₹${order.total.toFixed(2)}</td>
-      </tr>
-    </table>
-    <p style="margin:0;font-size:14px;color:#6b7c6b;line-height:1.6;">
-      We'll notify you once your order is shipped. Thank you for choosing us!<br/><br/>
-      Warm regards,<br/>
-      <strong style="color:#2d6b2d;">The Avshdh Organics Team</strong> 🌿
-    </p>
-  `);
-
-  await sendMail({
-    to,
-    subject: `Order Confirmed #${order.orderNumber} – Avshdh Organics`,
-    html,
-  });
-}
-
-// ─────────────────────────────────────────────────────────────────
 // Contact Form — Types
 // ─────────────────────────────────────────────────────────────────
 interface ContactPayload {
@@ -473,3 +433,112 @@ export async function sendContactAdminNotificationEmail(
   });
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Order Status Update Email
+// Usage: sendOrderStatusEmail("user@example.com", { orderNumber, status, userName, items, total })
+// ─────────────────────────────────────────────────────────────────
+export async function sendOrderStatusEmail(
+  to: string,
+  order: {
+    orderNumber: string;
+    status: string;
+    userName: string;
+    total: number;
+    items: {
+      productName: string;
+      quantity: number;
+      price: number;
+    }[];
+  }
+) {
+  const statusColor = 
+    order.status === "DELIVERED" ? "#1a5c1a" :
+    order.status === "CANCELLED" ? "#991b1b" :
+    order.status === "SHIPPED" ? "#1d4ed8" :
+    "#2d8a2d";
+
+  const itemsHtml = order.items
+    .map(
+      (item) => `
+    <tr>
+      <td style="padding:12px 0; border-bottom:1px solid #e8f0e8;">
+        <p style="margin:0; font-size:14px; color:#1a3d1a; font-weight:600;">${item.productName}</p>
+        <p style="margin:4px 0 0; font-size:12px; color:#6b7c6b;">Qty: ${item.quantity}</p>
+      </td>
+      <td style="padding:12px 0; border-bottom:1px solid #e8f0e8; text-align:right; font-size:14px; color:#1a3d1a; font-weight:600;">
+        ₹${(item.price * item.quantity).toFixed(2)}
+      </td>
+    </tr>
+  `
+    )
+    .join("");
+
+  const html = emailWrapper(`
+    <h2 style="margin:0 0 8px;font-size:22px;color:#1a3d1a;font-weight:700;">
+      Order Status Updated! 📦
+    </h2>
+    <p style="margin:0 0 16px;font-size:15px;color:#4a5c4a;line-height:1.6;">
+      Hi <strong>${order.userName}</strong>, the status of your order <strong>#${order.orderNumber}</strong> has been updated.
+    </p>
+
+    <!-- Status Badge -->
+    <div style="margin:0 0 24px; text-align:center;">
+      <span style="
+        display:inline-block;
+        background-color:${statusColor}15;
+        color:${statusColor};
+        padding:8px 20px;
+        border-radius:24px;
+        font-size:16px;
+        font-weight:700;
+        border:1px solid ${statusColor}30;
+        text-transform: uppercase;
+        letter-spacing:1px;
+      ">
+        ${order.status}
+      </span>
+    </div>
+
+    <!-- Special Mention Logic -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+      <tr>
+        <td style="background:#f0fdf4; border-left:4px solid ${statusColor}; border-radius:4px; padding:16px;">
+          <p style="margin:0; font-size:14px; color:#166534; line-height:1.5;">
+            ${
+              order.status === "PLACED" ? "Thank you for your order! We've received it and will process it shortly." :
+              order.status === "CONFIRMED" ? "Good news! We've confirmed your order and will start preparing it shortly." :
+              order.status === "PROCESSING" ? "We're currently picking and packing your items with care." :
+              order.status === "SHIPPED" ? "Exciting! Your order is on its way to you. Keep an eye out!" :
+              order.status === "DELIVERED" ? "Your order has been successfully delivered. Enjoy your organic products!" :
+              order.status === "CANCELLED" ? "Your order has been cancelled. If you have questions, please reach out." :
+              "We're working on your order and will keep you posted on its progress."
+            }
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    <h3 style="margin:0 0 12px; font-size:16px; color:#1a3d1a; border-bottom:2px solid #e8f0e8; padding-bottom:8px;">Order Summary</h3>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
+      ${itemsHtml}
+      <tr>
+        <td style="padding:16px 0 0; font-size:15px; color:#1a3d1a; font-weight:700;">Total Amount</td>
+        <td style="padding:16px 0 0; font-size:18px; color:#2d6b2d; font-weight:800; text-align:right;">
+          ₹${order.total.toFixed(2)}
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin:24px 0 0; font-size:14px; color:#6b7c6b; line-height:1.6;">
+      Thank you for choosing <strong>Avshdh Organics</strong>! If you have any questions about your order, please contact our support team.<br/><br/>
+      Warm regards,<br/>
+      <strong style="color:#2d6b2d;">The Avshdh Organics Team</strong> 🌿
+    </p>
+  `);
+
+  await sendMail({
+    to,
+    subject: `Order #${order.orderNumber} Status Update: ${order.status} – Avshdh Organics`,
+    html,
+  });
+}
