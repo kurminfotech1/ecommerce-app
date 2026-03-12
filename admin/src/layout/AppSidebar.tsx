@@ -7,8 +7,10 @@ import {
   BoxCubeIcon,
   ChevronDownIcon,
   GridIcon,
+  GroupIcon,
   ListIcon,
   UserCircleIcon,
+
 } from "../icons/index";
 import {
   Crown,
@@ -75,6 +77,12 @@ const navItems: NavItem[] = [
     name: "Users",
     moduleName: "Users",
     path: "/users",
+  },
+  {
+    icon: < GroupIcon />,
+    name: "Customers",
+    moduleName: "Customers",
+    path: "/customers",
   },
   {
     icon: <StarIcon />,
