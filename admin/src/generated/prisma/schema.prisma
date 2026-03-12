@@ -198,7 +198,7 @@ model Order {
 }
 
 model OrderItem {
-  id         String          @id @default(uuid())
+  id         String  @id @default(uuid())
   order_id   String
   variant_id String?
   quantity   Int
