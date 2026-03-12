@@ -11,23 +11,26 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
 
         const status = searchParams.get("status") ?? "";
-        const timeFilter = searchParams.get("timeFilter") ?? "all";
+        const startDate = searchParams.get("startDate");
+        const endDate = searchParams.get("endDate");
         const page = Math.max(1, Number(searchParams.get("page") || 1));
         const limit = Math.min(20, Math.max(1, Number(searchParams.get("limit") || 8)));
         const skip = (page - 1) * limit;
 
         // Build time filter
         const baseWhere: any = {};
-        const now = new Date();
-        if (timeFilter === "today") {
-            const start = new Date(); start.setHours(0, 0, 0, 0);
-            baseWhere.created_at = { gte: start };
-        } else if (timeFilter === "weekly") {
-            const start = new Date(); start.setDate(start.getDate() - 7);
-            baseWhere.created_at = { gte: start };
-        } else if (timeFilter === "monthly") {
-            const start = new Date(now.getFullYear(), now.getMonth(), 1);
-            baseWhere.created_at = { gte: start };
+        if (startDate || endDate) {
+            baseWhere.created_at = {};
+            if (startDate) {
+                const start = new Date(startDate);
+                start.setHours(0, 0, 0, 0);
+                baseWhere.created_at.gte = start;
+            }
+            if (endDate) {
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59, 999);
+                baseWhere.created_at.lte = end;
+            }
         }
 
         // Build where clause — only filter by status if valid

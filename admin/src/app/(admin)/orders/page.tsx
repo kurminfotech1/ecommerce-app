@@ -29,6 +29,7 @@ import { DeleteModal } from "@/components/common/DeleteModal";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { usePermission } from "@/hooks/usePermission";
+import flatpickr from "flatpickr";
 
 // ── Types ──────────────────────────────────────────────────────────
 type OrderStatus = "PLACED" | "CONFIRMED" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
@@ -92,12 +93,12 @@ const STATUS_CONFIG: Record<
 
 // ── Allowed status transitions (mirrors backend logic) ──────────────
 const ALLOWED_NEXT: Record<OrderStatus, OrderStatus[]> = {
-  PLACED:     ["CONFIRMED", "CANCELLED"],
-  CONFIRMED:  ["PROCESSING", "CANCELLED"],
+  PLACED: ["CONFIRMED", "CANCELLED"],
+  CONFIRMED: ["PROCESSING", "CANCELLED"],
   PROCESSING: ["SHIPPED", "CANCELLED"],
-  SHIPPED:    ["DELIVERED", "CANCELLED"],
-  DELIVERED:  [],
-  CANCELLED:  [],
+  SHIPPED: ["DELIVERED", "CANCELLED"],
+  DELIVERED: [],
+  CANCELLED: [],
 };
 
 // ── Helpers ────────────────────────────────────────────────────────
@@ -261,10 +262,10 @@ const OrderRowDetail = ({
                         isCurrent
                           ? `Current status: ${cfg.label}`
                           : isTerminal
-                          ? `Order is ${currentStatus} (terminal — no further changes)`
-                          : !isAllowed
-                          ? `Cannot go back to ${cfg.label}`
-                          : `Mark as ${cfg.label}`
+                            ? `Order is ${currentStatus} (terminal — no further changes)`
+                            : !isAllowed
+                              ? `Cannot go back to ${cfg.label}`
+                              : `Mark as ${cfg.label}`
                       }
                       className={`text-[10px] px-2.5 py-1 rounded-md border transition font-medium ${btnCls}`}
                     >
@@ -664,7 +665,7 @@ const OrderDetailModal = ({ order, onClose }: { order: Order; onClose: () => voi
         </div>
 
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
-          <button 
+          <button
             onClick={() => generateInvoice(order)}
             className="px-2 flex items-center justify-center gap-2 bg-[#157f3c] hover:bg-[#126631] text-white py-2.5 rounded-xl text-sm font-semibold transition shadow-sm"
           >
@@ -694,9 +695,41 @@ export default function OrdersPage() {
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+
+  const datePickerRef = React.useRef<HTMLInputElement>(null);
+  const fpRef = React.useRef<any>(null);
+
+  React.useEffect(() => {
+    if (!datePickerRef.current) return;
+    const fp = flatpickr(datePickerRef.current, {
+      mode: "range",
+      monthSelectorType: "static",
+      dateFormat: "Y-m-d",
+      clickOpens: true,
+      prevArrow:
+        '<svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.5 15L7.5 10L12.5 5" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      nextArrow:
+        '<svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 15L12.5 10L7.5 5" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      onChange: (selectedDates, dateStr, instance) => {
+        if (selectedDates.length === 2) {
+          setStartDate(instance.formatDate(selectedDates[0], "Y-m-d"));
+          setEndDate(instance.formatDate(selectedDates[1], "Y-m-d"));
+          setPage(1);
+        } else if (selectedDates.length === 0) {
+          setStartDate("");
+          setEndDate("");
+          setPage(1);
+        }
+      }
+    });
+    fpRef.current = fp;
+    return () => { if (!Array.isArray(fp)) fp.destroy(); };
+  }, []);
 
   // ── Separate all-orders fetch for stat cards (unfiltered) ─────────
   const [allOrders, setAllOrders] = React.useState<Order[]>([]);
@@ -732,6 +765,8 @@ export default function OrdersPage() {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       if (statusFilter && statusFilter !== "All") params.set("status", statusFilter);
+      if (startDate) params.set("startDate", startDate);
+      if (endDate) params.set("endDate", endDate);
       params.set("page", String(page));
       params.set("limit", String(ITEMS_PER_PAGE));
 
@@ -747,7 +782,7 @@ export default function OrdersPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, statusFilter, page]);
+  }, [search, statusFilter, page, startDate, endDate]);
 
   React.useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
@@ -768,12 +803,31 @@ export default function OrdersPage() {
   };
   const handleBulkStatus = async (newStatus: OrderStatus) => {
     if (statusUpdating || selectedIds.size === 0) return;
-    for (const id of Array.from(selectedIds)) {
+    
+    const validIds = Array.from(selectedIds).filter((id) => {
+      const order = orders.find((o) => o.id === id);
+      if (!order) return false;
+      const allowedNext = ALLOWED_NEXT[order.order_status] ?? [];
+      return allowedNext.includes(newStatus);
+    });
+
+    if (validIds.length === 0) {
+      toast.info(`None of the selected orders can be marked as ${newStatus}`);
+      setSelectedIds(new Set());
+      return;
+    }
+
+    for (const id of validIds) {
       await handleStatusUpdate(id, newStatus);
     }
+
+    if (validIds.length < selectedIds.size) {
+      const skipped = selectedIds.size - validIds.length;
+      toast.info(`Updated ${validIds.length} orders. ${skipped} skipped (invalid status).`);
+    }
+
     setSelectedIds(new Set());
   };
-
   // ── Status update loading lock (prevents multi-click) ─────────
   const [statusUpdating, setStatusUpdating] = useState<string | null>(null); // holds orderId being updated
 
@@ -847,10 +901,14 @@ export default function OrdersPage() {
 
   const ALL_STATUSES: string[] = ["All", ...Object.keys(STATUS_CONFIG)];
 
+  const selectedOrdersList = orders.filter((o) => selectedIds.has(o.id));
+  const confirmableCount = selectedOrdersList.filter((o) => (ALLOWED_NEXT[o.order_status] ?? []).includes("CONFIRMED")).length;
+  const cancellableCount = selectedOrdersList.filter((o) => (ALLOWED_NEXT[o.order_status] ?? []).includes("CANCELLED")).length;
+
   return (
     <>
       <div className="min-h-screen bg-gray-50/60">
-        <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+        <div className="max-w-12xl mx-auto px-4 py-8 space-y-6">
 
           {/* ── Header ── */}
           <div className="flex flex-wrap gap-3 justify-between items-center">
@@ -878,9 +936,29 @@ export default function OrdersPage() {
                 className="border border-gray-200 bg-white text-sm px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
               >
                 {ALL_STATUSES.map((s) => (
-                  <option key={s} value={s}>{s === "All" ? "All Statuses" : s}</option>
+                  <option key={s} value={s}>
+                    {s === "All" ? "All Statuses" : s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()}
+                  </option>
                 ))}
               </select>
+
+              <div className="relative inline-flex items-center">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none z-10" />
+                <input
+                  ref={datePickerRef}
+                  className="w-56 pl-9 pr-8 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition cursor-pointer shadow-sm"
+                  placeholder="Select date range"
+                />
+                {(startDate || endDate) && (
+                  <button 
+                    onClick={() => fpRef.current?.clear()}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition p-1"
+                    title="Clear dates"
+                  >
+                    <XCircle size={14} />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -981,20 +1059,27 @@ export default function OrdersPage() {
               {selectedIds.size > 0 && (
                 <div className="flex items-center gap-3 px-4 py-2.5 bg-blue-50 border-b border-blue-100">
                   <span className="text-xs font-semibold text-blue-700">{selectedIds.size} selected</span>
-                  <button
-                    onClick={() => handleBulkStatus("CONFIRMED")}
-                    disabled={!!statusUpdating}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition disabled:opacity-50"
-                  >
-                    <CheckCircle2 size={12} /> Confirm
-                  </button>
-                  <button
-                    onClick={() => handleBulkStatus("CANCELLED")}
-                    disabled={!!statusUpdating}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition disabled:opacity-50"
-                  >
-                    <XCircle size={12} /> Cancel
-                  </button>
+                  
+                  {confirmableCount > 0 && (
+                    <button
+                      onClick={() => handleBulkStatus("CONFIRMED")}
+                      disabled={!!statusUpdating}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition disabled:opacity-50"
+                    >
+                      <CheckCircle2 size={12} /> Confirm ({confirmableCount})
+                    </button>
+                  )}
+                  
+                  {cancellableCount > 0 && (
+                    <button
+                      onClick={() => handleBulkStatus("CANCELLED")}
+                      disabled={!!statusUpdating}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition disabled:opacity-50"
+                    >
+                      <XCircle size={12} /> Cancel ({cancellableCount})
+                    </button>
+                  )}
+
                   <button
                     onClick={() => setSelectedIds(new Set())}
                     className="ml-auto text-xs text-blue-500 hover:text-blue-700 font-medium transition"
@@ -1067,6 +1152,7 @@ export default function OrdersPage() {
                           {/* Product */}
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2.5 min-w-[160px]">
+
                               <div className="w-9 h-9 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center overflow-hidden shrink-0">
                                 {productImg ? (
                                   <img src={productImg} alt="" className="w-full h-full object-cover" />
@@ -1074,11 +1160,32 @@ export default function OrdersPage() {
                                   <Package size={14} className="text-gray-300" />
                                 )}
                               </div>
-                              <div className="min-w-0">
-                                <p className="text-[11px] font-medium text-gray-800 line-clamp-2 leading-tight">{productName}</p>
+
+                              <div className="min-w-0 flex flex-col justify-center">
+
+                                {/* Tooltip Wrapper */}
+                                <div className="relative group/tooltip inline-block max-w-[160px]">
+                                  <p className="text-[11px] font-medium text-gray-800 line-clamp-2 leading-tight cursor-default">
+                                    {productName?.slice(0, 20)}...
+                                  </p>
+
+                                  {/* Tooltip */}
+                                  <div className="pointer-events-none absolute bottom-full left-0 mb-2 z-50 hidden group-hover/tooltip:block">
+                                    <div className="bg-gray-900 dark:bg-gray-700 text-white text-[11px] font-medium rounded-lg px-3 py-1.5 shadow-lg w-max max-w-[240px] break-words text-left">
+                                      {productName}
+
+                                      {/* Arrow */}
+                                      <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700" />
+                                    </div>
+                                  </div>
+                                </div>
+
                                 {order.items.length > 1 && (
-                                  <p className="text-[9px] text-gray-400 mt-0.5">+{order.items.length - 1} more item(s)</p>
+                                  <p className="text-[9px] text-gray-400 mt-0.5">
+                                    +{order.items.length - 1} more item(s)
+                                  </p>
                                 )}
+
                               </div>
                             </div>
                           </td>
@@ -1104,14 +1211,13 @@ export default function OrdersPage() {
                                 value={order.order_status}
                                 disabled={!!statusUpdating}
                                 onChange={(e) => handleStatusUpdate(order.id, e.target.value as OrderStatus)}
-                                className={`text-[10px] font-semibold px-2 py-1 rounded-lg border cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-400 transition ${
-                                  order.order_status === "PLACED" ? "bg-amber-50 text-amber-700 border-amber-200" :
+                                className={`text-[10px] font-semibold px-2 py-1 rounded-lg border cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-400 transition ${order.order_status === "PLACED" ? "bg-amber-50 text-amber-700 border-amber-200" :
                                   order.order_status === "CONFIRMED" ? "bg-blue-50 text-blue-700 border-blue-200" :
-                                  order.order_status === "PROCESSING" ? "bg-indigo-50 text-indigo-700 border-indigo-200" :
-                                  order.order_status === "SHIPPED" ? "bg-purple-50 text-purple-700 border-purple-200" :
-                                  order.order_status === "DELIVERED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                                  "bg-red-50 text-red-600 border-red-200"
-                                }`}
+                                    order.order_status === "PROCESSING" ? "bg-indigo-50 text-indigo-700 border-indigo-200" :
+                                      order.order_status === "SHIPPED" ? "bg-purple-50 text-purple-700 border-purple-200" :
+                                        order.order_status === "DELIVERED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                                          "bg-red-50 text-red-600 border-red-200"
+                                  }`}
                               >
                                 {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
                                   <option

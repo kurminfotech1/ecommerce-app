@@ -9,23 +9,26 @@ export async function GET(request: Request) {
         const userId = searchParams.get("userId") ?? undefined;
         const search = searchParams.get("search")?.trim() ?? "";
         const status = searchParams.get("status") ?? "";   // e.g. "PLACED"
-        const timeFilter = searchParams.get("timeFilter") ?? "all";
+        const startDate = searchParams.get("startDate");
+        const endDate = searchParams.get("endDate");
         const page = Math.max(1, Number(searchParams.get("page") || 1));
         const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") || 20)));
         const skip = (page - 1) * limit;
 
         // ── Build time filter ───────────────────────────────────────
         const timeWhere: any = {};
-        const now = new Date();
-        if (timeFilter === "today") {
-            const start = new Date(); start.setHours(0, 0, 0, 0);
-            timeWhere.created_at = { gte: start };
-        } else if (timeFilter === "weekly") {
-            const start = new Date(); start.setDate(start.getDate() - 7);
-            timeWhere.created_at = { gte: start };
-        } else if (timeFilter === "monthly") {
-            const start = new Date(now.getFullYear(), now.getMonth(), 1);
-            timeWhere.created_at = { gte: start };
+        if (startDate || endDate) {
+            timeWhere.created_at = {};
+            if (startDate) {
+                const start = new Date(startDate);
+                start.setHours(0, 0, 0, 0);
+                timeWhere.created_at.gte = start;
+            }
+            if (endDate) {
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59, 999);
+                timeWhere.created_at.lte = end;
+            }
         }
 
         // ── Build where clause ──────────────────────────────────────

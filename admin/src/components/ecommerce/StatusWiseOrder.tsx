@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DashboardData } from "@/types/dashboard";
+import flatpickr from "flatpickr";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -143,7 +144,7 @@ function OrderRow({ order }: { order: StatusOrder }) {
       </td>
 
       {/* ── Product ── */}
-      <td className="px-4 py-3.5 hidden md:table-cell">
+      <td className="px-4 py-3.5 md:table-cell">
         <div className="flex items-center gap-2.5 min-w-0">
           {/* Product Image */}
           <div className="h-9 w-9 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 overflow-hidden shrink-0 flex items-center justify-center">
@@ -169,7 +170,7 @@ function OrderRow({ order }: { order: StatusOrder }) {
               </p>
               {/* Tooltip */}
               <div className="pointer-events-none absolute bottom-full left-0 mb-2 z-50 hidden group-hover/tooltip:block">
-                <div className="bg-gray-900 dark:bg-gray-700 text-white text-[11px] font-medium rounded-lg px-3 py-1.5 shadow-lg w-max max-w-max break-words text-left">
+                <div className="bg-gray-900 dark:bg-gray-700 text-white text-[11px] font-medium rounded-lg px-3 py-1.5 shadow-lg w-max max-w-[350px] break-words text-left">
                   {order.product_name}
                   {/* Arrow */}
                   <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700" />
@@ -208,7 +209,7 @@ function OrderRow({ order }: { order: StatusOrder }) {
       </td>
 
       {/* ── Date/Time ── */}
-      <td className="px-4 py-3.5 hidden lg:table-cell">
+      <td className="px-4 py-3.5 lg:table-cell">
         <div className="flex items-start gap-1.5">
           <svg className="w-3 h-3 text-gray-400 dark:text-gray-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -226,7 +227,7 @@ function OrderRow({ order }: { order: StatusOrder }) {
       </td>
 
       {/* ── Location ── */}
-      <td className="px-4 py-3.5 hidden xl:table-cell">
+      <td className="px-4 py-3.5 xl:table-cell">
         <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
           <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -253,10 +254,40 @@ export default function StatusWiseOrder({ data, loading }: StatusWiseOrderProps)
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [timeFilter, setTimeFilter] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [dynamicBreakdown, setDynamicBreakdown] = useState<{status: string, count: number}[] | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
+  const datePickerRef = useRef<HTMLInputElement>(null);
+  const fpRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (!datePickerRef.current) return;
+    const fp = flatpickr(datePickerRef.current, {
+      mode: "range",
+      monthSelectorType: "static",
+      dateFormat: "Y-m-d",
+      clickOpens: true,
+      prevArrow:
+        '<svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.5 15L7.5 10L12.5 5" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      nextArrow:
+        '<svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 15L12.5 10L7.5 5" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      onChange: (selectedDates, dateStr, instance) => {
+        if (selectedDates.length === 2) {
+          setStartDate(instance.formatDate(selectedDates[0], "Y-m-d"));
+          setEndDate(instance.formatDate(selectedDates[1], "Y-m-d"));
+          setPage(1);
+        } else if (selectedDates.length === 0) {
+          setStartDate("");
+          setEndDate("");
+          setPage(1);
+        }
+      }
+    });
+    fpRef.current = fp;
+    return () => { if (!Array.isArray(fp)) fp.destroy(); };
+  }, []);
 
   // Build count map from dashboard statusBreakdown or locally fetched breakdown
   const countMap = React.useMemo(() => {
@@ -271,7 +302,7 @@ export default function StatusWiseOrder({ data, loading }: StatusWiseOrderProps)
     return map;
   }, [data?.statusBreakdown, dynamicBreakdown]);
 
-  const fetchOrders = useCallback(async (status: string, pageNum: number, timeFilt: string) => {
+  const fetchOrders = useCallback(async (status: string, pageNum: number, start: string, end: string) => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -279,7 +310,9 @@ export default function StatusWiseOrder({ data, loading }: StatusWiseOrderProps)
     setFetchLoading(true);
     try {
       const statusParam = status === ALL_KEY ? "" : status;
-      const url = `/api/dashboard/orders-by-status?status=${statusParam}&page=${pageNum}&limit=${PAGE_SIZE}&timeFilter=${timeFilt}`;
+      const startParam = start ? `&startDate=${start}` : "";
+      const endParam = end ? `&endDate=${end}` : "";
+      const url = `/api/dashboard/orders-by-status?status=${statusParam}&page=${pageNum}&limit=${PAGE_SIZE}${startParam}${endParam}`;
       const res = await fetch(url, { signal: controller.signal });
       if (!res.ok) throw new Error("Failed");
       const json = await res.json();
@@ -295,8 +328,8 @@ export default function StatusWiseOrder({ data, loading }: StatusWiseOrderProps)
   }, []);
 
   useEffect(() => {
-    fetchOrders(activeTab, page, timeFilter);
-  }, [activeTab, page, timeFilter, fetchOrders]);
+    fetchOrders(activeTab, page, startDate, endDate);
+  }, [activeTab, page, startDate, endDate, fetchOrders]);
 
   const handleTabChange = (key: string) => {
     if (key === activeTab) return;
@@ -311,7 +344,7 @@ export default function StatusWiseOrder({ data, loading }: StatusWiseOrderProps)
   };
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+    <div className="overflow-visible rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
 
       {/* ── Header ── */}
       <div className="px-4 sm:px-6 pt-4 pb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 dark:border-gray-800">
@@ -324,24 +357,32 @@ export default function StatusWiseOrder({ data, loading }: StatusWiseOrderProps)
             )}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-          <select
-            value={timeFilter}
-            onChange={(e) => {
-              setTimeFilter(e.target.value);
-              setPage(1);
-            }}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
-          >
-            <option value="all">All Time</option>
-            <option value="today">Today</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 self-stretch sm:self-auto w-full sm:w-auto mt-2 sm:mt-0">
+          <div className="relative inline-flex items-center w-full sm:w-auto">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <input
+              ref={datePickerRef}
+              className="w-full sm:w-56 pl-9 pr-8 py-2 rounded-lg border border-gray-300 bg-white text-xs font-medium text-gray-700 outline-none hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 focus:ring-1 focus:ring-blue-500 cursor-pointer shadow-sm transition-colors"
+              placeholder="Select date range"
+            />
+            {(startDate || endDate) && (
+              <button 
+                onClick={() => fpRef.current?.clear()}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors p-1"
+                title="Clear dates"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
 
           <Link
             href="/orders"
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 transition-colors"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 transition-colors w-full sm:w-auto"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -386,17 +427,17 @@ export default function StatusWiseOrder({ data, loading }: StatusWiseOrderProps)
       </div>
 
       {/* ── Table ── */}
-      <div className="w-full overflow-x-auto">
-        <table className="w-full min-w-[700px]">
+      <div className="w-full overflow-x-auto scrollbar-hide">
+        <table className="w-full min-w-max whitespace-nowrap lg:whitespace-normal">
           <thead>
             <tr className="border-b border-gray-100 dark:border-gray-800">
               <th className="px-4 py-3 text-left text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Order</th>
-              <th className="px-4 py-3 text-left text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Product</th>
+              <th className="px-4 py-3 text-left text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider md:table-cell">Product</th>
               <th className="px-4 py-3 text-left text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Customer</th>
               <th className="px-4 py-3 text-left text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-              <th className="px-4 py-3 text-left text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">Date</th>
+              <th className="px-4 py-3 text-left text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider lg:table-cell">Date</th>
               <th className="px-4 py-3 text-left text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
-              <th className="px-4 py-3 text-left text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden xl:table-cell">Location</th>
+              <th className="px-4 py-3 text-left text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider xl:table-cell">Location</th>
             </tr>
           </thead>
 
@@ -430,9 +471,9 @@ export default function StatusWiseOrder({ data, loading }: StatusWiseOrderProps)
 
       {/* ── Pagination ── */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-t border-gray-100 dark:border-gray-800">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-3 border-t border-gray-100 dark:border-gray-800">
           <p className="text-xs text-gray-400 dark:text-gray-500">Page {page} of {totalPages}</p>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center flex-wrap justify-center gap-1">
             <button
               onClick={() => handlePage(page - 1)}
               disabled={page === 1 || fetchLoading}
