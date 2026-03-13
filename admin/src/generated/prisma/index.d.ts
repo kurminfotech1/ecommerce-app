@@ -156,6 +156,7 @@ export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus]
 export const PaymentStatus: {
   PENDING: 'PENDING',
   PAID: 'PAID',
+  SUCCESS: 'SUCCESS',
   FAILED: 'FAILED',
   REFUNDED: 'REFUNDED'
 };
@@ -15189,6 +15190,9 @@ export namespace Prisma {
     shipping_state: string | null
     shipping_pincode: string | null
     shipping_country: string | null
+    currency: string | null
+    payment_status: $Enums.PaymentStatus | null
+    razorpay_order_id: string | null
     created_at: Date | null
   }
 
@@ -15205,6 +15209,9 @@ export namespace Prisma {
     shipping_state: string | null
     shipping_pincode: string | null
     shipping_country: string | null
+    currency: string | null
+    payment_status: $Enums.PaymentStatus | null
+    razorpay_order_id: string | null
     created_at: Date | null
   }
 
@@ -15221,6 +15228,9 @@ export namespace Prisma {
     shipping_state: number
     shipping_pincode: number
     shipping_country: number
+    currency: number
+    payment_status: number
+    razorpay_order_id: number
     created_at: number
     _all: number
   }
@@ -15247,6 +15257,9 @@ export namespace Prisma {
     shipping_state?: true
     shipping_pincode?: true
     shipping_country?: true
+    currency?: true
+    payment_status?: true
+    razorpay_order_id?: true
     created_at?: true
   }
 
@@ -15263,6 +15276,9 @@ export namespace Prisma {
     shipping_state?: true
     shipping_pincode?: true
     shipping_country?: true
+    currency?: true
+    payment_status?: true
+    razorpay_order_id?: true
     created_at?: true
   }
 
@@ -15279,6 +15295,9 @@ export namespace Prisma {
     shipping_state?: true
     shipping_pincode?: true
     shipping_country?: true
+    currency?: true
+    payment_status?: true
+    razorpay_order_id?: true
     created_at?: true
     _all?: true
   }
@@ -15382,6 +15401,9 @@ export namespace Prisma {
     shipping_state: string
     shipping_pincode: string
     shipping_country: string
+    currency: string
+    payment_status: $Enums.PaymentStatus
+    razorpay_order_id: string | null
     created_at: Date
     _count: OrderCountAggregateOutputType | null
     _avg: OrderAvgAggregateOutputType | null
@@ -15417,6 +15439,9 @@ export namespace Prisma {
     shipping_state?: boolean
     shipping_pincode?: boolean
     shipping_country?: boolean
+    currency?: boolean
+    payment_status?: boolean
+    razorpay_order_id?: boolean
     created_at?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     items?: boolean | Order$itemsArgs<ExtArgs>
@@ -15438,6 +15463,9 @@ export namespace Prisma {
     shipping_state?: boolean
     shipping_pincode?: boolean
     shipping_country?: boolean
+    currency?: boolean
+    payment_status?: boolean
+    razorpay_order_id?: boolean
     created_at?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["order"]>
@@ -15455,6 +15483,9 @@ export namespace Prisma {
     shipping_state?: boolean
     shipping_pincode?: boolean
     shipping_country?: boolean
+    currency?: boolean
+    payment_status?: boolean
+    razorpay_order_id?: boolean
     created_at?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["order"]>
@@ -15472,10 +15503,13 @@ export namespace Prisma {
     shipping_state?: boolean
     shipping_pincode?: boolean
     shipping_country?: boolean
+    currency?: boolean
+    payment_status?: boolean
+    razorpay_order_id?: boolean
     created_at?: boolean
   }
 
-  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "order_number" | "user_id" | "total_amount" | "order_status" | "shipping_name" | "shipping_phone" | "shipping_address" | "shipping_city" | "shipping_state" | "shipping_pincode" | "shipping_country" | "created_at", ExtArgs["result"]["order"]>
+  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "order_number" | "user_id" | "total_amount" | "order_status" | "shipping_name" | "shipping_phone" | "shipping_address" | "shipping_city" | "shipping_state" | "shipping_pincode" | "shipping_country" | "currency" | "payment_status" | "razorpay_order_id" | "created_at", ExtArgs["result"]["order"]>
   export type OrderInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     items?: boolean | Order$itemsArgs<ExtArgs>
@@ -15511,6 +15545,9 @@ export namespace Prisma {
       shipping_state: string
       shipping_pincode: string
       shipping_country: string
+      currency: string
+      payment_status: $Enums.PaymentStatus
+      razorpay_order_id: string | null
       created_at: Date
     }, ExtArgs["result"]["order"]>
     composites: {}
@@ -15951,6 +15988,9 @@ export namespace Prisma {
     readonly shipping_state: FieldRef<"Order", 'String'>
     readonly shipping_pincode: FieldRef<"Order", 'String'>
     readonly shipping_country: FieldRef<"Order", 'String'>
+    readonly currency: FieldRef<"Order", 'String'>
+    readonly payment_status: FieldRef<"Order", 'PaymentStatus'>
+    readonly razorpay_order_id: FieldRef<"Order", 'String'>
     readonly created_at: FieldRef<"Order", 'DateTime'>
   }
     
@@ -17646,7 +17686,10 @@ export namespace Prisma {
     order_id: string | null
     payment_method: string | null
     transaction_id: string | null
+    razorpay_payment_id: string | null
+    razorpay_order_id: string | null
     amount: number | null
+    currency: string | null
     status: $Enums.PaymentStatus | null
     created_at: Date | null
   }
@@ -17656,7 +17699,10 @@ export namespace Prisma {
     order_id: string | null
     payment_method: string | null
     transaction_id: string | null
+    razorpay_payment_id: string | null
+    razorpay_order_id: string | null
     amount: number | null
+    currency: string | null
     status: $Enums.PaymentStatus | null
     created_at: Date | null
   }
@@ -17666,7 +17712,10 @@ export namespace Prisma {
     order_id: number
     payment_method: number
     transaction_id: number
+    razorpay_payment_id: number
+    razorpay_order_id: number
     amount: number
+    currency: number
     status: number
     created_at: number
     _all: number
@@ -17686,7 +17735,10 @@ export namespace Prisma {
     order_id?: true
     payment_method?: true
     transaction_id?: true
+    razorpay_payment_id?: true
+    razorpay_order_id?: true
     amount?: true
+    currency?: true
     status?: true
     created_at?: true
   }
@@ -17696,7 +17748,10 @@ export namespace Prisma {
     order_id?: true
     payment_method?: true
     transaction_id?: true
+    razorpay_payment_id?: true
+    razorpay_order_id?: true
     amount?: true
+    currency?: true
     status?: true
     created_at?: true
   }
@@ -17706,7 +17761,10 @@ export namespace Prisma {
     order_id?: true
     payment_method?: true
     transaction_id?: true
+    razorpay_payment_id?: true
+    razorpay_order_id?: true
     amount?: true
+    currency?: true
     status?: true
     created_at?: true
     _all?: true
@@ -17802,8 +17860,11 @@ export namespace Prisma {
     id: string
     order_id: string
     payment_method: string
-    transaction_id: string
+    transaction_id: string | null
+    razorpay_payment_id: string | null
+    razorpay_order_id: string | null
     amount: number
+    currency: string
     status: $Enums.PaymentStatus
     created_at: Date
     _count: PaymentCountAggregateOutputType | null
@@ -17832,7 +17893,10 @@ export namespace Prisma {
     order_id?: boolean
     payment_method?: boolean
     transaction_id?: boolean
+    razorpay_payment_id?: boolean
+    razorpay_order_id?: boolean
     amount?: boolean
+    currency?: boolean
     status?: boolean
     created_at?: boolean
     order?: boolean | OrderDefaultArgs<ExtArgs>
@@ -17843,7 +17907,10 @@ export namespace Prisma {
     order_id?: boolean
     payment_method?: boolean
     transaction_id?: boolean
+    razorpay_payment_id?: boolean
+    razorpay_order_id?: boolean
     amount?: boolean
+    currency?: boolean
     status?: boolean
     created_at?: boolean
     order?: boolean | OrderDefaultArgs<ExtArgs>
@@ -17854,7 +17921,10 @@ export namespace Prisma {
     order_id?: boolean
     payment_method?: boolean
     transaction_id?: boolean
+    razorpay_payment_id?: boolean
+    razorpay_order_id?: boolean
     amount?: boolean
+    currency?: boolean
     status?: boolean
     created_at?: boolean
     order?: boolean | OrderDefaultArgs<ExtArgs>
@@ -17865,12 +17935,15 @@ export namespace Prisma {
     order_id?: boolean
     payment_method?: boolean
     transaction_id?: boolean
+    razorpay_payment_id?: boolean
+    razorpay_order_id?: boolean
     amount?: boolean
+    currency?: boolean
     status?: boolean
     created_at?: boolean
   }
 
-  export type PaymentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "order_id" | "payment_method" | "transaction_id" | "amount" | "status" | "created_at", ExtArgs["result"]["payment"]>
+  export type PaymentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "order_id" | "payment_method" | "transaction_id" | "razorpay_payment_id" | "razorpay_order_id" | "amount" | "currency" | "status" | "created_at", ExtArgs["result"]["payment"]>
   export type PaymentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     order?: boolean | OrderDefaultArgs<ExtArgs>
   }
@@ -17890,8 +17963,11 @@ export namespace Prisma {
       id: string
       order_id: string
       payment_method: string
-      transaction_id: string
+      transaction_id: string | null
+      razorpay_payment_id: string | null
+      razorpay_order_id: string | null
       amount: number
+      currency: string
       status: $Enums.PaymentStatus
       created_at: Date
     }, ExtArgs["result"]["payment"]>
@@ -18322,7 +18398,10 @@ export namespace Prisma {
     readonly order_id: FieldRef<"Payment", 'String'>
     readonly payment_method: FieldRef<"Payment", 'String'>
     readonly transaction_id: FieldRef<"Payment", 'String'>
+    readonly razorpay_payment_id: FieldRef<"Payment", 'String'>
+    readonly razorpay_order_id: FieldRef<"Payment", 'String'>
     readonly amount: FieldRef<"Payment", 'Float'>
+    readonly currency: FieldRef<"Payment", 'String'>
     readonly status: FieldRef<"Payment", 'PaymentStatus'>
     readonly created_at: FieldRef<"Payment", 'DateTime'>
   }
@@ -29587,6 +29666,9 @@ export namespace Prisma {
     shipping_state: 'shipping_state',
     shipping_pincode: 'shipping_pincode',
     shipping_country: 'shipping_country',
+    currency: 'currency',
+    payment_status: 'payment_status',
+    razorpay_order_id: 'razorpay_order_id',
     created_at: 'created_at'
   };
 
@@ -29614,7 +29696,10 @@ export namespace Prisma {
     order_id: 'order_id',
     payment_method: 'payment_method',
     transaction_id: 'transaction_id',
+    razorpay_payment_id: 'razorpay_payment_id',
+    razorpay_order_id: 'razorpay_order_id',
     amount: 'amount',
+    currency: 'currency',
     status: 'status',
     created_at: 'created_at'
   };
@@ -30787,6 +30872,9 @@ export namespace Prisma {
     shipping_state?: StringFilter<"Order"> | string
     shipping_pincode?: StringFilter<"Order"> | string
     shipping_country?: StringFilter<"Order"> | string
+    currency?: StringFilter<"Order"> | string
+    payment_status?: EnumPaymentStatusFilter<"Order"> | $Enums.PaymentStatus
+    razorpay_order_id?: StringNullableFilter<"Order"> | string | null
     created_at?: DateTimeFilter<"Order"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     items?: OrderItemListRelationFilter
@@ -30807,6 +30895,9 @@ export namespace Prisma {
     shipping_state?: SortOrder
     shipping_pincode?: SortOrder
     shipping_country?: SortOrder
+    currency?: SortOrder
+    payment_status?: SortOrder
+    razorpay_order_id?: SortOrderInput | SortOrder
     created_at?: SortOrder
     user?: UserOrderByWithRelationInput
     items?: OrderItemOrderByRelationAggregateInput
@@ -30830,6 +30921,9 @@ export namespace Prisma {
     shipping_state?: StringFilter<"Order"> | string
     shipping_pincode?: StringFilter<"Order"> | string
     shipping_country?: StringFilter<"Order"> | string
+    currency?: StringFilter<"Order"> | string
+    payment_status?: EnumPaymentStatusFilter<"Order"> | $Enums.PaymentStatus
+    razorpay_order_id?: StringNullableFilter<"Order"> | string | null
     created_at?: DateTimeFilter<"Order"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     items?: OrderItemListRelationFilter
@@ -30850,6 +30944,9 @@ export namespace Prisma {
     shipping_state?: SortOrder
     shipping_pincode?: SortOrder
     shipping_country?: SortOrder
+    currency?: SortOrder
+    payment_status?: SortOrder
+    razorpay_order_id?: SortOrderInput | SortOrder
     created_at?: SortOrder
     _count?: OrderCountOrderByAggregateInput
     _avg?: OrderAvgOrderByAggregateInput
@@ -30874,6 +30971,9 @@ export namespace Prisma {
     shipping_state?: StringWithAggregatesFilter<"Order"> | string
     shipping_pincode?: StringWithAggregatesFilter<"Order"> | string
     shipping_country?: StringWithAggregatesFilter<"Order"> | string
+    currency?: StringWithAggregatesFilter<"Order"> | string
+    payment_status?: EnumPaymentStatusWithAggregatesFilter<"Order"> | $Enums.PaymentStatus
+    razorpay_order_id?: StringNullableWithAggregatesFilter<"Order"> | string | null
     created_at?: DateTimeWithAggregatesFilter<"Order"> | Date | string
   }
 
@@ -30969,8 +31069,11 @@ export namespace Prisma {
     id?: StringFilter<"Payment"> | string
     order_id?: StringFilter<"Payment"> | string
     payment_method?: StringFilter<"Payment"> | string
-    transaction_id?: StringFilter<"Payment"> | string
+    transaction_id?: StringNullableFilter<"Payment"> | string | null
+    razorpay_payment_id?: StringNullableFilter<"Payment"> | string | null
+    razorpay_order_id?: StringNullableFilter<"Payment"> | string | null
     amount?: FloatFilter<"Payment"> | number
+    currency?: StringFilter<"Payment"> | string
     status?: EnumPaymentStatusFilter<"Payment"> | $Enums.PaymentStatus
     created_at?: DateTimeFilter<"Payment"> | Date | string
     order?: XOR<OrderScalarRelationFilter, OrderWhereInput>
@@ -30980,8 +31083,11 @@ export namespace Prisma {
     id?: SortOrder
     order_id?: SortOrder
     payment_method?: SortOrder
-    transaction_id?: SortOrder
+    transaction_id?: SortOrderInput | SortOrder
+    razorpay_payment_id?: SortOrderInput | SortOrder
+    razorpay_order_id?: SortOrderInput | SortOrder
     amount?: SortOrder
+    currency?: SortOrder
     status?: SortOrder
     created_at?: SortOrder
     order?: OrderOrderByWithRelationInput
@@ -30994,8 +31100,11 @@ export namespace Prisma {
     OR?: PaymentWhereInput[]
     NOT?: PaymentWhereInput | PaymentWhereInput[]
     payment_method?: StringFilter<"Payment"> | string
-    transaction_id?: StringFilter<"Payment"> | string
+    transaction_id?: StringNullableFilter<"Payment"> | string | null
+    razorpay_payment_id?: StringNullableFilter<"Payment"> | string | null
+    razorpay_order_id?: StringNullableFilter<"Payment"> | string | null
     amount?: FloatFilter<"Payment"> | number
+    currency?: StringFilter<"Payment"> | string
     status?: EnumPaymentStatusFilter<"Payment"> | $Enums.PaymentStatus
     created_at?: DateTimeFilter<"Payment"> | Date | string
     order?: XOR<OrderScalarRelationFilter, OrderWhereInput>
@@ -31005,8 +31114,11 @@ export namespace Prisma {
     id?: SortOrder
     order_id?: SortOrder
     payment_method?: SortOrder
-    transaction_id?: SortOrder
+    transaction_id?: SortOrderInput | SortOrder
+    razorpay_payment_id?: SortOrderInput | SortOrder
+    razorpay_order_id?: SortOrderInput | SortOrder
     amount?: SortOrder
+    currency?: SortOrder
     status?: SortOrder
     created_at?: SortOrder
     _count?: PaymentCountOrderByAggregateInput
@@ -31023,8 +31135,11 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"Payment"> | string
     order_id?: StringWithAggregatesFilter<"Payment"> | string
     payment_method?: StringWithAggregatesFilter<"Payment"> | string
-    transaction_id?: StringWithAggregatesFilter<"Payment"> | string
+    transaction_id?: StringNullableWithAggregatesFilter<"Payment"> | string | null
+    razorpay_payment_id?: StringNullableWithAggregatesFilter<"Payment"> | string | null
+    razorpay_order_id?: StringNullableWithAggregatesFilter<"Payment"> | string | null
     amount?: FloatWithAggregatesFilter<"Payment"> | number
+    currency?: StringWithAggregatesFilter<"Payment"> | string
     status?: EnumPaymentStatusWithAggregatesFilter<"Payment"> | $Enums.PaymentStatus
     created_at?: DateTimeWithAggregatesFilter<"Payment"> | Date | string
   }
@@ -32619,6 +32734,9 @@ export namespace Prisma {
     shipping_state: string
     shipping_pincode: string
     shipping_country: string
+    currency?: string
+    payment_status?: $Enums.PaymentStatus
+    razorpay_order_id?: string | null
     created_at?: Date | string
     user: UserCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
@@ -32639,6 +32757,9 @@ export namespace Prisma {
     shipping_state: string
     shipping_pincode: string
     shipping_country: string
+    currency?: string
+    payment_status?: $Enums.PaymentStatus
+    razorpay_order_id?: string | null
     created_at?: Date | string
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     payment?: PaymentUncheckedCreateNestedOneWithoutOrderInput
@@ -32657,6 +32778,9 @@ export namespace Prisma {
     shipping_state?: StringFieldUpdateOperationsInput | string
     shipping_pincode?: StringFieldUpdateOperationsInput | string
     shipping_country?: StringFieldUpdateOperationsInput | string
+    currency?: StringFieldUpdateOperationsInput | string
+    payment_status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    razorpay_order_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
@@ -32677,6 +32801,9 @@ export namespace Prisma {
     shipping_state?: StringFieldUpdateOperationsInput | string
     shipping_pincode?: StringFieldUpdateOperationsInput | string
     shipping_country?: StringFieldUpdateOperationsInput | string
+    currency?: StringFieldUpdateOperationsInput | string
+    payment_status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    razorpay_order_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     payment?: PaymentUncheckedUpdateOneWithoutOrderNestedInput
@@ -32696,6 +32823,9 @@ export namespace Prisma {
     shipping_state: string
     shipping_pincode: string
     shipping_country: string
+    currency?: string
+    payment_status?: $Enums.PaymentStatus
+    razorpay_order_id?: string | null
     created_at?: Date | string
   }
 
@@ -32711,6 +32841,9 @@ export namespace Prisma {
     shipping_state?: StringFieldUpdateOperationsInput | string
     shipping_pincode?: StringFieldUpdateOperationsInput | string
     shipping_country?: StringFieldUpdateOperationsInput | string
+    currency?: StringFieldUpdateOperationsInput | string
+    payment_status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    razorpay_order_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -32727,6 +32860,9 @@ export namespace Prisma {
     shipping_state?: StringFieldUpdateOperationsInput | string
     shipping_pincode?: StringFieldUpdateOperationsInput | string
     shipping_country?: StringFieldUpdateOperationsInput | string
+    currency?: StringFieldUpdateOperationsInput | string
+    payment_status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    razorpay_order_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -32822,8 +32958,11 @@ export namespace Prisma {
   export type PaymentCreateInput = {
     id?: string
     payment_method: string
-    transaction_id: string
+    transaction_id?: string | null
+    razorpay_payment_id?: string | null
+    razorpay_order_id?: string | null
     amount: number
+    currency?: string
     status?: $Enums.PaymentStatus
     created_at?: Date | string
     order: OrderCreateNestedOneWithoutPaymentInput
@@ -32833,8 +32972,11 @@ export namespace Prisma {
     id?: string
     order_id: string
     payment_method: string
-    transaction_id: string
+    transaction_id?: string | null
+    razorpay_payment_id?: string | null
+    razorpay_order_id?: string | null
     amount: number
+    currency?: string
     status?: $Enums.PaymentStatus
     created_at?: Date | string
   }
@@ -32842,8 +32984,11 @@ export namespace Prisma {
   export type PaymentUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     payment_method?: StringFieldUpdateOperationsInput | string
-    transaction_id?: StringFieldUpdateOperationsInput | string
+    transaction_id?: NullableStringFieldUpdateOperationsInput | string | null
+    razorpay_payment_id?: NullableStringFieldUpdateOperationsInput | string | null
+    razorpay_order_id?: NullableStringFieldUpdateOperationsInput | string | null
     amount?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     order?: OrderUpdateOneRequiredWithoutPaymentNestedInput
@@ -32853,8 +32998,11 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     order_id?: StringFieldUpdateOperationsInput | string
     payment_method?: StringFieldUpdateOperationsInput | string
-    transaction_id?: StringFieldUpdateOperationsInput | string
+    transaction_id?: NullableStringFieldUpdateOperationsInput | string | null
+    razorpay_payment_id?: NullableStringFieldUpdateOperationsInput | string | null
+    razorpay_order_id?: NullableStringFieldUpdateOperationsInput | string | null
     amount?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -32863,8 +33011,11 @@ export namespace Prisma {
     id?: string
     order_id: string
     payment_method: string
-    transaction_id: string
+    transaction_id?: string | null
+    razorpay_payment_id?: string | null
+    razorpay_order_id?: string | null
     amount: number
+    currency?: string
     status?: $Enums.PaymentStatus
     created_at?: Date | string
   }
@@ -32872,8 +33023,11 @@ export namespace Prisma {
   export type PaymentUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     payment_method?: StringFieldUpdateOperationsInput | string
-    transaction_id?: StringFieldUpdateOperationsInput | string
+    transaction_id?: NullableStringFieldUpdateOperationsInput | string | null
+    razorpay_payment_id?: NullableStringFieldUpdateOperationsInput | string | null
+    razorpay_order_id?: NullableStringFieldUpdateOperationsInput | string | null
     amount?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -32882,8 +33036,11 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     order_id?: StringFieldUpdateOperationsInput | string
     payment_method?: StringFieldUpdateOperationsInput | string
-    transaction_id?: StringFieldUpdateOperationsInput | string
+    transaction_id?: NullableStringFieldUpdateOperationsInput | string | null
+    razorpay_payment_id?: NullableStringFieldUpdateOperationsInput | string | null
+    razorpay_order_id?: NullableStringFieldUpdateOperationsInput | string | null
     amount?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -34466,6 +34623,13 @@ export namespace Prisma {
     not?: NestedEnumOrderStatusFilter<$PrismaModel> | $Enums.OrderStatus
   }
 
+  export type EnumPaymentStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.PaymentStatus | EnumPaymentStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumPaymentStatusFilter<$PrismaModel> | $Enums.PaymentStatus
+  }
+
   export type PaymentNullableScalarRelationFilter = {
     is?: PaymentWhereInput | null
     isNot?: PaymentWhereInput | null
@@ -34484,6 +34648,9 @@ export namespace Prisma {
     shipping_state?: SortOrder
     shipping_pincode?: SortOrder
     shipping_country?: SortOrder
+    currency?: SortOrder
+    payment_status?: SortOrder
+    razorpay_order_id?: SortOrder
     created_at?: SortOrder
   }
 
@@ -34504,6 +34671,9 @@ export namespace Prisma {
     shipping_state?: SortOrder
     shipping_pincode?: SortOrder
     shipping_country?: SortOrder
+    currency?: SortOrder
+    payment_status?: SortOrder
+    razorpay_order_id?: SortOrder
     created_at?: SortOrder
   }
 
@@ -34520,6 +34690,9 @@ export namespace Prisma {
     shipping_state?: SortOrder
     shipping_pincode?: SortOrder
     shipping_country?: SortOrder
+    currency?: SortOrder
+    payment_status?: SortOrder
+    razorpay_order_id?: SortOrder
     created_at?: SortOrder
   }
 
@@ -34535,6 +34708,16 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumOrderStatusFilter<$PrismaModel>
     _max?: NestedEnumOrderStatusFilter<$PrismaModel>
+  }
+
+  export type EnumPaymentStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PaymentStatus | EnumPaymentStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumPaymentStatusWithAggregatesFilter<$PrismaModel> | $Enums.PaymentStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumPaymentStatusFilter<$PrismaModel>
+    _max?: NestedEnumPaymentStatusFilter<$PrismaModel>
   }
 
   export type OrderScalarRelationFilter = {
@@ -34596,19 +34779,15 @@ export namespace Prisma {
     price?: SortOrder
   }
 
-  export type EnumPaymentStatusFilter<$PrismaModel = never> = {
-    equals?: $Enums.PaymentStatus | EnumPaymentStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
-    not?: NestedEnumPaymentStatusFilter<$PrismaModel> | $Enums.PaymentStatus
-  }
-
   export type PaymentCountOrderByAggregateInput = {
     id?: SortOrder
     order_id?: SortOrder
     payment_method?: SortOrder
     transaction_id?: SortOrder
+    razorpay_payment_id?: SortOrder
+    razorpay_order_id?: SortOrder
     amount?: SortOrder
+    currency?: SortOrder
     status?: SortOrder
     created_at?: SortOrder
   }
@@ -34622,7 +34801,10 @@ export namespace Prisma {
     order_id?: SortOrder
     payment_method?: SortOrder
     transaction_id?: SortOrder
+    razorpay_payment_id?: SortOrder
+    razorpay_order_id?: SortOrder
     amount?: SortOrder
+    currency?: SortOrder
     status?: SortOrder
     created_at?: SortOrder
   }
@@ -34632,23 +34814,16 @@ export namespace Prisma {
     order_id?: SortOrder
     payment_method?: SortOrder
     transaction_id?: SortOrder
+    razorpay_payment_id?: SortOrder
+    razorpay_order_id?: SortOrder
     amount?: SortOrder
+    currency?: SortOrder
     status?: SortOrder
     created_at?: SortOrder
   }
 
   export type PaymentSumOrderByAggregateInput = {
     amount?: SortOrder
-  }
-
-  export type EnumPaymentStatusWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.PaymentStatus | EnumPaymentStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
-    not?: NestedEnumPaymentStatusWithAggregatesFilter<$PrismaModel> | $Enums.PaymentStatus
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumPaymentStatusFilter<$PrismaModel>
-    _max?: NestedEnumPaymentStatusFilter<$PrismaModel>
   }
 
   export type EnumReturnStatusFilter<$PrismaModel = never> = {
@@ -35992,6 +36167,10 @@ export namespace Prisma {
     set?: $Enums.OrderStatus
   }
 
+  export type EnumPaymentStatusFieldUpdateOperationsInput = {
+    set?: $Enums.PaymentStatus
+  }
+
   export type UserUpdateOneRequiredWithoutOrdersNestedInput = {
     create?: XOR<UserCreateWithoutOrdersInput, UserUncheckedCreateWithoutOrdersInput>
     connectOrCreate?: UserCreateOrConnectWithoutOrdersInput
@@ -36110,10 +36289,6 @@ export namespace Prisma {
     create?: XOR<OrderCreateWithoutPaymentInput, OrderUncheckedCreateWithoutPaymentInput>
     connectOrCreate?: OrderCreateOrConnectWithoutPaymentInput
     connect?: OrderWhereUniqueInput
-  }
-
-  export type EnumPaymentStatusFieldUpdateOperationsInput = {
-    set?: $Enums.PaymentStatus
   }
 
   export type OrderUpdateOneRequiredWithoutPaymentNestedInput = {
@@ -36561,6 +36736,13 @@ export namespace Prisma {
     not?: NestedEnumOrderStatusFilter<$PrismaModel> | $Enums.OrderStatus
   }
 
+  export type NestedEnumPaymentStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.PaymentStatus | EnumPaymentStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumPaymentStatusFilter<$PrismaModel> | $Enums.PaymentStatus
+  }
+
   export type NestedEnumOrderStatusWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.OrderStatus | EnumOrderStatusFieldRefInput<$PrismaModel>
     in?: $Enums.OrderStatus[] | ListEnumOrderStatusFieldRefInput<$PrismaModel>
@@ -36569,13 +36751,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumOrderStatusFilter<$PrismaModel>
     _max?: NestedEnumOrderStatusFilter<$PrismaModel>
-  }
-
-  export type NestedEnumPaymentStatusFilter<$PrismaModel = never> = {
-    equals?: $Enums.PaymentStatus | EnumPaymentStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
-    not?: NestedEnumPaymentStatusFilter<$PrismaModel> | $Enums.PaymentStatus
   }
 
   export type NestedEnumPaymentStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -38010,6 +38185,9 @@ export namespace Prisma {
     shipping_state: string
     shipping_pincode: string
     shipping_country: string
+    currency?: string
+    payment_status?: $Enums.PaymentStatus
+    razorpay_order_id?: string | null
     created_at?: Date | string
     items?: OrderItemCreateNestedManyWithoutOrderInput
     payment?: PaymentCreateNestedOneWithoutOrderInput
@@ -38028,6 +38206,9 @@ export namespace Prisma {
     shipping_state: string
     shipping_pincode: string
     shipping_country: string
+    currency?: string
+    payment_status?: $Enums.PaymentStatus
+    razorpay_order_id?: string | null
     created_at?: Date | string
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     payment?: PaymentUncheckedCreateNestedOneWithoutOrderInput
@@ -38201,6 +38382,9 @@ export namespace Prisma {
     shipping_state?: StringFilter<"Order"> | string
     shipping_pincode?: StringFilter<"Order"> | string
     shipping_country?: StringFilter<"Order"> | string
+    currency?: StringFilter<"Order"> | string
+    payment_status?: EnumPaymentStatusFilter<"Order"> | $Enums.PaymentStatus
+    razorpay_order_id?: StringNullableFilter<"Order"> | string | null
     created_at?: DateTimeFilter<"Order"> | Date | string
   }
 
@@ -38587,8 +38771,11 @@ export namespace Prisma {
   export type PaymentCreateWithoutOrderInput = {
     id?: string
     payment_method: string
-    transaction_id: string
+    transaction_id?: string | null
+    razorpay_payment_id?: string | null
+    razorpay_order_id?: string | null
     amount: number
+    currency?: string
     status?: $Enums.PaymentStatus
     created_at?: Date | string
   }
@@ -38596,8 +38783,11 @@ export namespace Prisma {
   export type PaymentUncheckedCreateWithoutOrderInput = {
     id?: string
     payment_method: string
-    transaction_id: string
+    transaction_id?: string | null
+    razorpay_payment_id?: string | null
+    razorpay_order_id?: string | null
     amount: number
+    currency?: string
     status?: $Enums.PaymentStatus
     created_at?: Date | string
   }
@@ -38708,8 +38898,11 @@ export namespace Prisma {
   export type PaymentUpdateWithoutOrderInput = {
     id?: StringFieldUpdateOperationsInput | string
     payment_method?: StringFieldUpdateOperationsInput | string
-    transaction_id?: StringFieldUpdateOperationsInput | string
+    transaction_id?: NullableStringFieldUpdateOperationsInput | string | null
+    razorpay_payment_id?: NullableStringFieldUpdateOperationsInput | string | null
+    razorpay_order_id?: NullableStringFieldUpdateOperationsInput | string | null
     amount?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -38717,8 +38910,11 @@ export namespace Prisma {
   export type PaymentUncheckedUpdateWithoutOrderInput = {
     id?: StringFieldUpdateOperationsInput | string
     payment_method?: StringFieldUpdateOperationsInput | string
-    transaction_id?: StringFieldUpdateOperationsInput | string
+    transaction_id?: NullableStringFieldUpdateOperationsInput | string | null
+    razorpay_payment_id?: NullableStringFieldUpdateOperationsInput | string | null
+    razorpay_order_id?: NullableStringFieldUpdateOperationsInput | string | null
     amount?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -38751,6 +38947,9 @@ export namespace Prisma {
     shipping_state: string
     shipping_pincode: string
     shipping_country: string
+    currency?: string
+    payment_status?: $Enums.PaymentStatus
+    razorpay_order_id?: string | null
     created_at?: Date | string
     user: UserCreateNestedOneWithoutOrdersInput
     payment?: PaymentCreateNestedOneWithoutOrderInput
@@ -38770,6 +38969,9 @@ export namespace Prisma {
     shipping_state: string
     shipping_pincode: string
     shipping_country: string
+    currency?: string
+    payment_status?: $Enums.PaymentStatus
+    razorpay_order_id?: string | null
     created_at?: Date | string
     payment?: PaymentUncheckedCreateNestedOneWithoutOrderInput
     returnRequests?: ReturnRequestUncheckedCreateNestedManyWithoutOrderInput
@@ -38844,6 +39046,9 @@ export namespace Prisma {
     shipping_state?: StringFieldUpdateOperationsInput | string
     shipping_pincode?: StringFieldUpdateOperationsInput | string
     shipping_country?: StringFieldUpdateOperationsInput | string
+    currency?: StringFieldUpdateOperationsInput | string
+    payment_status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    razorpay_order_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutOrdersNestedInput
     payment?: PaymentUpdateOneWithoutOrderNestedInput
@@ -38863,6 +39068,9 @@ export namespace Prisma {
     shipping_state?: StringFieldUpdateOperationsInput | string
     shipping_pincode?: StringFieldUpdateOperationsInput | string
     shipping_country?: StringFieldUpdateOperationsInput | string
+    currency?: StringFieldUpdateOperationsInput | string
+    payment_status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    razorpay_order_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     payment?: PaymentUncheckedUpdateOneWithoutOrderNestedInput
     returnRequests?: ReturnRequestUncheckedUpdateManyWithoutOrderNestedInput
@@ -38927,6 +39135,9 @@ export namespace Prisma {
     shipping_state: string
     shipping_pincode: string
     shipping_country: string
+    currency?: string
+    payment_status?: $Enums.PaymentStatus
+    razorpay_order_id?: string | null
     created_at?: Date | string
     user: UserCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
@@ -38946,6 +39157,9 @@ export namespace Prisma {
     shipping_state: string
     shipping_pincode: string
     shipping_country: string
+    currency?: string
+    payment_status?: $Enums.PaymentStatus
+    razorpay_order_id?: string | null
     created_at?: Date | string
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     returnRequests?: ReturnRequestUncheckedCreateNestedManyWithoutOrderInput
@@ -38979,6 +39193,9 @@ export namespace Prisma {
     shipping_state?: StringFieldUpdateOperationsInput | string
     shipping_pincode?: StringFieldUpdateOperationsInput | string
     shipping_country?: StringFieldUpdateOperationsInput | string
+    currency?: StringFieldUpdateOperationsInput | string
+    payment_status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    razorpay_order_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
@@ -38998,6 +39215,9 @@ export namespace Prisma {
     shipping_state?: StringFieldUpdateOperationsInput | string
     shipping_pincode?: StringFieldUpdateOperationsInput | string
     shipping_country?: StringFieldUpdateOperationsInput | string
+    currency?: StringFieldUpdateOperationsInput | string
+    payment_status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    razorpay_order_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     returnRequests?: ReturnRequestUncheckedUpdateManyWithoutOrderNestedInput
@@ -39015,6 +39235,9 @@ export namespace Prisma {
     shipping_state: string
     shipping_pincode: string
     shipping_country: string
+    currency?: string
+    payment_status?: $Enums.PaymentStatus
+    razorpay_order_id?: string | null
     created_at?: Date | string
     user: UserCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
@@ -39034,6 +39257,9 @@ export namespace Prisma {
     shipping_state: string
     shipping_pincode: string
     shipping_country: string
+    currency?: string
+    payment_status?: $Enums.PaymentStatus
+    razorpay_order_id?: string | null
     created_at?: Date | string
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     payment?: PaymentUncheckedCreateNestedOneWithoutOrderInput
@@ -39104,6 +39330,9 @@ export namespace Prisma {
     shipping_state?: StringFieldUpdateOperationsInput | string
     shipping_pincode?: StringFieldUpdateOperationsInput | string
     shipping_country?: StringFieldUpdateOperationsInput | string
+    currency?: StringFieldUpdateOperationsInput | string
+    payment_status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    razorpay_order_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
@@ -39123,6 +39352,9 @@ export namespace Prisma {
     shipping_state?: StringFieldUpdateOperationsInput | string
     shipping_pincode?: StringFieldUpdateOperationsInput | string
     shipping_country?: StringFieldUpdateOperationsInput | string
+    currency?: StringFieldUpdateOperationsInput | string
+    payment_status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    razorpay_order_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     payment?: PaymentUncheckedUpdateOneWithoutOrderNestedInput
@@ -40367,6 +40599,9 @@ export namespace Prisma {
     shipping_state: string
     shipping_pincode: string
     shipping_country: string
+    currency?: string
+    payment_status?: $Enums.PaymentStatus
+    razorpay_order_id?: string | null
     created_at?: Date | string
   }
 
@@ -40463,6 +40698,9 @@ export namespace Prisma {
     shipping_state?: StringFieldUpdateOperationsInput | string
     shipping_pincode?: StringFieldUpdateOperationsInput | string
     shipping_country?: StringFieldUpdateOperationsInput | string
+    currency?: StringFieldUpdateOperationsInput | string
+    payment_status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    razorpay_order_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     items?: OrderItemUpdateManyWithoutOrderNestedInput
     payment?: PaymentUpdateOneWithoutOrderNestedInput
@@ -40481,6 +40719,9 @@ export namespace Prisma {
     shipping_state?: StringFieldUpdateOperationsInput | string
     shipping_pincode?: StringFieldUpdateOperationsInput | string
     shipping_country?: StringFieldUpdateOperationsInput | string
+    currency?: StringFieldUpdateOperationsInput | string
+    payment_status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    razorpay_order_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     payment?: PaymentUncheckedUpdateOneWithoutOrderNestedInput
@@ -40499,6 +40740,9 @@ export namespace Prisma {
     shipping_state?: StringFieldUpdateOperationsInput | string
     shipping_pincode?: StringFieldUpdateOperationsInput | string
     shipping_country?: StringFieldUpdateOperationsInput | string
+    currency?: StringFieldUpdateOperationsInput | string
+    payment_status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    razorpay_order_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

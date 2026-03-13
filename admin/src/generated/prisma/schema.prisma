@@ -176,25 +176,29 @@ model Cart {
 }
 
 model Order {
-  id               String          @id @default(uuid())
-  order_number     String          @unique
-  user_id          String
-  total_amount     Float
-  order_status     OrderStatus     @default(PLACED)
-  shipping_name    String
-  shipping_phone   String
-  shipping_address String
-  shipping_city    String
-  shipping_state   String
-  shipping_pincode String
-  shipping_country String
-  created_at       DateTime        @default(now())
-  user             User            @relation(fields: [user_id], references: [id])
-  items            OrderItem[]
-  payment          Payment?
-  returnRequests   ReturnRequest[]
+  id                String          @id @default(uuid())
+  order_number      String          @unique
+  user_id           String
+  total_amount      Float
+  order_status      OrderStatus     @default(PLACED)
+  shipping_name     String
+  shipping_phone    String
+  shipping_address  String
+  shipping_city     String
+  shipping_state    String
+  shipping_pincode  String
+  shipping_country  String
+  currency          String          @default("INR")
+  payment_status    PaymentStatus   @default(PENDING)
+  razorpay_order_id String?
+  created_at        DateTime        @default(now())
+  user              User            @relation(fields: [user_id], references: [id])
+  items             OrderItem[]
+  payment           Payment?
+  returnRequests    ReturnRequest[]
 
   @@index([order_status])
+  @@index([payment_status])
 }
 
 model OrderItem {
@@ -216,14 +220,17 @@ model OrderItem {
 }
 
 model Payment {
-  id             String        @id @default(uuid())
-  order_id       String        @unique
-  payment_method String
-  transaction_id String
-  amount         Float
-  status         PaymentStatus @default(PENDING)
-  created_at     DateTime      @default(now())
-  order          Order         @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  id                  String        @id @default(uuid())
+  order_id            String        @unique
+  payment_method      String
+  transaction_id      String?
+  razorpay_payment_id String?
+  razorpay_order_id   String?
+  amount              Float
+  currency            String        @default("INR")
+  status              PaymentStatus @default(PENDING)
+  created_at          DateTime      @default(now())
+  order               Order         @relation(fields: [order_id], references: [id], onDelete: Cascade)
 }
 
 model ReturnRequest {
@@ -358,6 +365,7 @@ enum OrderStatus {
 enum PaymentStatus {
   PENDING
   PAID
+  SUCCESS
   FAILED
   REFUNDED
 }
