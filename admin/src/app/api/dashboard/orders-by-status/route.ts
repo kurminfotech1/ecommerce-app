@@ -62,6 +62,8 @@ export async function GET(request: Request) {
                     items: {
                         take: 1,
                         select: {
+                            product_name: true,
+                            image_url: true,
                             variant: {
                                 select: {
                                     product: {
@@ -98,10 +100,14 @@ export async function GET(request: Request) {
         const data = orders.map((order) => {
             console.log(order)
             const firstItem = order.items[0];
-            const product = firstItem?.variant?.product;
+            const variant = firstItem?.variant;
+            const product = variant?.product;
+
+            // Priority: Variant Image -> Product Image -> Snapshot Image
             const productImage =
-                firstItem?.variant?.images?.[0]?.image_url ||
+                variant?.images?.[0]?.image_url ||
                 product?.images?.[0]?.image_url ||
+                firstItem?.image_url ||
                 null;
 
             return {
@@ -110,7 +116,7 @@ export async function GET(request: Request) {
                 customer: order.user?.full_name || order.shipping_name,
                 email: order.user?.email || "",
                 phone: order.user?.phone || "",
-                product_name: product?.product_name || "N/A",
+                product_name: product?.product_name || firstItem?.product_name || "N/A",
                 product_image: productImage,
                 total_amount: order.total_amount,
                 status: order.order_status,

@@ -188,17 +188,22 @@ export async function GET() {
         // ─── 6. Format recent orders ──────────────────────────────────────────
         const formattedRecentOrders = recentOrders.map((order) => {
             const firstItem = order.items[0];
-            const product = firstItem?.variant?.product;
+            const variant = firstItem?.variant;
+            const product = variant?.product;
+
+            // Priority: Variant Image -> Product Image -> Snapshot Image
             const productImage =
-                firstItem?.variant?.images?.[0]?.image_url ||
+                variant?.images?.[0]?.image_url ||
                 product?.images?.[0]?.image_url ||
+                firstItem?.image_url ||
                 null;
+
             return {
                 id: order.id,
                 order_number: order.order_number,
                 customer: order.user?.full_name || order.shipping_name,
                 email: order.user?.email || "",
-                product_name: product?.product_name || "N/A",
+                product_name: product?.product_name || firstItem?.product_name || "N/A",
                 product_image: productImage,
                 category: "Product",
                 total_amount: order.total_amount,

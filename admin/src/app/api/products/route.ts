@@ -30,6 +30,9 @@ async function deleteFromStorage(urls: string[]) {
 /** Standard product include — used across all APIs */
 const productInclude = {
   category: true,
+  images: {
+    orderBy: { sort_order: "asc" as const },
+  },
   variants: {
     orderBy: { created_at: "asc" as const },
     include: {
