@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     try {
       data = await prisma.announcementBar.findMany({
         where,
-        orderBy: { created_at: "desc" },
+        orderBy: [{ priority: "desc" }, { created_at: "desc" }],
       });
 
       settings = await prisma.announcementSettings.findUnique({
@@ -82,6 +82,7 @@ export async function POST(req: Request) {
     const data = await prisma.announcementBar.create({
       data: {
         text: body.text,
+        priority: Number(body.priority) || 1,
         is_active: body.is_active ?? true,
       },
     });
@@ -107,6 +108,7 @@ export async function PUT(req: Request) {
       where: { id },
       data: {
         text: body.text,
+        priority: Number(body.priority) || 1,
         is_active: body.is_active,
       },
     });

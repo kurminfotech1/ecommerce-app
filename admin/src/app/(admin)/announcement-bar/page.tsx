@@ -2,12 +2,14 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { Megaphone, Trash2, Edit, Plus, Loader2, Link as LinkIcon, CheckCircle2, XCircle } from "lucide-react";
+import { Megaphone, Trash2, Edit, Plus, Loader2, Link as LinkIcon, CheckCircle2, XCircle, Pencil } from "lucide-react";
 import { usePermission } from "@/hooks/usePermission";
+import { DeleteModal } from "@/components/common/DeleteModal";
 
 type AnnouncementBar = {
   id: string;
   text: string;
+  priority: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -18,9 +20,11 @@ export default function AnnouncementBarPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<AnnouncementBar | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<AnnouncementBar | null>(null);
   
   // Form state
   const [text, setText] = useState("");
+  const [priority, setPriority] = useState<number | string>(1);
   const [isActive, setIsActive] = useState(true);
   const [isGlobalEnabled, setIsGlobalEnabled] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -50,10 +54,12 @@ export default function AnnouncementBarPage() {
     if (item) {
       setEditingItem(item);
       setText(item.text);
+      setPriority(item.priority);
       setIsActive(item.is_active);
     } else {
       setEditingItem(null);
       setText("");
+      setPriority(1);
       setIsActive(true);
     }
     setModalOpen(true);
@@ -79,7 +85,7 @@ export default function AnnouncementBarPage() {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, is_active: isActive }),
+        body: JSON.stringify({ text, priority: Number(priority), is_active: isActive }),
       });
 
       const json = await res.json();
@@ -116,18 +122,20 @@ export default function AnnouncementBarPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this announcement?")) return;
-
+  const handleDelete = async (item: AnnouncementBar) => {
     try {
-      const res = await fetch(`/api/announcement-bar?id=${id}`, { method: "DELETE" });
+      setSubmitting(true);
+      const res = await fetch(`/api/announcement-bar?id=${item.id}`, { method: "DELETE" });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Delete failed");
 
       toast.success(json.message);
       fetchData();
+      setConfirmDelete(null);
     } catch (err: any) {
       toast.error(err.message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -150,14 +158,14 @@ export default function AnnouncementBarPage() {
             </div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Announcement Bar</h1>
           </div>
-          <p className="text-gray-500 dark:text-gray-400 ml-14">
+          <p className="text-gray-500 dark:text-gray-400 md:ml-14 text-sm sm:text-base">
             Manage the announcement bars displayed at the top of your store.
           </p>
         </div>
         {canCreate && (
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm">
-              <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Section Status</span>
+          <div className="flex items-center flex-wrap gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm">
+              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-400 whitespace-nowrap">Section Status</span>
               <button
                 onClick={handleToggleSettings}
                 disabled={settingsLoading}
@@ -172,25 +180,27 @@ export default function AnnouncementBarPage() {
             
             <button
               onClick={() => handleOpenModal()}
-              className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-semibold text-sm transition-all shadow-sm"
+              className="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-semibold text-sm transition-all shadow-sm whitespace-nowrap"
             >
               <Plus className="w-4 h-4" />
-              Add New Bar
+              <span className="hidden sm:inline">Add New Bar</span>
+              <span className="sm:hidden">Add New</span>
             </button>
           </div>
         )}
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-visible shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 dark:bg-gray-800/50">
-              <tr className="border-b border-gray-200 dark:border-gray-800 text-xs font-bold uppercase tracking-wider text-gray-500">
-                <th className="px-6 py-4">Announcement Text</th>
-                <th className="px-6 py-4 text-center">Status</th>
-                <th className="px-6 py-4">Updated At</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+              <tr className="border-b border-gray-200 dark:border-gray-800 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-500">
+                <th className="px-4 sm:px-6 py-4">Announcement Text</th>
+                <th className="px-4 sm:px-6 py-4 text-center hidden md:table-cell">Priority</th>
+                <th className="px-4 sm:px-6 py-4 text-center">Status</th>
+                <th className="px-4 sm:px-6 py-4 hidden lg:table-cell">Updated At</th>
+                <th className="px-4 sm:px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -203,38 +213,66 @@ export default function AnnouncementBarPage() {
               ) : (
                 data.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
-                    <td className="px-6 py-4">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white max-w-xs truncate" title={item.text}>
-                        {item.text}
-                      </p>
+                    <td className="px-4 sm:px-6 py-4">
+                      <div className="relative group/tooltip inline-block max-w-[150px] sm:max-w-xs">
+                        <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate cursor-default">
+                          {item.text}
+                        </p>
+                        {/* Tooltip */}
+                        <div className="pointer-events-none absolute bottom-full left-0 mb-2 z-50 hidden group-hover/tooltip:block">
+                          <div className="bg-gray-900 dark:bg-gray-700 text-white text-[11px] font-medium rounded-lg px-3 py-1.5 shadow-lg w-max max-w-[350px] break-words text-left">
+                            {item.text}
+                            {/* Arrow */}
+                            <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700" />
+                          </div>
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    <td className="px-4 sm:px-6 py-4 text-center hidden md:table-cell">
+                      <div className="relative group/tooltip inline-block">
+                        <span className="text-xs font-bold text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded cursor-help">
+                          {item.priority}
+                        </span>
+                        {/* Tooltip */}
+                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 hidden group-hover/tooltip:block">
+                          <div className="bg-gray-900 dark:bg-gray-700 text-white text-[10px] font-medium rounded-lg px-3 py-1.5 shadow-lg w-max whitespace-nowrap">
+                            Higher priority appears first
+                            {/* Arrow */}
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700" />
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 sm:px-6 py-4 text-center">
+                      <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 rounded-full text-[10px] sm:text-xs font-medium ${
                         item.is_active 
                           ? "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400" 
                           : "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400"
                       }`}>
                         {item.is_active ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-                        {item.is_active ? "Active" : "Inactive"}
+                        <span className="hidden sm:inline">{item.is_active ? "Active" : "Inactive"}</span>
+                        <span className="sm:hidden">{item.is_active ? "On" : "Off"}</span>
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-xs text-gray-500">
+                    <td className="px-4 sm:px-6 py-4 text-xs text-gray-500 hidden lg:table-cell">
                       {new Date(item.updated_at).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-4 sm:px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         {canUpdate && (
                           <button
                             onClick={() => handleOpenModal(item)}
-                            className="p-1.5 text-gray-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
+                            className="c-icon-btn-edit"
+                            title="Edit"
                           >
-                            <Edit className="w-4 h-4" />
+                            <Pencil className="w-4 h-4" />
                           </button>
                         )}
                         {canDelete && (
                           <button
-                            onClick={() => handleDelete(item.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            onClick={() => setConfirmDelete(item)}
+                            className="c-icon-btn-del"
+                            title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -275,6 +313,20 @@ export default function AnnouncementBarPage() {
                   required
                 />
               </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Priority (higher appears first)
+                </label>
+                <input
+                  type="number"
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value)}
+                  placeholder="1"
+                  className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-sm"
+                  min="0"
+                />
+              </div>
 
               <div className="flex items-center gap-3 py-2">
                 <button
@@ -309,6 +361,16 @@ export default function AnnouncementBarPage() {
             </form>
           </div>
         </div>
+      )}
+      {confirmDelete && (
+        <DeleteModal
+          open={!!confirmDelete}
+          parentTitle="Delete announcement?"
+          childTitle="This announcement will be permanently removed from your store."
+          onConfirm={() => handleDelete(confirmDelete)}
+          onClose={() => setConfirmDelete(null)}
+          loading={submitting}
+        />
       )}
     </div>
   );
