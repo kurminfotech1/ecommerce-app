@@ -26,6 +26,7 @@ const MODULES = [
   "Products",
   "Orders",
   "Users",
+  "Customers",
   "Reviews",
   "Returns",
   "Blog",

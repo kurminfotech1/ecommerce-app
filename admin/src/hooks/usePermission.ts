@@ -26,7 +26,7 @@ interface UsePermissionReturn {
  *   const { canCreate, canUpdate, canDelete } = usePermission("Categories");
  *
  * Module names must match AdminPermission.module values in the DB:
- *   "Dashboard", "Categories", "Products", "Orders", "Users",
+ *   "Dashboard", "Categories", "Products", "Orders", "Users", "Customers",
  *   "Reviews", "Returns", "Blog", "manage logo", "User Permission"
  */
 export function usePermission(module: string): UsePermissionReturn {
