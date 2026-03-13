@@ -30,6 +30,7 @@ const MODULES = [
   "Reviews",
   "Returns",
   "Blog",
+  "Announcement Bar",
   "manage logo",
   "User Permission",
 ];

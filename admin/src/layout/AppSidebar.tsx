@@ -16,6 +16,7 @@ import {
   Crown,
   Database,
   ImageIcon,
+  Megaphone,
   NewspaperIcon,
   RefreshCw,
   Settings,
@@ -107,6 +108,13 @@ const navItems: NavItem[] = [
     icon: <Settings />,
     // No top-level moduleName — visibility is derived from sub-items
     subItems: [
+      {
+        name: "Announcement Bar",
+        path: "/announcement-bar",
+        moduleName: "Announcement Bar",
+        pro: false,
+        icon: <Megaphone size={18} />,
+      },
       {
         name: "Manage Logo",
         path: "/logo",

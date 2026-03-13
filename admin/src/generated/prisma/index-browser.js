@@ -367,6 +367,21 @@ exports.Prisma.SiteLogoScalarFieldEnum = {
   updated_at: 'updated_at'
 };
 
+exports.Prisma.AnnouncementBarScalarFieldEnum = {
+  id: 'id',
+  text: 'text',
+  link: 'link',
+  is_active: 'is_active',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.AnnouncementSettingsScalarFieldEnum = {
+  id: 'id',
+  is_enabled: 'is_enabled',
+  updated_at: 'updated_at'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -440,7 +455,9 @@ exports.Prisma.ModelName = {
   Blog: 'Blog',
   AdminPermission: 'AdminPermission',
   OtpVerification: 'OtpVerification',
-  SiteLogo: 'SiteLogo'
+  SiteLogo: 'SiteLogo',
+  AnnouncementBar: 'AnnouncementBar',
+  AnnouncementSettings: 'AnnouncementSettings'
 };
 
 /**

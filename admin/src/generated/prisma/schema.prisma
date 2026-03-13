@@ -326,6 +326,21 @@ model SiteLogo {
   updated_at  DateTime @updatedAt
 }
 
+model AnnouncementBar {
+  id         String   @id @default(uuid())
+  text       String
+  link       String?
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model AnnouncementSettings {
+  id         String   @id @default("announcement-settings")
+  is_enabled Boolean  @default(true)
+  updated_at DateTime @updatedAt
+}
+
 enum Role {
   ADMIN
   SUPERADMIN
