@@ -259,6 +259,9 @@ exports.Prisma.OrderScalarFieldEnum = {
   shipping_state: 'shipping_state',
   shipping_pincode: 'shipping_pincode',
   shipping_country: 'shipping_country',
+  currency: 'currency',
+  payment_status: 'payment_status',
+  razorpay_order_id: 'razorpay_order_id',
   created_at: 'created_at'
 };
 
@@ -280,7 +283,10 @@ exports.Prisma.PaymentScalarFieldEnum = {
   order_id: 'order_id',
   payment_method: 'payment_method',
   transaction_id: 'transaction_id',
+  razorpay_payment_id: 'razorpay_payment_id',
+  razorpay_order_id: 'razorpay_order_id',
   amount: 'amount',
+  currency: 'currency',
   status: 'status',
   created_at: 'created_at'
 };
@@ -370,7 +376,6 @@ exports.Prisma.SiteLogoScalarFieldEnum = {
 exports.Prisma.AnnouncementBarScalarFieldEnum = {
   id: 'id',
   text: 'text',
-  link: 'link',
   is_active: 'is_active',
   created_at: 'created_at',
   updated_at: 'updated_at'
@@ -423,6 +428,7 @@ exports.OrderStatus = exports.$Enums.OrderStatus = {
 exports.PaymentStatus = exports.$Enums.PaymentStatus = {
   PENDING: 'PENDING',
   PAID: 'PAID',
+  SUCCESS: 'SUCCESS',
   FAILED: 'FAILED',
   REFUNDED: 'REFUNDED'
 };
