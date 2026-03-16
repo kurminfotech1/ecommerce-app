@@ -355,8 +355,8 @@ const OrderRowDetail = ({
 const generateInvoice = (order: Order) => {
   const { date } = formatDate(order.created_at);
   const total = order.total_amount;
-  const subtotal = Math.round((total / 1.05) * 100) / 100; // pre-GST price
-  const tax = Math.round((total - subtotal) * 100) / 100; // 5% GST (included in total)
+  const subtotal = Math.round((total / 1.05) * 100) / 100; 
+  const tax = Math.round((total - subtotal) * 100) / 100; 
   const shipping = 0; // free shipping
 
   const itemRows = order.items
@@ -382,9 +382,14 @@ const generateInvoice = (order: Order) => {
   <title>Invoice – ${order.order_number}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; background: #fff; color: #333; font-size: 13px; }
-    .page { max-width: 780px; margin: 0 auto; padding: 48px 40px; }
-    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .no-print { display: none !important; } }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f9fafb; color: #333; font-size: 13px; }
+    .page { width: 210mm; min-height: 297mm; margin: 20px auto; padding: 48px 40px; background: #fff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+    @page { size: A4; margin: 0; }
+    @media print { 
+      body { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+      .page { width: 210mm; min-height: 297mm; margin: 0; padding: 48px 40px; box-shadow: none; }
+      .no-print { display: none !important; } 
+    }
   </style>
 </head>
 <body>
