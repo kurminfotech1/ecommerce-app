@@ -336,6 +336,7 @@ model SiteLogo {
 model AnnouncementBar {
   id         String   @id @default(uuid())
   text       String
+  priority   Int      @default(1)
   is_active  Boolean  @default(true)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

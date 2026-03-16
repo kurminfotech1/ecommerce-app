@@ -27478,13 +27478,24 @@ export namespace Prisma {
 
   export type AggregateAnnouncementBar = {
     _count: AnnouncementBarCountAggregateOutputType | null
+    _avg: AnnouncementBarAvgAggregateOutputType | null
+    _sum: AnnouncementBarSumAggregateOutputType | null
     _min: AnnouncementBarMinAggregateOutputType | null
     _max: AnnouncementBarMaxAggregateOutputType | null
+  }
+
+  export type AnnouncementBarAvgAggregateOutputType = {
+    priority: number | null
+  }
+
+  export type AnnouncementBarSumAggregateOutputType = {
+    priority: number | null
   }
 
   export type AnnouncementBarMinAggregateOutputType = {
     id: string | null
     text: string | null
+    priority: number | null
     is_active: boolean | null
     created_at: Date | null
     updated_at: Date | null
@@ -27493,6 +27504,7 @@ export namespace Prisma {
   export type AnnouncementBarMaxAggregateOutputType = {
     id: string | null
     text: string | null
+    priority: number | null
     is_active: boolean | null
     created_at: Date | null
     updated_at: Date | null
@@ -27501,6 +27513,7 @@ export namespace Prisma {
   export type AnnouncementBarCountAggregateOutputType = {
     id: number
     text: number
+    priority: number
     is_active: number
     created_at: number
     updated_at: number
@@ -27508,9 +27521,18 @@ export namespace Prisma {
   }
 
 
+  export type AnnouncementBarAvgAggregateInputType = {
+    priority?: true
+  }
+
+  export type AnnouncementBarSumAggregateInputType = {
+    priority?: true
+  }
+
   export type AnnouncementBarMinAggregateInputType = {
     id?: true
     text?: true
+    priority?: true
     is_active?: true
     created_at?: true
     updated_at?: true
@@ -27519,6 +27541,7 @@ export namespace Prisma {
   export type AnnouncementBarMaxAggregateInputType = {
     id?: true
     text?: true
+    priority?: true
     is_active?: true
     created_at?: true
     updated_at?: true
@@ -27527,6 +27550,7 @@ export namespace Prisma {
   export type AnnouncementBarCountAggregateInputType = {
     id?: true
     text?: true
+    priority?: true
     is_active?: true
     created_at?: true
     updated_at?: true
@@ -27571,6 +27595,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: AnnouncementBarAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: AnnouncementBarSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: AnnouncementBarMinAggregateInputType
@@ -27601,6 +27637,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: AnnouncementBarCountAggregateInputType | true
+    _avg?: AnnouncementBarAvgAggregateInputType
+    _sum?: AnnouncementBarSumAggregateInputType
     _min?: AnnouncementBarMinAggregateInputType
     _max?: AnnouncementBarMaxAggregateInputType
   }
@@ -27608,10 +27646,13 @@ export namespace Prisma {
   export type AnnouncementBarGroupByOutputType = {
     id: string
     text: string
+    priority: number
     is_active: boolean
     created_at: Date
     updated_at: Date
     _count: AnnouncementBarCountAggregateOutputType | null
+    _avg: AnnouncementBarAvgAggregateOutputType | null
+    _sum: AnnouncementBarSumAggregateOutputType | null
     _min: AnnouncementBarMinAggregateOutputType | null
     _max: AnnouncementBarMaxAggregateOutputType | null
   }
@@ -27633,6 +27674,7 @@ export namespace Prisma {
   export type AnnouncementBarSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     text?: boolean
+    priority?: boolean
     is_active?: boolean
     created_at?: boolean
     updated_at?: boolean
@@ -27641,6 +27683,7 @@ export namespace Prisma {
   export type AnnouncementBarSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     text?: boolean
+    priority?: boolean
     is_active?: boolean
     created_at?: boolean
     updated_at?: boolean
@@ -27649,6 +27692,7 @@ export namespace Prisma {
   export type AnnouncementBarSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     text?: boolean
+    priority?: boolean
     is_active?: boolean
     created_at?: boolean
     updated_at?: boolean
@@ -27657,12 +27701,13 @@ export namespace Prisma {
   export type AnnouncementBarSelectScalar = {
     id?: boolean
     text?: boolean
+    priority?: boolean
     is_active?: boolean
     created_at?: boolean
     updated_at?: boolean
   }
 
-  export type AnnouncementBarOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "text" | "is_active" | "created_at" | "updated_at", ExtArgs["result"]["announcementBar"]>
+  export type AnnouncementBarOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "text" | "priority" | "is_active" | "created_at" | "updated_at", ExtArgs["result"]["announcementBar"]>
 
   export type $AnnouncementBarPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "AnnouncementBar"
@@ -27670,6 +27715,7 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       text: string
+      priority: number
       is_active: boolean
       created_at: Date
       updated_at: Date
@@ -28098,6 +28144,7 @@ export namespace Prisma {
   interface AnnouncementBarFieldRefs {
     readonly id: FieldRef<"AnnouncementBar", 'String'>
     readonly text: FieldRef<"AnnouncementBar", 'String'>
+    readonly priority: FieldRef<"AnnouncementBar", 'Int'>
     readonly is_active: FieldRef<"AnnouncementBar", 'Boolean'>
     readonly created_at: FieldRef<"AnnouncementBar", 'DateTime'>
     readonly updated_at: FieldRef<"AnnouncementBar", 'DateTime'>
@@ -29769,6 +29816,7 @@ export namespace Prisma {
   export const AnnouncementBarScalarFieldEnum: {
     id: 'id',
     text: 'text',
+    priority: 'priority',
     is_active: 'is_active',
     created_at: 'created_at',
     updated_at: 'updated_at'
@@ -31638,6 +31686,7 @@ export namespace Prisma {
     NOT?: AnnouncementBarWhereInput | AnnouncementBarWhereInput[]
     id?: StringFilter<"AnnouncementBar"> | string
     text?: StringFilter<"AnnouncementBar"> | string
+    priority?: IntFilter<"AnnouncementBar"> | number
     is_active?: BoolFilter<"AnnouncementBar"> | boolean
     created_at?: DateTimeFilter<"AnnouncementBar"> | Date | string
     updated_at?: DateTimeFilter<"AnnouncementBar"> | Date | string
@@ -31646,6 +31695,7 @@ export namespace Prisma {
   export type AnnouncementBarOrderByWithRelationInput = {
     id?: SortOrder
     text?: SortOrder
+    priority?: SortOrder
     is_active?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
@@ -31657,6 +31707,7 @@ export namespace Prisma {
     OR?: AnnouncementBarWhereInput[]
     NOT?: AnnouncementBarWhereInput | AnnouncementBarWhereInput[]
     text?: StringFilter<"AnnouncementBar"> | string
+    priority?: IntFilter<"AnnouncementBar"> | number
     is_active?: BoolFilter<"AnnouncementBar"> | boolean
     created_at?: DateTimeFilter<"AnnouncementBar"> | Date | string
     updated_at?: DateTimeFilter<"AnnouncementBar"> | Date | string
@@ -31665,12 +31716,15 @@ export namespace Prisma {
   export type AnnouncementBarOrderByWithAggregationInput = {
     id?: SortOrder
     text?: SortOrder
+    priority?: SortOrder
     is_active?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     _count?: AnnouncementBarCountOrderByAggregateInput
+    _avg?: AnnouncementBarAvgOrderByAggregateInput
     _max?: AnnouncementBarMaxOrderByAggregateInput
     _min?: AnnouncementBarMinOrderByAggregateInput
+    _sum?: AnnouncementBarSumOrderByAggregateInput
   }
 
   export type AnnouncementBarScalarWhereWithAggregatesInput = {
@@ -31679,6 +31733,7 @@ export namespace Prisma {
     NOT?: AnnouncementBarScalarWhereWithAggregatesInput | AnnouncementBarScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"AnnouncementBar"> | string
     text?: StringWithAggregatesFilter<"AnnouncementBar"> | string
+    priority?: IntWithAggregatesFilter<"AnnouncementBar"> | number
     is_active?: BoolWithAggregatesFilter<"AnnouncementBar"> | boolean
     created_at?: DateTimeWithAggregatesFilter<"AnnouncementBar"> | Date | string
     updated_at?: DateTimeWithAggregatesFilter<"AnnouncementBar"> | Date | string
@@ -33568,6 +33623,7 @@ export namespace Prisma {
   export type AnnouncementBarCreateInput = {
     id?: string
     text: string
+    priority?: number
     is_active?: boolean
     created_at?: Date | string
     updated_at?: Date | string
@@ -33576,6 +33632,7 @@ export namespace Prisma {
   export type AnnouncementBarUncheckedCreateInput = {
     id?: string
     text: string
+    priority?: number
     is_active?: boolean
     created_at?: Date | string
     updated_at?: Date | string
@@ -33584,6 +33641,7 @@ export namespace Prisma {
   export type AnnouncementBarUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     text?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -33592,6 +33650,7 @@ export namespace Prisma {
   export type AnnouncementBarUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     text?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -33600,6 +33659,7 @@ export namespace Prisma {
   export type AnnouncementBarCreateManyInput = {
     id?: string
     text: string
+    priority?: number
     is_active?: boolean
     created_at?: Date | string
     updated_at?: Date | string
@@ -33608,6 +33668,7 @@ export namespace Prisma {
   export type AnnouncementBarUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     text?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -33616,6 +33677,7 @@ export namespace Prisma {
   export type AnnouncementBarUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     text?: StringFieldUpdateOperationsInput | string
+    priority?: IntFieldUpdateOperationsInput | number
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -35093,14 +35155,20 @@ export namespace Prisma {
   export type AnnouncementBarCountOrderByAggregateInput = {
     id?: SortOrder
     text?: SortOrder
+    priority?: SortOrder
     is_active?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
 
+  export type AnnouncementBarAvgOrderByAggregateInput = {
+    priority?: SortOrder
+  }
+
   export type AnnouncementBarMaxOrderByAggregateInput = {
     id?: SortOrder
     text?: SortOrder
+    priority?: SortOrder
     is_active?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
@@ -35109,9 +35177,14 @@ export namespace Prisma {
   export type AnnouncementBarMinOrderByAggregateInput = {
     id?: SortOrder
     text?: SortOrder
+    priority?: SortOrder
     is_active?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
+  }
+
+  export type AnnouncementBarSumOrderByAggregateInput = {
+    priority?: SortOrder
   }
 
   export type AnnouncementSettingsCountOrderByAggregateInput = {
