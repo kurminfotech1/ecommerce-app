@@ -4,7 +4,7 @@
  * Token is cached in-memory and refreshed automatically on expiry.
  */
 
-const NIMBUSPOST_BASE_URL = "https://api.nimbuspost.com/v1";
+const NIMBUSPOST_BASE_URL = process.env.NIMBUS_BASE_URL;
 
 // ── In-memory token cache ──────────────────────────────────────────
 let cachedToken: string | null = null;
@@ -207,13 +207,14 @@ export async function getCourierServiceability(
   }
 
   const couriers = (data.data ?? []) as any[];
+  console.log("couriers", couriers);
 
   return couriers.map((c: any) => ({
     courier_id: c.courier_id ?? c.id,
     courier_name: c.courier_name ?? c.name,
     rate: parseFloat(c.total_charges ?? c.rate ?? 0),
-    estimated_delivery: c.estimated_delivery ?? c.etd ?? "N/A",
-    etd: c.etd ?? c.estimated_delivery ?? "N/A",
+    estimated_delivery: c.estimated_delivery ?? c.edd ?? "N/A",
+    etd: c.edd ?? c.estimated_delivery ?? "N/A",
     min_weight: parseFloat(c.min_weight ?? 0.5),
     cod_charges: parseFloat(c.cod_charges ?? 0),
     is_recommended: !!c.is_recommended,
