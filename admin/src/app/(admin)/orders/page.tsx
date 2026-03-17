@@ -24,6 +24,13 @@ import {
   AlertCircle,
   Loader2,
   Printer,
+  Truck,
+  Tag,
+  Navigation,
+  Link,
+  Ban,
+  Download,
+  Radio,
 } from "lucide-react";
 import { DeleteModal } from "@/components/common/DeleteModal";
 import axios from "axios";
@@ -65,6 +72,8 @@ interface Order {
   order_status: OrderStatus;
   created_at: string;
   total_amount: number;
+  shipping_name: string;
+  shipping_phone: string;
   shipping_address: string;
   shipping_city: string;
   shipping_state: string;
@@ -75,6 +84,14 @@ interface Order {
     payment_method: string;
     status: string;
   };
+  // NimbusPost Shipping Fields
+  courier_name?: string | null;
+  awb_number?: string | null;
+  shipment_id?: string | null;
+  shipping_cost?: number | null;
+  shipping_status?: string | null;
+  estimated_delivery_date?: string | null;
+  tracking_url?: string | null;
 }
 
 
@@ -496,6 +513,398 @@ const generateInvoice = (order: Order) => {
   URL.revokeObjectURL(url);
 };
 
+// ── Shipping Status Badge ──────────────────────────────────────────
+const SHIPPING_STATUS_COLORS: Record<string, { color: string; bg: string; border: string }> = {
+  SHIPMENT_CREATED:  { color: "text-blue-700",   bg: "bg-blue-50",   border: "border-blue-200" },
+  PICKUP_SCHEDULED:  { color: "text-indigo-700", bg: "bg-indigo-50", border: "border-indigo-200" },
+  IN_TRANSIT:        { color: "text-purple-700", bg: "bg-purple-50", border: "border-purple-200" },
+  OUT_FOR_DELIVERY:  { color: "text-amber-700",  bg: "bg-amber-50",  border: "border-amber-200" },
+  DELIVERED:         { color: "text-emerald-700",bg: "bg-emerald-50",border: "border-emerald-200" },
+  CANCELLED:         { color: "text-red-700",    bg: "bg-red-50",    border: "border-red-200" },
+};
+
+const ShippingStatusBadge = ({ status }: { status?: string | null }) => {
+  if (!status) return <span className="text-[10px] text-gray-400 italic">No shipment</span>;
+  const cfg = SHIPPING_STATUS_COLORS[status] ?? { color: "text-gray-700", bg: "bg-gray-50", border: "border-gray-200" };
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${cfg.color} ${cfg.bg} ${cfg.border}`}>
+      <Radio size={8} /> {status.replace(/_/g, " ")}
+    </span>
+  );
+};
+
+// ── Courier Option Card ────────────────────────────────────────────
+interface CourierOption {
+  courier_id: number;
+  courier_name: string;
+  rate: number;
+  etd: string;
+  estimated_delivery: string;
+  cod_charges?: number;
+  is_recommended?: boolean;
+}
+
+// ── Create Shipment Panel ──────────────────────────────────────────
+const CreateShipmentPanel = ({
+  order,
+  onSuccess,
+}: { order: Order; onSuccess: (updated: Partial<Order>) => void }) => {
+  const [loading, setLoading] = useState(false);
+  const [couriers, setCouriers] = useState<CourierOption[]>([]);
+  const [selectedCourierId, setSelectedCourierId] = useState<number | null>(null);
+  const [fetched, setFetched] = useState(false);
+
+  const isCod = order.payment?.payment_method === "COD";
+
+  // Estimate total weight from items
+  const estimatedWeight = Math.max(
+    0.5,
+    order.items.reduce((acc, item) => {
+      const w = parseFloat(item.variant?.weight || item.weight || "0.5");
+      return acc + w * item.quantity;
+    }, 0)
+  );
+
+  const fetchCouriers = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.post("/api/shipping/serviceability", {
+        delivery_pincode: order.shipping_pincode,
+        weight: estimatedWeight,
+        cod: isCod ? 1 : 0,
+        order_amount: order.total_amount,
+      });
+      const data: CourierOption[] = res.data?.data ?? [];
+      setCouriers(data);
+      setFetched(true);
+      if (data.length === 0) toast.info("No couriers available for this pincode.");
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to fetch courier options");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreate = async () => {
+    if (!selectedCourierId) {
+      toast.error("Please select a courier");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await axios.post("/api/shipping/create", {
+        order_id: order.id,
+        courier_id: selectedCourierId,
+        weight: estimatedWeight,
+      });
+      const data = res.data?.data;
+      toast.success(`Shipment created! AWB: ${data?.awb_number}`);
+      onSuccess({
+        awb_number: data?.awb_number,
+        shipment_id: data?.shipment_id,
+        courier_name: data?.courier_name,
+        tracking_url: data?.tracking_url,
+        shipping_status: "SHIPMENT_CREATED",
+        order_status: "PROCESSING",
+      });
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to create shipment");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-gray-500">Delivery PIN: <strong>{order.shipping_pincode}</strong> | Est. Weight: <strong>{estimatedWeight.toFixed(2)} kg</strong></p>
+        {!fetched && (
+          <button
+            onClick={fetchCouriers}
+            disabled={loading}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50 font-medium"
+          >
+            {loading ? <Loader2 size={12} className="animate-spin" /> : <Truck size={12} />}
+            Check Couriers
+          </button>
+        )}
+      </div>
+
+      {order.courier_name && order.shipping_cost != null && (
+        <div className="bg-blue-50/50 p-2 rounded border border-blue-100 mb-2">
+          <p className="text-[10px] text-blue-800">Customer selected: <strong className="font-semibold">{order.courier_name}</strong> (Paid ₹{order.shipping_cost})</p>
+        </div>
+      )}
+
+      {fetched && couriers.length > 0 && (
+        <>
+          <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+            {couriers.map((c) => (
+              <label
+                key={c.courier_id}
+                className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition ${
+                  selectedCourierId === c.courier_id
+                    ? "bg-blue-50 border-blue-400"
+                    : "bg-white border-gray-200 hover:border-blue-200"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <input
+                    type="radio"
+                    name="courier"
+                    value={c.courier_id}
+                    checked={selectedCourierId === c.courier_id}
+                    onChange={() => setSelectedCourierId(c.courier_id)}
+                    className="accent-blue-600"
+                  />
+                  <div>
+                    <p className="text-xs font-semibold text-gray-800">
+                      {c.courier_name}
+                      {c.is_recommended && (
+                        <span className="ml-1.5 text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-semibold">Recommended</span>
+                      )}
+                    </p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">ETA: {c.etd || c.estimated_delivery}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-gray-900">₹{c.rate.toFixed(0)}</p>
+                  {isCod && c.cod_charges != null && c.cod_charges > 0 && (
+                    <p className="text-[10px] text-gray-400">COD: ₹{c.cod_charges}</p>
+                  )}
+                </div>
+              </label>
+            ))}
+          </div>
+          <button
+            onClick={handleCreate}
+            disabled={loading || !selectedCourierId}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#157f3c] hover:bg-[#126631] text-white text-sm font-semibold transition disabled:opacity-50"
+          >
+            {loading ? <Loader2 size={14} className="animate-spin" /> : <Truck size={14} />}
+            Create Shipment & Generate AWB
+          </button>
+        </>
+      )}
+    </div>
+  );
+};
+
+// ── Shipping Management Panel (inside OrderDetailModal) ────────────
+const ShippingManagementPanel = ({
+  order,
+  onOrderUpdate,
+}: {
+  order: Order;
+  onOrderUpdate: (updates: Partial<Order>) => void;
+}) => {
+  const [labelLoading, setLabelLoading] = useState(false);
+  const [pickupLoading, setPickupLoading] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [trackLoading, setTrackLoading] = useState(false);
+  const [trackingData, setTrackingData] = useState<null | {
+    current_status: string;
+    tracking_events: { status: string; location: string; timestamp: string; remark?: string }[];
+  }>(null);
+  const [showTracking, setShowTracking] = useState(false);
+
+  const hasShipment = !!order.awb_number;
+
+  const handleDownloadLabel = async () => {
+    if (!order.awb_number) return;
+    setLabelLoading(true);
+    try {
+      const res = await axios.post("/api/shipping/label", { awb_numbers: [order.awb_number] });
+      const labelData = res.data?.data;
+      if (labelData) {
+        if (labelData.startsWith("http")) {
+          window.open(labelData, "_blank");
+        } else {
+          // base64 PDF
+          const link = document.createElement("a");
+          link.href = `data:application/pdf;base64,${labelData}`;
+          link.download = `label-${order.awb_number}.pdf`;
+          link.click();
+        }
+        toast.success("Label downloaded!");
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to generate label");
+    } finally {
+      setLabelLoading(false);
+    }
+  };
+
+  const handleSchedulePickup = async () => {
+    setPickupLoading(true);
+    try {
+      const res = await axios.post("/api/shipping/pickup", { order_id: order.id });
+      toast.success(res.data.message || "Pickup scheduled!");
+      onOrderUpdate({ shipping_status: "PICKUP_SCHEDULED" });
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to schedule pickup");
+    } finally {
+      setPickupLoading(false);
+    }
+  };
+
+  const handleTrack = async () => {
+    setTrackLoading(true);
+    setShowTracking(true);
+    try {
+      const res = await axios.get(`/api/shipping/track?order_id=${order.id}`);
+      setTrackingData(res.data?.data ?? null);
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to fetch tracking");
+      setShowTracking(false);
+    } finally {
+      setTrackLoading(false);
+    }
+  };
+
+  const handleCancelShipment = async () => {
+    if (!confirm("Are you sure you want to cancel this shipment? This cannot be undone.")) return;
+    setCancelLoading(true);
+    try {
+      const res = await axios.post("/api/shipping/cancel", { order_id: order.id });
+      toast.success(res.data.message || "Shipment cancelled.");
+      onOrderUpdate({ shipping_status: "CANCELLED", order_status: "CANCELLED" });
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to cancel shipment");
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-gray-100 overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100">
+        <div className="flex items-center gap-2">
+          <Truck size={14} className="text-[#157f3c]" />
+          <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">Shipping Management</span>
+        </div>
+        <ShippingStatusBadge status={order.shipping_status} />
+      </div>
+
+      <div className="p-4 space-y-4">
+        {/* AWB / Courier Info */}
+        {hasShipment ? (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-blue-50 rounded-lg p-3">
+              <p className="text-[10px] font-semibold text-blue-500 uppercase tracking-wide mb-1">Courier</p>
+              <p className="text-sm font-bold text-blue-900">{order.courier_name || "N/A"}</p>
+            </div>
+            <div className="bg-purple-50 rounded-lg p-3">
+              <p className="text-[10px] font-semibold text-purple-500 uppercase tracking-wide mb-1">AWB Number</p>
+              <p className="text-sm font-bold text-purple-900 font-mono">{order.awb_number}</p>
+            </div>
+            {order.shipment_id && (
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Shipment ID</p>
+                <p className="text-xs font-medium text-gray-700 font-mono">{order.shipment_id}</p>
+              </div>
+            )}
+            {order.tracking_url && (
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Track Link</p>
+                <a href={order.tracking_url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                  <Link size={10} /> Open
+                </a>
+              </div>
+            )}
+          </div>
+        ) : (
+          <CreateShipmentPanel
+            order={order}
+            onSuccess={(updates) => onOrderUpdate(updates)}
+          />
+        )}
+
+        {/* Action Buttons (only when shipment exists) */}
+        {hasShipment && (
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+            <button
+              onClick={handleDownloadLabel}
+              disabled={labelLoading}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition disabled:opacity-50"
+            >
+              {labelLoading ? <Loader2 size={11} className="animate-spin" /> : <Download size={11} />}
+              Shipping Label
+            </button>
+
+            {order.shipping_status !== "PICKUP_SCHEDULED" && order.shipping_status !== "CANCELLED" && (
+              <button
+                onClick={handleSchedulePickup}
+                disabled={pickupLoading}
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-medium transition disabled:opacity-50"
+              >
+                {pickupLoading ? <Loader2 size={11} className="animate-spin" /> : <Navigation size={11} />}
+                Schedule Pickup
+              </button>
+            )}
+
+            <button
+              onClick={showTracking ? () => setShowTracking(false) : handleTrack}
+              disabled={trackLoading}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-[#157f3c] hover:bg-[#126631] text-white font-medium transition disabled:opacity-50"
+            >
+              {trackLoading ? <Loader2 size={11} className="animate-spin" /> : <Radio size={11} />}
+              {showTracking ? "Hide Tracking" : "Track Shipment"}
+            </button>
+
+            {order.shipping_status !== "CANCELLED" && order.order_status !== "DELIVERED" && (
+              <button
+                onClick={handleCancelShipment}
+                disabled={cancelLoading}
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition disabled:opacity-50 ml-auto"
+              >
+                {cancelLoading ? <Loader2 size={11} className="animate-spin" /> : <Ban size={11} />}
+                Cancel Shipment
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Tracking Timeline */}
+        {showTracking && trackingData && (
+          <div className="mt-2 rounded-xl border border-gray-100 overflow-hidden">
+            <div className="px-4 py-2.5 bg-[#157f3c] flex items-center gap-2">
+              <Radio size={12} className="text-white" />
+              <span className="text-xs font-semibold text-white">Live Tracking — {trackingData.current_status}</span>
+            </div>
+            {trackingData.tracking_events.length === 0 ? (
+              <p className="text-xs text-gray-400 italic p-4">No tracking events available yet.</p>
+            ) : (
+              <div className="relative p-4 space-y-0">
+                {trackingData.tracking_events.map((ev, idx) => (
+                  <div key={idx} className="flex gap-3 relative">
+                    {/* Timeline line */}
+                    {idx < trackingData.tracking_events.length - 1 && (
+                      <div className="absolute left-[11px] top-5 w-0.5 h-full -translate-x-1/2 bg-gray-200" />
+                    )}
+                    <div className={`w-5 h-5 rounded-full shrink-0 mt-0.5 flex items-center justify-center border-2 ${
+                      idx === 0 ? "bg-[#157f3c] border-[#157f3c]" : "bg-white border-gray-300"
+                    }`}>
+                      <div className={`w-2 h-2 rounded-full ${idx === 0 ? "bg-white" : "bg-gray-300"}`} />
+                    </div>
+                    <div className="pb-4 flex-1">
+                      <p className={`text-xs font-semibold ${idx === 0 ? "text-[#157f3c]" : "text-gray-700"}`}>{ev.status}</p>
+                      {ev.location && <p className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5"><MapPin size={9} />{ev.location}</p>}
+                      {ev.remark && <p className="text-[10px] text-gray-400 mt-0.5">{ev.remark}</p>}
+                      {ev.timestamp && <p className="text-[10px] text-gray-400 mt-0.5">{new Date(ev.timestamp).toLocaleString("en-IN")}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // ── Context Menu (3-dot) ───────────────────────────────────────────
 interface RowMenuProps {
   order: Order;
@@ -534,7 +943,7 @@ const RowMenu = ({ order, onDelete, onView, canDelete }: RowMenuProps) => {
           <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setOpen(false); }} />
           <div
             style={{ top: pos.top, right: pos.right }}
-            className="fixed z-[9999] bg-white rounded-xl border border-gray-100 shadow-2xl py-1 min-w-[170px]"
+            className="fixed z-[9999] bg-white rounded-xl border border-gray-100 shadow-2xl py-1 min-w-[180px]"
           >
             <button
               type="button"
@@ -542,6 +951,13 @@ const RowMenu = ({ order, onDelete, onView, canDelete }: RowMenuProps) => {
               className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition"
             >
               <Eye size={13} /> View Details
+            </button>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onView(order); setOpen(false); }}
+              className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition"
+            >
+              <Truck size={13} /> Manage Shipping
             </button>
             <button
               type="button"
@@ -571,8 +987,16 @@ const RowMenu = ({ order, onDelete, onView, canDelete }: RowMenuProps) => {
 };
 
 // ── Order Detail Modal ─────────────────────────────────────────────
-const OrderDetailModal = ({ order, onClose }: { order: Order; onClose: () => void }) => {
+const OrderDetailModal = ({ order: initialOrder, onClose, onOrderUpdate }: { order: Order; onClose: () => void; onOrderUpdate?: (id: string, updates: Partial<Order>) => void }) => {
+  const [order, setOrderState] = React.useState<Order>(initialOrder);
   const { date, time } = formatDate(order.created_at);
+  const [activeTab, setActiveTab] = React.useState<"details" | "shipping">("details");
+
+  const handleShippingUpdate = (updates: Partial<Order>) => {
+    setOrderState(prev => ({ ...prev, ...updates }));
+    onOrderUpdate?.(order.id, updates);
+  };
+
   return (
     <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
@@ -596,77 +1020,109 @@ const OrderDetailModal = ({ order, onClose }: { order: Order; onClose: () => voi
           </div>
         </div>
 
+        {/* Tabs */}
+        <div className="flex border-b border-gray-100 px-6">
+          {(["details", "shipping"] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2.5 text-xs font-semibold capitalize border-b-2 transition ${
+                activeTab === tab
+                  ? "border-[#157f3c] text-[#157f3c]"
+                  : "border-transparent text-gray-400 hover:text-gray-600"
+              }`}
+            >
+              {tab === "shipping" ? (
+                <span className="flex items-center gap-1"><Truck size={11} /> Shipping</span>
+              ) : (
+                <span className="flex items-center gap-1"><Package size={11} /> Order Details</span>
+              )}
+            </button>
+          ))}
+        </div>
+
         <div className="p-6 space-y-5">
-          {/* Customer info */}
-          <div className="flex items-start gap-4 bg-gray-50 rounded-xl p-4">
-            <div className={`w-11 h-11 rounded-full ${avatarColor(order.user?.full_name || "Guest")} flex items-center justify-center text-white text-sm font-bold shrink-0`}>
-              {initials(order.user?.full_name || "Guest")}
-            </div>
-            <div>
-              <p className="font-semibold text-gray-800">{order.user?.full_name || "Guest User"}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{order.user?.email || "No email provided"}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{order.user?.phone || "No phone provided"}</p>
-              <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
-                <MapPin size={11} />
-                {order.shipping_address}, {order.shipping_city}, {order.shipping_state} - {order.shipping_pincode}
+          {activeTab === "details" && (
+            <>
+              {/* Customer info */}
+              <div className="flex items-start gap-4 bg-gray-50 rounded-xl p-4">
+                <div className={`w-11 h-11 rounded-full ${avatarColor(order.user?.full_name || "Guest")} flex items-center justify-center text-white text-sm font-bold shrink-0`}>
+                  {initials(order.user?.full_name || "Guest")}
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-800">{order.user?.full_name || "Guest User"}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{order.user?.email || "No email provided"}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{order.user?.phone || "No phone provided"}</p>
+                  <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
+                    <MapPin size={11} />
+                    {order.shipping_address}, {order.shipping_city}, {order.shipping_state} – {order.shipping_pincode}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* Items */}
-          <div className="rounded-xl border border-gray-100 overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-[#157f3c] text-xs font-semibold text-white uppercase tracking-wide border-b border-[#157f3c]">
-                  <th className="px-4 py-3 text-left">Product</th>
-                  <th className="px-4 py-3 text-left">SKU</th>
-                  <th className="px-4 py-3 text-center">Qty</th>
-                  <th className="px-4 py-3 text-right">Price</th>
-                  <th className="px-4 py-3 text-right">Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {order.items.map((item) => (
-                  <tr key={item.id}>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden text-base shrink-0">
-                          {item.variant?.images?.[0]?.image_url || item.image_url ? (
-                            <img src={item.variant?.images?.[0]?.image_url || item.image_url!} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <Package size={14} className="text-gray-400" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-800 text-xs">{item.variant?.product?.product_name || item.product_name || "Unknown Product"}</p>
-                          <p className="text-[10px] text-gray-400">{item.variant?.weight || item.weight || item.variant?.size || item.size || "Standard"}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <code className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-mono">{item.variant?.sku || item.sku || "N/A"}</code>
-                    </td>
-                    <td className="px-4 py-3 text-center text-gray-600">{item.quantity}</td>
-                    <td className="px-4 py-3 text-right text-gray-700">{formatCurrency(item.price)}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-gray-800">
-                      {formatCurrency(item.price * item.quantity)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              {/* Items */}
+              <div className="rounded-xl border border-gray-100 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-[#157f3c] text-xs font-semibold text-white uppercase tracking-wide border-b border-[#157f3c]">
+                      <th className="px-4 py-3 text-left">Product</th>
+                      <th className="px-4 py-3 text-left">SKU</th>
+                      <th className="px-4 py-3 text-center">Qty</th>
+                      <th className="px-4 py-3 text-right">Price</th>
+                      <th className="px-4 py-3 text-right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {order.items.map((item) => (
+                      <tr key={item.id}>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden text-base shrink-0">
+                              {item.variant?.images?.[0]?.image_url || item.image_url ? (
+                                <img src={item.variant?.images?.[0]?.image_url || item.image_url!} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <Package size={14} className="text-gray-400" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-800 text-xs">{item.variant?.product?.product_name || item.product_name || "Unknown Product"}</p>
+                              <p className="text-[10px] text-gray-400">{item.variant?.weight || item.weight || item.variant?.size || item.size || "Standard"}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <code className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-mono">{item.variant?.sku || item.sku || "N/A"}</code>
+                        </td>
+                        <td className="px-4 py-3 text-center text-gray-600">{item.quantity}</td>
+                        <td className="px-4 py-3 text-right text-gray-700">{formatCurrency(item.price)}</td>
+                        <td className="px-4 py-3 text-right font-semibold text-gray-800">
+                          {formatCurrency(item.price * item.quantity)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-          {/* Summary */}
-          <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-            <div className="flex justify-between text-base font-bold text-gray-900">
-              <span>Grand Total</span>
-              <span>{formatCurrency(order.total_amount)}</span>
-            </div>
-            <div className="text-[10px] text-gray-400 pt-2 border-t border-gray-200">
-              Payment Method: {order.payment?.payment_method || "N/A"} | Status: {order.payment?.status || "PENDING"}
-            </div>
-          </div>
+              {/* Summary */}
+              <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+                <div className="flex justify-between text-base font-bold text-gray-900">
+                  <span>Grand Total</span>
+                  <span>{formatCurrency(order.total_amount)}</span>
+                </div>
+                <div className="text-[10px] text-gray-400 pt-2 border-t border-gray-200">
+                  Payment Method: {order.payment?.payment_method || "N/A"} | Status: {order.payment?.status || "PENDING"}
+                </div>
+              </div>
+            </>
+          )}
+
+          {activeTab === "shipping" && (
+            <ShippingManagementPanel
+              order={order}
+              onOrderUpdate={handleShippingUpdate}
+            />
+          )}
         </div>
 
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
@@ -688,7 +1144,7 @@ const OrderDetailModal = ({ order, onClose }: { order: Order; onClose: () => voi
 // ════════════════════════════════════════════════════════════════════
 // MAIN PAGE
 // ════════════════════════════════════════════════════════════════════
-const ITEMS_PER_PAGE = 7;
+const ITEMS_PER_PAGE = 10;
 
 export default function OrdersPage() {
   const [orders, setOrders] = React.useState<Order[]>([]);
@@ -1369,7 +1825,15 @@ export default function OrdersPage() {
 
       {/* ── Order Detail Modal ── */}
       {viewOrder && (
-        <OrderDetailModal order={viewOrder} onClose={() => setViewOrder(null)} />
+        <OrderDetailModal
+          order={viewOrder}
+          onClose={() => setViewOrder(null)}
+          onOrderUpdate={(id, updates) => {
+            setOrders(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o));
+            setAllOrders(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o));
+            setViewOrder(prev => prev && prev.id === id ? { ...prev, ...updates } : prev);
+          }}
+        />
       )}
 
       {/* ── Status Updating Popup ── */}

@@ -17,8 +17,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Not a success event" }, { status: 200 });
     }
 
-    console.log(`Processing automation for Order ID: ${order_id}`);
-
     // Trigger Business Logic:
     // 1. Update Inventory (Already done in order creation API in this project?)
     //    Wait, checking orders/route.ts, it updates stock when order is created (PLACED).
@@ -32,7 +30,6 @@ export async function POST(request: Request) {
     //    (Can use real-time or just logs)
     
     // 4. Generate Invoice (Mocked here)
-    console.log(`Generating invoice for order ${order_id}...`);
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error: any) {

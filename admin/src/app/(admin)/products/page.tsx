@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -166,7 +166,6 @@ export default function ProductsPage() {
   const { products, totalPages, totalRecords, loading, submitting, uploading } =
     useSelector((s: RootState) => s.products);
   const { categories } = useSelector((s: RootState) => s.categories);
-  console.log(categories);
 
   // ── Permission flags ────────────────────────────────────────────
   const { canCreate, canUpdate, canDelete } = usePermission("Products");
@@ -469,7 +468,7 @@ export default function ProductsPage() {
   const ProductCard = ({ product }: { product: Product }) => {
     const firstVariant = product.variants?.[0];
     const firstImage = firstVariant?.images?.[0]?.image_url;
-    console.log("product", product);
+    
     return (
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow group">
         <Link href={`/products/${product.id}`}>

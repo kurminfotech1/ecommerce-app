@@ -16,7 +16,6 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { email } = body;
-    console.log("SEND-OTP REQUEST FOR:", email);
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json(
@@ -29,19 +28,15 @@ export async function POST(req: Request) {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
-    console.log("GENERATED OTP:", otp);
-
     // Upsert: one active OTP per email at a time (replaces previous)
     await prisma.otpVerification.upsert({
       where: { email },
       update: { otp, expires_at: expiresAt },
       create: { email, otp, expires_at: expiresAt },
     });
-    console.log("OTP UPSERTED TO DB");
 
     // Send the branded OTP email via Nodemailer
     await sendOtpEmail(email, otp);
-    console.log("OTP EMAIL SENT SUCCESSFULLY");
 
     return NextResponse.json({
       success: true,

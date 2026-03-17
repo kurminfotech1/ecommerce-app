@@ -262,7 +262,14 @@ exports.Prisma.OrderScalarFieldEnum = {
   currency: 'currency',
   payment_status: 'payment_status',
   razorpay_order_id: 'razorpay_order_id',
-  created_at: 'created_at'
+  created_at: 'created_at',
+  courier_name: 'courier_name',
+  awb_number: 'awb_number',
+  shipment_id: 'shipment_id',
+  shipping_cost: 'shipping_cost',
+  shipping_status: 'shipping_status',
+  estimated_delivery_date: 'estimated_delivery_date',
+  tracking_url: 'tracking_url'
 };
 
 exports.Prisma.OrderItemScalarFieldEnum = {

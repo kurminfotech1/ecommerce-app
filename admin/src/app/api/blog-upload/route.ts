@@ -17,7 +17,6 @@ async function ensureBucket() {
       allowedMimeTypes: ["image/jpeg", "image/png", "image/webp", "image/gif"],
     });
     if (createError) throw new Error(`Failed to create bucket: ${createError.message}`);
-    console.log(`✅ Supabase bucket "${BUCKET}" created.`);
   }
 }
 
