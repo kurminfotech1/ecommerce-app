@@ -444,9 +444,9 @@ export default function CategoriesPage() {
                         onClick={() => setPage(pg as number)}
                         style={{
                           ...pgBtnBase,
-                          background: pg === currentPage ? "#4f46e5" : "#fff",
+                          background: pg === currentPage ? "#0F6B30" : "#fff",
                           color: pg === currentPage ? "#fff" : "#374151",
-                          borderColor: pg === currentPage ? "#4f46e5" : "#e5e7eb",
+                          borderColor: pg === currentPage ? "#0F6B30" : "#e5e7eb",
                           fontWeight: pg === currentPage ? 600 : 500,
                         }}
                       >

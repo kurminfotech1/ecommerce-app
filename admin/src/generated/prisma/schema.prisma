@@ -176,11 +176,11 @@ model Cart {
 }
 
 model Order {
-  id                String          @id @default(uuid())
-  order_number      String          @unique
+  id                String        @id @default(uuid())
+  order_number      String        @unique
   user_id           String
   total_amount      Float
-  order_status      OrderStatus     @default(PLACED)
+  order_status      OrderStatus   @default(PLACED)
   shipping_name     String
   shipping_phone    String
   shipping_address  String
@@ -188,17 +188,28 @@ model Order {
   shipping_state    String
   shipping_pincode  String
   shipping_country  String
-  currency          String          @default("INR")
-  payment_status    PaymentStatus   @default(PENDING)
+  currency          String        @default("INR")
+  payment_status    PaymentStatus @default(PENDING)
   razorpay_order_id String?
-  created_at        DateTime        @default(now())
-  user              User            @relation(fields: [user_id], references: [id])
-  items             OrderItem[]
-  payment           Payment?
-  returnRequests    ReturnRequest[]
+  created_at        DateTime      @default(now())
+
+  // NimbusPost Shipping Fields
+  courier_name            String?
+  awb_number              String?
+  shipment_id             String?
+  shipping_cost           Float?
+  shipping_status         String?
+  estimated_delivery_date DateTime?
+  tracking_url            String?
+
+  user           User            @relation(fields: [user_id], references: [id])
+  items          OrderItem[]
+  payment        Payment?
+  returnRequests ReturnRequest[]
 
   @@index([order_status])
   @@index([payment_status])
+  @@index([awb_number])
 }
 
 model OrderItem {

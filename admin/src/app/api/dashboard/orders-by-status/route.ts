@@ -98,7 +98,6 @@ export async function GET(request: Request) {
 
        
         const data = orders.map((order) => {
-            console.log(order)
             const firstItem = order.items[0];
             const variant = firstItem?.variant;
             const product = variant?.product;

@@ -105,7 +105,9 @@ export async function POST(request: Request) {
             shipping_city,
             shipping_state,
             shipping_pincode,
-            shipping_country
+            shipping_country,
+            shipping_cost,
+            courier_name,
         } = body;
 
         if (!user_id || !shipping_name || !shipping_address || !shipping_city) {
@@ -131,8 +133,10 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
         }
 
-        // 2. Calculate total amount
-        const totalAmount = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+        // 2. Calculate total amount (subtotal + shipping)
+        const subTotalAmount = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+        const parsedShippingCost = shipping_cost != null ? parseFloat(shipping_cost) : 0;
+        const totalAmount = subTotalAmount + parsedShippingCost;
 
         // 3. Generate a simple order number
         const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -153,6 +157,8 @@ export async function POST(request: Request) {
                     shipping_state,
                     shipping_pincode,
                     shipping_country,
+                    ...(parsedShippingCost > 0 ? { shipping_cost: parsedShippingCost } : {}),
+                    ...(courier_name ? { courier_name } : {}),
                     items: {
                         create: cartItems.map((item) => {
                             const variantImage = item.variant.images?.[0]?.image_url;

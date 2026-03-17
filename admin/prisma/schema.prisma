@@ -192,6 +192,16 @@ model Order {
   payment_status   PaymentStatus   @default(PENDING)
   razorpay_order_id String?
   created_at       DateTime        @default(now())
+
+  // NimbusPost Shipping Fields
+  courier_name            String?
+  awb_number              String?
+  shipment_id             String?
+  shipping_cost           Float?
+  shipping_status         String?
+  estimated_delivery_date DateTime?
+  tracking_url            String?
+
   user             User            @relation(fields: [user_id], references: [id])
   items            OrderItem[]
   payment          Payment?
@@ -199,6 +209,7 @@ model Order {
 
   @@index([order_status])
   @@index([payment_status])
+  @@index([awb_number])
 }
 
 model OrderItem {
