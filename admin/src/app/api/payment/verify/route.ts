@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
+import { createShipment } from "@/lib/nimbuspost";
 
 export async function POST(request: Request) {
   try {
@@ -34,8 +35,19 @@ export async function POST(request: Request) {
         where: { id: internal_order_id },
         data: {
           payment_status: "SUCCESS",
-          order_status: "PLACED", // Or CONFIRMED
+          order_status: "CONFIRMED", // Move to CONFIRMED on successful payment
         },
+        include: {
+          items: {
+            include: {
+              variant: {
+                include: {
+                  product: true
+                }
+              }
+            }
+          }
+        }
       });
 
       // 2. Create/Update Payment record
@@ -58,6 +70,54 @@ export async function POST(request: Request) {
           status: "SUCCESS",
         },
       });
+
+      // 3. AUTO-CREATE SHIPMENT if not already created during order placement
+      if (!order.awb_number && order.courier_name) {
+        try {
+          const courierId = 1; // Default courier - adjust based on your setup
+          
+          const totalWeight = order.items.reduce((acc, item) => {
+            return acc + parseFloat(item.variant?.weight || "0.5");
+          }, 0);
+          
+          const shipmentData = {
+            order_number: order.order_number,
+            shipping_name: order.shipping_name,
+            shipping_phone: order.shipping_phone,
+            shipping_address: order.shipping_address,
+            shipping_city: order.shipping_city,
+            shipping_state: order.shipping_state,
+            shipping_pincode: order.shipping_pincode,
+            shipping_country: order.shipping_country || "India",
+            weight: totalWeight,
+            total_amount: order.total_amount,
+            payment_method: "PREPAID" as const, // Since payment is already done
+            courier_id: courierId,
+            items: order.items.map(item => ({
+              name: item.variant?.product?.product_name || "Product",
+              qty: item.quantity,
+              price: item.price
+            }))
+          };
+
+          const shipment = await createShipment(shipmentData);
+          
+          // Update order with AWB and shipment details
+          await tx.order.update({
+            where: { id: internal_order_id },
+            data: {
+              awb_number: shipment.awb_number,
+              shipment_id: shipment.shipment_id,
+              shipping_status: "LABEL_CREATED"
+            }
+          });
+          
+          console.log(`Shipment created for Razorpay order ${order.order_number}: ${shipment.awb_number}`);
+        } catch (shipmentError) {
+          console.error("Failed to create shipment after Razorpay payment:", shipmentError);
+          // Continue anyway - shipment can be created manually later
+        }
+      }
     });
 
     return NextResponse.json({ success: true, message: "Payment verified successfully" }, { status: 200 });

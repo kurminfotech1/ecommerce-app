@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
+import { createShipment } from "@/lib/nimbuspost";
 
 export async function POST(request: Request) {
   try {
@@ -54,12 +55,23 @@ export async function POST(request: Request) {
       // Update order and payment in a transaction
       await prisma.$transaction(async (tx) => {
         // 1. Update Order
-        await tx.order.update({
+        const updatedOrder = await tx.order.update({
           where: { id: order.id },
           data: {
             payment_status: "SUCCESS",
             order_status: "CONFIRMED", // Move to CONFIRMED on successful payment
           },
+          include: {
+            items: {
+              include: {
+                variant: {
+                  include: {
+                    product: true
+                  }
+                }
+              }
+            }
+          }
         });
 
         // 2. Create/Update Payment record
@@ -81,6 +93,55 @@ export async function POST(request: Request) {
             currency: order.currency || "INR",
           },
         });
+
+        // 3. AUTO-CREATE SHIPMENT if not already created
+        if (!updatedOrder.awb_number && updatedOrder.courier_name) {
+          try {
+            const courierId = 1; // Default courier
+            
+            const totalWeight = updatedOrder.items.reduce((acc, item) => {
+              return acc + parseFloat(item.variant?.weight || "0.5");
+            }, 0);
+            
+            const shipmentData = {
+              order_number: updatedOrder.order_number,
+              shipping_name: updatedOrder.shipping_name,
+              shipping_phone: updatedOrder.shipping_phone,
+              shipping_address: updatedOrder.shipping_address,
+              shipping_city: updatedOrder.shipping_city,
+              shipping_state: updatedOrder.shipping_state,
+              shipping_pincode: updatedOrder.shipping_pincode,
+              shipping_country: updatedOrder.shipping_country || "India",
+              weight: totalWeight,
+              total_amount: updatedOrder.total_amount,
+              payment_method: "PREPAID" as const,
+              courier_id: courierId,
+              items: updatedOrder.items.map(item => ({
+                name: item.variant?.product?.product_name || "Product",
+                qty: item.quantity,
+                price: item.price
+              }))
+            };
+
+            const shipment = await createShipment(shipmentData);
+            
+            // Update order with AWB and shipment details
+            await tx.order.update({
+              where: { id: order.id },
+              data: {
+                awb_number: shipment.awb_number,
+                shipment_id: shipment.shipment_id,
+                shipping_status: "LABEL_CREATED"
+              }
+            });
+            
+            console.log(`Webhook: Shipment created for order ${updatedOrder.order_number}: ${shipment.awb_number}`);
+          } catch (shipmentError) {
+            console.error("Webhook: Failed to create shipment:", shipmentError);
+          }
+        }
+
+        return updatedOrder;
       });
 
       console.log(`Payment verified and order ${order.order_number} confirmed`);
