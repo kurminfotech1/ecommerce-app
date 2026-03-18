@@ -4,7 +4,7 @@
  * Token is cached in-memory and refreshed automatically on expiry.
  */
 
-const NIMBUSPOST_BASE_URL = "https://api.nimbuspost.com/v1";
+const NIMBUSPOST_BASE_URL = process.env.NIMBUS_BASE_URL;
 
 // ── In-memory token cache ──────────────────────────────────────────
 let cachedToken: string | null = null;
