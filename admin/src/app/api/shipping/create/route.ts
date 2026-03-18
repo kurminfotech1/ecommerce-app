@@ -50,10 +50,10 @@ export async function POST(request: Request) {
     // Calculate weight: use provided weight or sum from items (in kg)
     const totalWeight =
       weight ??
-      order.items.reduce((acc, item) => {
+      (order.items.reduce((acc, item) => {
         const w = parseFloat(item.variant?.weight ?? item.weight ?? "0.5");
         return acc + w * item.quantity;
-      }, 0) || 0.5;
+      }, 0) || 0.5);
 
     // Build shipment
     const result = await createShipment({
