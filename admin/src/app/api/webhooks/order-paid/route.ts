@@ -1,35 +1,113 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 
 export async function POST(request: Request) {
   try {
-    const payload = await request.json();
+    // Verify Razorpay webhook signature
+    const razorpaySignature = request.headers.get("x-razorpay-signature") || "";
     
-    // Supabase webhook payload structure usually has 'record' and 'old_record'
-    // Depending on how you configure it, but let's assume it sends the order data
-    const orderData = payload.record || payload;
-    const { id: order_id, user_id, total_amount, currency, payment_status } = orderData;
-
-    // Validate request (Add a secret header check for security if needed)
-    // For example: if (request.headers.get('x-webhook-secret') !== process.env.WEBHOOK_SECRET) ...
-
-    if (payment_status !== 'SUCCESS') {
-      return NextResponse.json({ message: "Not a success event" }, { status: 200 });
+    if (!razorpaySignature) {
+      return NextResponse.json({ error: "Missing signature" }, { status: 400 });
     }
 
-    // Trigger Business Logic:
-    // 1. Update Inventory (Already done in order creation API in this project?)
-    //    Wait, checking orders/route.ts, it updates stock when order is created (PLACED).
-    //    If we only want to update stock after payment, we should move that logic here.
-    //    However, usually stock is reserved/decremented at placement to avoid overselling.
+    const payload = await request.text();
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET!;
     
-    // 2. Send order confirmation email
-    //    (Already partially done in orders/route.ts, but maybe we want a "Payment Success" email)
-    
-    // 3. Notify Admin Panel
-    //    (Can use real-time or just logs)
-    
-    // 4. Generate Invoice (Mocked here)
+    // Generate expected signature
+    const expectedSignature = crypto
+      .createHmac("sha256", secret)
+      .update(payload)
+      .digest("hex");
+
+    // Verify signature
+    if (expectedSignature !== razorpaySignature) {
+      return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    }
+
+    // Parse payload
+    const event = JSON.parse(payload);
+    const { event: eventType, payload: eventData } = event;
+
+    console.log(`Razorpay Webhook Event: ${eventType}`);
+
+    // Handle payment captured event
+    if (eventType === "payment.captured") {
+      const payment = eventData.payment.entity;
+      const orderId = payment.order_id;
+      const paymentId = payment.id;
+      const amount = payment.amount / 100; // Convert from paise to rupees
+
+      if (!orderId) {
+        return NextResponse.json({ error: "Order ID not found in payment" }, { status: 400 });
+      }
+
+      // Find our internal order by Razorpay order ID
+      const order = await prisma.order.findFirst({
+        where: { razorpay_order_id: orderId },
+      });
+
+      if (!order) {
+        return NextResponse.json({ error: "Order not found" }, { status: 404 });
+      }
+
+      // Update order and payment in a transaction
+      await prisma.$transaction(async (tx) => {
+        // 1. Update Order
+        await tx.order.update({
+          where: { id: order.id },
+          data: {
+            payment_status: "SUCCESS",
+            order_status: "CONFIRMED", // Move to CONFIRMED on successful payment
+          },
+        });
+
+        // 2. Create/Update Payment record
+        await tx.payment.upsert({
+          where: { order_id: order.id },
+          update: {
+            payment_method: "RAZORPAY",
+            transaction_id: paymentId,
+            amount: amount,
+            status: "SUCCESS",
+            currency: order.currency || "INR",
+          },
+          create: {
+            order_id: order.id,
+            payment_method: "RAZORPAY",
+            transaction_id: paymentId,
+            amount: amount,
+            status: "SUCCESS",
+            currency: order.currency || "INR",
+          },
+        });
+      });
+
+      console.log(`Payment verified and order ${order.order_number} confirmed`);
+    }
+
+    // Handle payment failed event
+    if (eventType === "payment.failed") {
+      const payment = eventData.payment.entity;
+      const orderId = payment.order_id;
+
+      if (orderId) {
+        const order = await prisma.order.findFirst({
+          where: { razorpay_order_id: orderId },
+        });
+
+        if (order) {
+          await prisma.order.update({
+            where: { id: order.id },
+            data: {
+              payment_status: "FAILED",
+            },
+          });
+
+          console.log(`Payment failed for order ${order.order_number}`);
+        }
+      }
+    }
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error: any) {

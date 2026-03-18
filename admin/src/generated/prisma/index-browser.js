@@ -269,7 +269,14 @@ exports.Prisma.OrderScalarFieldEnum = {
   shipping_cost: 'shipping_cost',
   shipping_status: 'shipping_status',
   estimated_delivery_date: 'estimated_delivery_date',
-  tracking_url: 'tracking_url'
+  tracking_url: 'tracking_url',
+  cod_amount: 'cod_amount',
+  cod_status: 'cod_status',
+  cod_remitted_date: 'cod_remitted_date',
+  cod_tracking_id: 'cod_tracking_id',
+  manifest_generated: 'manifest_generated',
+  rto_reason: 'rto_reason',
+  rto_initiated_at: 'rto_initiated_at'
 };
 
 exports.Prisma.OrderItemScalarFieldEnum = {

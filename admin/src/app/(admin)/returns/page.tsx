@@ -1,333 +1,309 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import {
-    Search,
-    RefreshCw,
-    Eye,
-    CheckCircle2,
-    XCircle,
-    Clock,
-    ChevronDown,
-    ChevronUp,
-    Package,
-    User,
-    AlertCircle,
-    MoreVertical,
-    Trash2,
-    ChevronLeft,
-    ChevronRight,
-} from "lucide-react";
-import axios from "axios";
+import { useState, useEffect } from "react";
+import { Loader2, CheckCircle, XCircle, Eye, RotateCcw } from "lucide-react";
 import { toast } from "react-toastify";
-import { usePermission } from "@/hooks/usePermission";
-import { DeleteModal } from "@/components/common/DeleteModal";
-
-// -- Types --
-type ReturnStatus = "REQUESTED" | "APPROVED" | "REJECTED" | "COMPLETED";
 
 interface ReturnRequest {
-    id: string;
-    order_id: string;
-    user_id: string;
-    reason: string;
-    status: ReturnStatus;
-    created_at: string;
-    updated_at: string;
-    order: {
-        order_number: string;
-        total_amount: number;
-    };
-    user: {
-        full_name: string;
-        email: string;
-    };
+  id: string;
+  order_id: string;
+  user_id: string;
+  reason: string;
+  status: "REQUESTED" | "APPROVED" | "REJECTED" | "PICKED_UP" | "REFUNDED";
+  created_at: string;
+  order?: {
+    order_number: string;
+    total_amount: number;
+    shipping_name: string;
+    shipping_phone: string;
+    shipping_address: string;
+    shipping_city?: string;
+    shipping_state?: string;
+    shipping_pincode?: string;
+  };
+  user?: {
+    full_name: string;
+    email: string;
+  };
 }
 
-const STATUS_CONFIG: Record<
-    ReturnStatus,
-    { label: string; color: string; bg: string; border: string; icon: any }
-> = {
-    REQUESTED: {
-        label: "Requested",
-        color: "text-amber-700",
-        bg: "bg-amber-50",
-        border: "border-amber-200",
-        icon: Clock,
-    },
-    APPROVED: {
-        label: "Approved",
-        color: "text-blue-700",
-        bg: "bg-blue-50",
-        border: "border-blue-200",
-        icon: CheckCircle2,
-    },
-    REJECTED: {
-        label: "Rejected",
-        color: "text-red-700",
-        bg: "bg-red-50",
-        border: "border-red-200",
-        icon: XCircle,
-    },
-    COMPLETED: {
-        label: "Completed",
-        color: "text-emerald-700",
-        bg: "bg-emerald-50",
-        border: "border-emerald-200",
-        icon: Package,
-    },
-};
-
-const formatDate = (iso: string) => {
-    if (!iso) return "N/A";
-    const d = new Date(iso);
-    return d.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-    });
-};
-
-const formatCurrency = (v: number) => `₹${v.toFixed(2)}`;
-
 export default function ReturnsPage() {
-    const [returns, setReturns] = useState<ReturnRequest[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState("");
-    const [statusFilter, setStatusFilter] = useState("All");
+  const [returns, setReturns] = useState<ReturnRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedReturn, setSelectedReturn] = useState<ReturnRequest | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [actionType, setActionType] = useState<"approve" | "reject" | "view">("view");
 
-    // ── Permission flags ──
-    const { canUpdate, canDelete } = usePermission("Returns");
+  useEffect(() => {
+    fetchReturns();
+  }, []);
 
-    const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const limit = 10;
+  const fetchReturns = async () => {
+    try {
+      const res = await fetch("/api/returns");
+      const data = await res.json();
+      setReturns(data.data || []);
+    } catch (error) {
+      console.error("Failed to fetch returns:", error);
+      toast.error("Failed to load return requests");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const fetchReturns = useCallback(async () => {
-        try {
-            setLoading(true);
-            const res = await axios.get("/api/returns", {
-                params: {
-                    page,
-                    limit,
-                    search,
-                    status: statusFilter !== "All" ? statusFilter : undefined
-                }
-            });
-            setReturns(res.data.data || []);
-            setTotalPages(res.data.totalPages || 1);
-        } catch (error) {
-            console.error("Fetch returns failed:", error);
-            toast.error("Failed to load return requests");
-        } finally {
-            setLoading(false);
-        }
-    }, [page, search, statusFilter]);
+  const handleApprove = async (id: string) => {
+    try {
+      const res = await fetch(`/api/returns/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "APPROVED" }),
+      });
 
-    useEffect(() => {
-        fetchReturns();
-    }, [fetchReturns]);
+      if (!res.ok) throw new Error("Failed to approve return");
 
-    const handleStatusUpdate = async (id: string, newStatus: ReturnStatus) => {
-        try {
-            await axios.patch(`/api/returns/${id}`, { status: newStatus });
-            setReturns((prev) =>
-                prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
-            );
-            toast.success(`Return request ${newStatus.toLowerCase()}`);
-        } catch (error) {
-            console.error("Status update failed:", error);
-            toast.error("Failed to update status");
-        }
-    };
+      toast.success("Return request approved");
+      fetchReturns();
+      setShowModal(false);
+    } catch (error) {
+      toast.error("Failed to approve return request");
+    }
+  };
 
-    const handleDelete = async (id: string) => {
-        try {
-            await axios.delete(`/api/returns/${id}`);
-            toast.success("Return request deleted");
-            if (returns.length === 1 && page > 1) {
-                setPage(page - 1);
-            } else {
-                fetchReturns();
-            }
-        } catch (error) {
-            console.error("Delete failed:", error);
-            toast.error("Failed to delete request");
-        }
-    };
+  const handleReject = async (id: string) => {
+    try {
+      const res = await fetch(`/api/returns/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "REJECTED" }),
+      });
 
-    // We no longer manually filter, because the backend will handle search/status via pagination.
-    const filteredReturns = returns;
+      if (!res.ok) throw new Error("Failed to reject return");
 
-    return (
-        <div className="min-h-screen bg-gray-50/60 p-4 md:p-8">
-            <div className="max-w-7xl mx-auto space-y-6">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                            <RefreshCw className="text-[#155dfc]" size={24} />
-                            Manage Returns
-                        </h1>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Process and track customer return requests
-                        </p>
-                    </div>
+      toast.success("Return request rejected");
+      fetchReturns();
+      setShowModal(false);
+    } catch (error) {
+      toast.error("Failed to reject return request");
+    }
+  };
 
-                    <div className="flex flex-wrap gap-2">
-                        <div className="relative">
-                            <Search
-                                size={16}
-                                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                            />
-                            <input
-                                placeholder="Search order #, customer..."
-                                value={search}
-                                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                                className="pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] w-64 shadow-sm transition"
-                            />
-                        </div>
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                            className="px-4 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] shadow-sm"
-                        >
-                            <option value="All">All Statuses</option>
-                            {Object.keys(STATUS_CONFIG).map((s) => (
-                                <option key={s} value={s}>
-                                    {s}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "REQUESTED":
+        return "bg-yellow-100 text-yellow-800";
+      case "APPROVED":
+        return "bg-green-100 text-green-800";
+      case "REJECTED":
+        return "bg-red-100 text-red-800";
+      case "PICKED_UP":
+        return "bg-blue-100 text-blue-800";
+      case "REFUNDED":
+        return "bg-purple-100 text-purple-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
 
-                {/* Table/List */}
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                    {loading ? (
-                        <div className="p-20 flex flex-col items-center justify-center space-y-4">
-                            <RefreshCw className="animate-spin text-[#155dfc]" size={32} />
-                            <p className="text-gray-500 animate-pulse">Loading return requests...</p>
-                        </div>
-                    ) : filteredReturns.length === 0 ? (
-                        <div className="p-20 text-center">
-                            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-dashed border-gray-200">
-                                <RefreshCw size={24} className="text-gray-300" />
-                            </div>
-                            <h3 className="text-lg font-semibold text-gray-900">No returns found</h3>
-                            <p className="text-gray-500">There are no return requests matching your filters.</p>
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="bg-gray-50/80 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200">
-                                        <th className="px-6 py-4 text-left">Order #</th>
-                                        <th className="px-6 py-4 text-left">Customer</th>
-                                        <th className="px-6 py-4 text-left">Reason</th>
-                                        <th className="px-6 py-4 text-left">Requested On</th>
-                                        <th className="px-6 py-4 text-left">Status</th>
-                                        <th className="px-6 py-4 text-left">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {filteredReturns.map((req) => {
-                                        const cfg = STATUS_CONFIG[req.status];
-                                        const Icon = cfg.icon;
-                                        return (
-                                            <tr key={req.id} className="hover:bg-blue-50/20 transition-colors group">
-                                                <td className="px-6 py-4">
-                                                    <span className="font-mono text-xs font-bold text-gray-900">
-                                                        {req.order.order_number}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[#155dfc] font-bold text-xs">
-                                                            {req.user.full_name[0].toUpperCase()}
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-medium text-gray-900">
-                                                                {req.user.full_name}
-                                                            </p>
-                                                            <p className="text-[10px] text-gray-500">{req.user.email}</p>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <p className="max-w-[200px] truncate text-gray-600 italic" title={req.reason}>
-                                                        {req.reason}
-                                                    </p>
-                                                </td>
-                                                <td className="px-6 py-4 text-gray-600">
-                                                    {formatDate(req.created_at)}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span
-                                                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${cfg.color} ${cfg.bg} ${cfg.border}`}
-                                                    >
-                                                        <Icon size={12} />
-                                                        {cfg.label}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                      {canUpdate && (
-                                                        <select
-                                                          value={req.status}
-                                                          onChange={(e) => handleStatusUpdate(req.id, e.target.value as ReturnStatus)}
-                                                          className="px-2.5 py-1.5 text-xs font-medium border border-gray-200 rounded-lg bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#155dfc]/50 cursor-pointer shadow-sm transition"
-                                                        >
-                                                          {Object.entries(STATUS_CONFIG).map(([key, c]) => (
-                                                            <option key={key} value={key}>
-                                                              {c.label}
-                                                            </option>
-                                                          ))}
-                                                        </select>
-                                                      )}
-                                                      {canDelete && (
-                                                          <DeleteModal
-                                                            onConfirm={() => handleDelete(req.id)}
-                                                            parentTitle="Delete return request?"
-                                                            childTitle="This will permanently delete this return request from the database."
-                                                          />
-                                                      )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-
-                {/* Pagination */}
-                {!loading && totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-4">
-                    <p className="text-sm text-gray-500">
-                      Page {page} of {totalPages}
-                    </p>
-                    <div className="flex gap-2">
-                      <button
-                        disabled={page === 1}
-                        onClick={() => setPage(p => p - 1)}
-                        className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition rounded-lg"
-                      >
-                        <ChevronLeft size={14} /> Prev
-                      </button>
-                      <button
-                        disabled={page === totalPages}
-                        onClick={() => setPage(p => p + 1)}
-                        className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition rounded-lg"
-                      >
-                        Next <ChevronRight size={14} />
-                      </button>
-                    </div>
-                  </div>
-                )}
-            </div>
+  return (
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Return Requests</h1>
+        <div className="flex gap-2">
+          <select className="border rounded-lg px-3 py-2 text-sm">
+            <option value="">All Statuses</option>
+            <option value="REQUESTED">Requested</option>
+            <option value="APPROVED">Approved</option>
+            <option value="REJECTED">Rejected</option>
+            <option value="PICKED_UP">Picked Up</option>
+            <option value="REFUNDED">Refunded</option>
+          </select>
         </div>
-    );
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : returns.length === 0 ? (
+        <div className="text-center py-20 bg-white rounded-lg shadow">
+          <RotateCcw className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+          <p className="text-muted-foreground">No return requests yet.</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Order
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Customer
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Reason
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {returns.map((ret) => (
+                <tr key={ret.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {ret.order?.order_number || "N/A"}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      ₹{ret.order?.total_amount.toFixed(0)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {ret.user?.full_name || "Unknown"}
+                    </div>
+                    <div className="text-sm text-gray-500">{ret.user?.email}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-900 max-w-xs truncate">
+                      {ret.reason}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
+                        ret.status
+                      )}`}
+                    >
+                      {ret.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(ret.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button
+                      onClick={() => {
+                        setSelectedReturn(ret);
+                        setActionType("view");
+                        setShowModal(true);
+                      }}
+                      className="text-blue-600 hover:text-blue-900 mr-3"
+                    >
+                      <Eye className="h-4 w-4 inline" /> View
+                    </button>
+                    {ret.status === "REQUESTED" && (
+                      <>
+                        <button
+                          onClick={() => {
+                            setSelectedReturn(ret);
+                            setActionType("approve");
+                            setShowModal(true);
+                          }}
+                          className="text-green-600 hover:text-green-900 mr-3"
+                        >
+                          <CheckCircle className="h-4 w-4 inline" /> Approve
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedReturn(ret);
+                            setActionType("reject");
+                            setShowModal(true);
+                          }}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <XCircle className="h-4 w-4 inline" /> Reject
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Modal for View/Approve/Reject */}
+      {showModal && selectedReturn && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-bold mb-4">
+              {actionType === "view" && "Return Details"}
+              {actionType === "approve" && "Approve Return"}
+              {actionType === "reject" && "Reject Return"}
+            </h2>
+
+            <div className="space-y-3 mb-6">
+              <div>
+                <label className="text-sm font-medium text-gray-500">Order Number</label>
+                <p className="text-gray-900">{selectedReturn.order?.order_number}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Customer</label>
+                <p className="text-gray-900">{selectedReturn.user?.full_name}</p>
+                <p className="text-sm text-gray-500">{selectedReturn.user?.email}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Reason</label>
+                <p className="text-gray-900">{selectedReturn.reason}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Status</label>
+                <p className="text-gray-900">{selectedReturn.status}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">Shipping Address</label>
+                <p className="text-gray-900">{selectedReturn.order?.shipping_address}</p>
+                <p className="text-gray-900">
+                  {selectedReturn.order?.shipping_city}, {selectedReturn.order?.shipping_state}{" "}
+                  {selectedReturn.order?.shipping_pincode}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              {actionType === "approve" && (
+                <button
+                  onClick={() => handleApprove(selectedReturn.id)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  Approve Return
+                </button>
+              )}
+              {actionType === "reject" && (
+                <button
+                  onClick={() => handleReject(selectedReturn.id)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                >
+                  Reject Return
+                </button>
+              )}
+              {actionType === "view" && (
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+                >
+                  Close
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

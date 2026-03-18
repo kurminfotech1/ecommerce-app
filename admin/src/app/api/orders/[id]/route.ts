@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { checkApiPermission } from "@/lib/utils/apiPermission";
 import { sendOrderStatusEmail } from "@/lib/mailer";
+import { cancelShipment } from "@/lib/nimbuspost";
 
 const MODULE = "Orders";
 
@@ -197,19 +198,67 @@ export async function PATCH(
     }
 }
 
-// DELETE: Cancel/Remove order
+// DELETE: Cancel order (for users) or Remove order (for admin)
 export async function DELETE(
     request: Request,
     context: { params: Promise<{ id: string }> }
 ) {
     try {
         const { error } = await checkApiPermission(MODULE, "canDelete");
-        if (error) return error;
+        
+        // If no permission error, it's an admin delete - proceed with full deletion
+        if (!error) {
+            // Admin has permission - do full delete
+            const { id } = await context.params;
 
+            const result = await prisma.$transaction(async (tx) => {
+                // 1. Get order with items INSIDE transaction
+                const order = await tx.order.findUnique({
+                    where: { id },
+                    include: { items: true }
+                });
+
+                if (!order) {
+                    throw new Error("Order not found");
+                }
+
+                // 2. Restore stock if needed
+                const shouldRestoreStock = ["PLACED", "CONFIRMED", "PROCESSING"].includes(order.order_status);
+
+                if (shouldRestoreStock) {
+                    for (const item of order.items) {
+                        if (item.variant_id) {
+                            await tx.productVariant.update({
+                                where: { id: item.variant_id },
+                                data: { stock: { increment: item.quantity } }
+                            });
+
+                            await tx.stockLog.create({
+                                data: {
+                                    variant_id: item.variant_id,
+                                    change: item.quantity,
+                                    reason: `Stock restored - Order #${order.order_number} deleted by admin`
+                                }
+                            });
+                        }
+                    }
+                }
+
+                // 3. Delete the order
+                await tx.order.delete({
+                    where: { id }
+                });
+
+                return { message: "Order removed successfully" };
+            });
+
+            return NextResponse.json(result, { status: 200 });
+        }
+        
+        // If permission error, it's a user cancel - just update status to CANCELLED
         const { id } = await context.params;
 
-        const result = await prisma.$transaction(async (tx) => {
-            // 1. Get order with items INSIDE transaction
+        const updatedOrder = await prisma.$transaction(async (tx) => {
             const order = await tx.order.findUnique({
                 where: { id },
                 include: { items: true }
@@ -219,38 +268,76 @@ export async function DELETE(
                 throw new Error("Order not found");
             }
 
-            // 2. Admin can delete orders of any status; we just need to optionally restore stock
-            // if it was previously occupying inventory (e.g. PLACED, CONFIRMED, PROCESSING)
-            const shouldRestoreStock = ["PLACED", "CONFIRMED", "PROCESSING"].includes(order.order_status);
+            // Only allow cancellation if order is in PLACED status
+            if (order.order_status !== "PLACED") {
+                throw new Error("Only orders in PLACED status can be cancelled by users");
+            }
 
-            if (shouldRestoreStock) {
-                for (const item of order.items) {
-                    if (item.variant_id) {
-                        await tx.productVariant.update({
-                            where: { id: item.variant_id },
-                            data: { stock: { increment: item.quantity } }
-                        });
+            // RESTORE STOCK for all items
+            for (const item of order.items) {
+                if (item.variant_id) {
+                    await tx.productVariant.update({
+                        where: { id: item.variant_id },
+                        data: { stock: { increment: item.quantity } }
+                    });
 
-                        await tx.stockLog.create({
-                            data: {
-                                variant_id: item.variant_id,
-                                change: item.quantity,
-                                reason: `Stock restored - Order #${order.order_number} deleted by admin`
-                            }
-                        });
-                    }
+                    await tx.stockLog.create({
+                        data: {
+                            variant_id: item.variant_id,
+                            change: item.quantity,
+                            reason: `Stock restored - Order #${order.order_number} cancelled`
+                        }
+                    });
                 }
             }
 
-            // 3. Delete the order
-            await tx.order.delete({
-                where: { id }
-            });
+            // CANCEL SHIPMENT in NimbusPost if AWB exists
+            if (order.awb_number) {
+                try {
+                    await cancelShipment([order.awb_number]);
+                    console.log(`Shipment ${order.awb_number} cancelled in NimbusPost`);
+                } catch (shipmentError) {
+                    console.error("Failed to cancel shipment in NimbusPost:", shipmentError);
+                    // Continue anyway - we still want to update local DB
+                }
+            }
 
-            return { message: "Order removed successfully" };
+            // Update status to CANCELLED instead of deleting
+            return await tx.order.update({
+                where: { id },
+                data: { 
+                    order_status: "CANCELLED",
+                    shipping_status: order.awb_number ? "CANCELLED" : order.shipping_status
+                },
+                include: {
+                    user: { select: { email: true, full_name: true } },
+                    items: {
+                        select: {
+                            product_name: true,
+                            quantity: true,
+                            price: true
+                        }
+                    }
+                }
+            });
         });
 
-        return NextResponse.json(result, { status: 200 });
+        // Send cancellation email
+        if (updatedOrder.user?.email) {
+            sendOrderStatusEmail(updatedOrder.user.email, {
+                orderNumber: updatedOrder.order_number,
+                status: updatedOrder.order_status,
+                userName: updatedOrder.user.full_name || "Valued Customer",
+                total: updatedOrder.total_amount,
+                items: updatedOrder.items.map((item: any) => ({
+                    productName: item.product_name || "Product",
+                    quantity: item.quantity,
+                    price: item.price
+                }))
+            }).catch(err => console.error("EMAIL_ORDER_CANCELLED_ERROR", err));
+        }
+
+        return NextResponse.json(updatedOrder, { status: 200 });
     } catch (error: any) {
         console.error("DELETE_ORDER_ERROR", error);
         if (error.message === "Order not found") {

@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { checkApiPermission } from "@/lib/utils/apiPermission";
+
+const MODULE = "Returns";
 
 // GET: List return requests
 export async function GET(request: Request) {
@@ -14,9 +17,11 @@ export async function GET(request: Request) {
         // 2. Filter Params
         const search = searchParams.get("search")?.trim() || "";
         const status = searchParams.get("status");
+        const userId = searchParams.get("userId");
 
         const whereClause: any = {
             ...(status ? { status } : {}),
+            ...(userId ? { user_id: userId } : {}),
             ...(search ? {
                 OR: [
                     { reason: { contains: search, mode: "insensitive" } },
@@ -59,9 +64,6 @@ export async function GET(request: Request) {
 }
 
 // DELETE: Delete a return request
-import { checkApiPermission } from "@/lib/utils/apiPermission";
-const MODULE = "Returns";
-
 export async function DELETE(
     request: Request
 ) {
@@ -91,6 +93,45 @@ export async function DELETE(
     }
 }
 
+// PATCH: Update return request status (approve/reject)
+export async function PATCH(request: Request) {
+    try {
+        const { error } = await checkApiPermission(MODULE, "canUpdate");
+        if (error) return error;
+
+        const body = await request.json();
+        const { id, status } = body;
+
+        if (!id || !status) {
+            return NextResponse.json({ error: "Return ID and status are required" }, { status: 400 });
+        }
+
+        const validStatuses = ["REQUESTED", "APPROVED", "REJECTED", "PICKED_UP", "REFUNDED"];
+        if (!validStatuses.includes(status)) {
+            return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+        }
+
+        const updatedReturn = await prisma.returnRequest.update({
+            where: { id },
+            data: { status },
+            include: {
+                order: true,
+                user: {
+                    select: {
+                        full_name: true,
+                        email: true
+                    }
+                }
+            }
+        });
+
+        return NextResponse.json(updatedReturn, { status: 200 });
+    } catch (error: any) {
+        console.error("PATCH_RETURN_ERROR", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}
+
 // POST: Create a new return request
 export async function POST(request: Request) {
     try {
@@ -113,6 +154,15 @@ export async function POST(request: Request) {
                 user_id,
                 reason,
                 status: "REQUESTED"
+            },
+            include: {
+                order: true,
+                user: {
+                    select: {
+                        full_name: true,
+                        email: true
+                    }
+                }
             }
         });
 

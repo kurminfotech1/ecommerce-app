@@ -202,6 +202,17 @@ model Order {
   estimated_delivery_date DateTime?
   tracking_url            String?
 
+  // COD Reconciliation Fields
+  cod_amount        Float?
+  cod_status        String?   @default("PENDING") // PENDING, COLLECTED, REMITTED, FAILED
+  cod_remitted_date DateTime?
+  cod_tracking_id   String?
+
+  // RTO & Manifest Fields
+  manifest_generated Boolean   @default(false)
+  rto_reason         String?
+  rto_initiated_at   DateTime?
+
   user           User            @relation(fields: [user_id], references: [id])
   items          OrderItem[]
   payment        Payment?

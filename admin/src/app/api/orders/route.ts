@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { sendOrderStatusEmail } from "@/lib/mailer";
+import { createShipment } from "@/lib/nimbuspost";
 
 // GET: Get all orders with server-side search, status filter & pagination
 export async function GET(request: Request) {
@@ -210,6 +211,52 @@ export async function POST(request: Request) {
                         reason: `Order ${orderNumber}`
                     }
                 });
+            }
+
+            // AUTO-CREATE SHIPMENT in NimbusPost if courier is selected
+            if (courier_name && order.courier_name) {
+                try {
+                    // Find courier ID from name (you may need to adjust this based on your NimbusPost setup)
+                    const courierId = 1; // Default courier - update based on your configuration
+                    
+                    // Calculate total weight from items
+                    const totalWeight = cartItems.reduce((acc, item) => acc + parseFloat(item.variant.weight || "0.5"), 0);
+                    
+                    const shipmentData = {
+                        order_number: order.order_number,
+                        shipping_name,
+                        shipping_phone,
+                        shipping_address,
+                        shipping_city,
+                        shipping_state,
+                        shipping_pincode,
+                        shipping_country: shipping_country || "India",
+                        weight: totalWeight,
+                        total_amount: totalAmount,
+                        payment_method: "COD" as const, // Default to COD, will be updated by payment API
+                        courier_id: courierId,
+                        items: cartItems.map(item => ({
+                            name: item.variant.product?.product_name || "Product",
+                            qty: item.quantity,
+                            price: item.price
+                        }))
+                    };
+
+                    const shipment = await createShipment(shipmentData);
+                    
+                    // Update order with AWB and shipment details
+                    await tx.order.update({
+                        where: { id: order.id },
+                        data: {
+                            awb_number: shipment.awb_number,
+                            shipment_id: shipment.shipment_id,
+                            shipping_status: "LABEL_CREATED"
+                        }
+                    });
+                } catch (shipmentError) {
+                    console.error("Failed to create shipment in NimbusPost:", shipmentError);
+                    // Continue anyway - order is created, shipment can be created manually later
+                }
             }
 
             return order;

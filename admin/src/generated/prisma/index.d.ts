@@ -15172,11 +15172,13 @@ export namespace Prisma {
   export type OrderAvgAggregateOutputType = {
     total_amount: number | null
     shipping_cost: number | null
+    cod_amount: number | null
   }
 
   export type OrderSumAggregateOutputType = {
     total_amount: number | null
     shipping_cost: number | null
+    cod_amount: number | null
   }
 
   export type OrderMinAggregateOutputType = {
@@ -15203,6 +15205,13 @@ export namespace Prisma {
     shipping_status: string | null
     estimated_delivery_date: Date | null
     tracking_url: string | null
+    cod_amount: number | null
+    cod_status: string | null
+    cod_remitted_date: Date | null
+    cod_tracking_id: string | null
+    manifest_generated: boolean | null
+    rto_reason: string | null
+    rto_initiated_at: Date | null
   }
 
   export type OrderMaxAggregateOutputType = {
@@ -15229,6 +15238,13 @@ export namespace Prisma {
     shipping_status: string | null
     estimated_delivery_date: Date | null
     tracking_url: string | null
+    cod_amount: number | null
+    cod_status: string | null
+    cod_remitted_date: Date | null
+    cod_tracking_id: string | null
+    manifest_generated: boolean | null
+    rto_reason: string | null
+    rto_initiated_at: Date | null
   }
 
   export type OrderCountAggregateOutputType = {
@@ -15255,6 +15271,13 @@ export namespace Prisma {
     shipping_status: number
     estimated_delivery_date: number
     tracking_url: number
+    cod_amount: number
+    cod_status: number
+    cod_remitted_date: number
+    cod_tracking_id: number
+    manifest_generated: number
+    rto_reason: number
+    rto_initiated_at: number
     _all: number
   }
 
@@ -15262,11 +15285,13 @@ export namespace Prisma {
   export type OrderAvgAggregateInputType = {
     total_amount?: true
     shipping_cost?: true
+    cod_amount?: true
   }
 
   export type OrderSumAggregateInputType = {
     total_amount?: true
     shipping_cost?: true
+    cod_amount?: true
   }
 
   export type OrderMinAggregateInputType = {
@@ -15293,6 +15318,13 @@ export namespace Prisma {
     shipping_status?: true
     estimated_delivery_date?: true
     tracking_url?: true
+    cod_amount?: true
+    cod_status?: true
+    cod_remitted_date?: true
+    cod_tracking_id?: true
+    manifest_generated?: true
+    rto_reason?: true
+    rto_initiated_at?: true
   }
 
   export type OrderMaxAggregateInputType = {
@@ -15319,6 +15351,13 @@ export namespace Prisma {
     shipping_status?: true
     estimated_delivery_date?: true
     tracking_url?: true
+    cod_amount?: true
+    cod_status?: true
+    cod_remitted_date?: true
+    cod_tracking_id?: true
+    manifest_generated?: true
+    rto_reason?: true
+    rto_initiated_at?: true
   }
 
   export type OrderCountAggregateInputType = {
@@ -15345,6 +15384,13 @@ export namespace Prisma {
     shipping_status?: true
     estimated_delivery_date?: true
     tracking_url?: true
+    cod_amount?: true
+    cod_status?: true
+    cod_remitted_date?: true
+    cod_tracking_id?: true
+    manifest_generated?: true
+    rto_reason?: true
+    rto_initiated_at?: true
     _all?: true
   }
 
@@ -15458,6 +15504,13 @@ export namespace Prisma {
     shipping_status: string | null
     estimated_delivery_date: Date | null
     tracking_url: string | null
+    cod_amount: number | null
+    cod_status: string | null
+    cod_remitted_date: Date | null
+    cod_tracking_id: string | null
+    manifest_generated: boolean
+    rto_reason: string | null
+    rto_initiated_at: Date | null
     _count: OrderCountAggregateOutputType | null
     _avg: OrderAvgAggregateOutputType | null
     _sum: OrderSumAggregateOutputType | null
@@ -15503,6 +15556,13 @@ export namespace Prisma {
     shipping_status?: boolean
     estimated_delivery_date?: boolean
     tracking_url?: boolean
+    cod_amount?: boolean
+    cod_status?: boolean
+    cod_remitted_date?: boolean
+    cod_tracking_id?: boolean
+    manifest_generated?: boolean
+    rto_reason?: boolean
+    rto_initiated_at?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     items?: boolean | Order$itemsArgs<ExtArgs>
     payment?: boolean | Order$paymentArgs<ExtArgs>
@@ -15534,6 +15594,13 @@ export namespace Prisma {
     shipping_status?: boolean
     estimated_delivery_date?: boolean
     tracking_url?: boolean
+    cod_amount?: boolean
+    cod_status?: boolean
+    cod_remitted_date?: boolean
+    cod_tracking_id?: boolean
+    manifest_generated?: boolean
+    rto_reason?: boolean
+    rto_initiated_at?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["order"]>
 
@@ -15561,6 +15628,13 @@ export namespace Prisma {
     shipping_status?: boolean
     estimated_delivery_date?: boolean
     tracking_url?: boolean
+    cod_amount?: boolean
+    cod_status?: boolean
+    cod_remitted_date?: boolean
+    cod_tracking_id?: boolean
+    manifest_generated?: boolean
+    rto_reason?: boolean
+    rto_initiated_at?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["order"]>
 
@@ -15588,9 +15662,16 @@ export namespace Prisma {
     shipping_status?: boolean
     estimated_delivery_date?: boolean
     tracking_url?: boolean
+    cod_amount?: boolean
+    cod_status?: boolean
+    cod_remitted_date?: boolean
+    cod_tracking_id?: boolean
+    manifest_generated?: boolean
+    rto_reason?: boolean
+    rto_initiated_at?: boolean
   }
 
-  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "order_number" | "user_id" | "total_amount" | "order_status" | "shipping_name" | "shipping_phone" | "shipping_address" | "shipping_city" | "shipping_state" | "shipping_pincode" | "shipping_country" | "currency" | "payment_status" | "razorpay_order_id" | "created_at" | "courier_name" | "awb_number" | "shipment_id" | "shipping_cost" | "shipping_status" | "estimated_delivery_date" | "tracking_url", ExtArgs["result"]["order"]>
+  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "order_number" | "user_id" | "total_amount" | "order_status" | "shipping_name" | "shipping_phone" | "shipping_address" | "shipping_city" | "shipping_state" | "shipping_pincode" | "shipping_country" | "currency" | "payment_status" | "razorpay_order_id" | "created_at" | "courier_name" | "awb_number" | "shipment_id" | "shipping_cost" | "shipping_status" | "estimated_delivery_date" | "tracking_url" | "cod_amount" | "cod_status" | "cod_remitted_date" | "cod_tracking_id" | "manifest_generated" | "rto_reason" | "rto_initiated_at", ExtArgs["result"]["order"]>
   export type OrderInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     items?: boolean | Order$itemsArgs<ExtArgs>
@@ -15637,6 +15718,13 @@ export namespace Prisma {
       shipping_status: string | null
       estimated_delivery_date: Date | null
       tracking_url: string | null
+      cod_amount: number | null
+      cod_status: string | null
+      cod_remitted_date: Date | null
+      cod_tracking_id: string | null
+      manifest_generated: boolean
+      rto_reason: string | null
+      rto_initiated_at: Date | null
     }, ExtArgs["result"]["order"]>
     composites: {}
   }
@@ -16087,6 +16175,13 @@ export namespace Prisma {
     readonly shipping_status: FieldRef<"Order", 'String'>
     readonly estimated_delivery_date: FieldRef<"Order", 'DateTime'>
     readonly tracking_url: FieldRef<"Order", 'String'>
+    readonly cod_amount: FieldRef<"Order", 'Float'>
+    readonly cod_status: FieldRef<"Order", 'String'>
+    readonly cod_remitted_date: FieldRef<"Order", 'DateTime'>
+    readonly cod_tracking_id: FieldRef<"Order", 'String'>
+    readonly manifest_generated: FieldRef<"Order", 'Boolean'>
+    readonly rto_reason: FieldRef<"Order", 'String'>
+    readonly rto_initiated_at: FieldRef<"Order", 'DateTime'>
   }
     
 
@@ -29771,7 +29866,14 @@ export namespace Prisma {
     shipping_cost: 'shipping_cost',
     shipping_status: 'shipping_status',
     estimated_delivery_date: 'estimated_delivery_date',
-    tracking_url: 'tracking_url'
+    tracking_url: 'tracking_url',
+    cod_amount: 'cod_amount',
+    cod_status: 'cod_status',
+    cod_remitted_date: 'cod_remitted_date',
+    cod_tracking_id: 'cod_tracking_id',
+    manifest_generated: 'manifest_generated',
+    rto_reason: 'rto_reason',
+    rto_initiated_at: 'rto_initiated_at'
   };
 
   export type OrderScalarFieldEnum = (typeof OrderScalarFieldEnum)[keyof typeof OrderScalarFieldEnum]
@@ -30985,6 +31087,13 @@ export namespace Prisma {
     shipping_status?: StringNullableFilter<"Order"> | string | null
     estimated_delivery_date?: DateTimeNullableFilter<"Order"> | Date | string | null
     tracking_url?: StringNullableFilter<"Order"> | string | null
+    cod_amount?: FloatNullableFilter<"Order"> | number | null
+    cod_status?: StringNullableFilter<"Order"> | string | null
+    cod_remitted_date?: DateTimeNullableFilter<"Order"> | Date | string | null
+    cod_tracking_id?: StringNullableFilter<"Order"> | string | null
+    manifest_generated?: BoolFilter<"Order"> | boolean
+    rto_reason?: StringNullableFilter<"Order"> | string | null
+    rto_initiated_at?: DateTimeNullableFilter<"Order"> | Date | string | null
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     items?: OrderItemListRelationFilter
     payment?: XOR<PaymentNullableScalarRelationFilter, PaymentWhereInput> | null
@@ -31015,6 +31124,13 @@ export namespace Prisma {
     shipping_status?: SortOrderInput | SortOrder
     estimated_delivery_date?: SortOrderInput | SortOrder
     tracking_url?: SortOrderInput | SortOrder
+    cod_amount?: SortOrderInput | SortOrder
+    cod_status?: SortOrderInput | SortOrder
+    cod_remitted_date?: SortOrderInput | SortOrder
+    cod_tracking_id?: SortOrderInput | SortOrder
+    manifest_generated?: SortOrder
+    rto_reason?: SortOrderInput | SortOrder
+    rto_initiated_at?: SortOrderInput | SortOrder
     user?: UserOrderByWithRelationInput
     items?: OrderItemOrderByRelationAggregateInput
     payment?: PaymentOrderByWithRelationInput
@@ -31048,6 +31164,13 @@ export namespace Prisma {
     shipping_status?: StringNullableFilter<"Order"> | string | null
     estimated_delivery_date?: DateTimeNullableFilter<"Order"> | Date | string | null
     tracking_url?: StringNullableFilter<"Order"> | string | null
+    cod_amount?: FloatNullableFilter<"Order"> | number | null
+    cod_status?: StringNullableFilter<"Order"> | string | null
+    cod_remitted_date?: DateTimeNullableFilter<"Order"> | Date | string | null
+    cod_tracking_id?: StringNullableFilter<"Order"> | string | null
+    manifest_generated?: BoolFilter<"Order"> | boolean
+    rto_reason?: StringNullableFilter<"Order"> | string | null
+    rto_initiated_at?: DateTimeNullableFilter<"Order"> | Date | string | null
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     items?: OrderItemListRelationFilter
     payment?: XOR<PaymentNullableScalarRelationFilter, PaymentWhereInput> | null
@@ -31078,6 +31201,13 @@ export namespace Prisma {
     shipping_status?: SortOrderInput | SortOrder
     estimated_delivery_date?: SortOrderInput | SortOrder
     tracking_url?: SortOrderInput | SortOrder
+    cod_amount?: SortOrderInput | SortOrder
+    cod_status?: SortOrderInput | SortOrder
+    cod_remitted_date?: SortOrderInput | SortOrder
+    cod_tracking_id?: SortOrderInput | SortOrder
+    manifest_generated?: SortOrder
+    rto_reason?: SortOrderInput | SortOrder
+    rto_initiated_at?: SortOrderInput | SortOrder
     _count?: OrderCountOrderByAggregateInput
     _avg?: OrderAvgOrderByAggregateInput
     _max?: OrderMaxOrderByAggregateInput
@@ -31112,6 +31242,13 @@ export namespace Prisma {
     shipping_status?: StringNullableWithAggregatesFilter<"Order"> | string | null
     estimated_delivery_date?: DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
     tracking_url?: StringNullableWithAggregatesFilter<"Order"> | string | null
+    cod_amount?: FloatNullableWithAggregatesFilter<"Order"> | number | null
+    cod_status?: StringNullableWithAggregatesFilter<"Order"> | string | null
+    cod_remitted_date?: DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
+    cod_tracking_id?: StringNullableWithAggregatesFilter<"Order"> | string | null
+    manifest_generated?: BoolWithAggregatesFilter<"Order"> | boolean
+    rto_reason?: StringNullableWithAggregatesFilter<"Order"> | string | null
+    rto_initiated_at?: DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
   }
 
   export type OrderItemWhereInput = {
@@ -32882,6 +33019,13 @@ export namespace Prisma {
     shipping_status?: string | null
     estimated_delivery_date?: Date | string | null
     tracking_url?: string | null
+    cod_amount?: number | null
+    cod_status?: string | null
+    cod_remitted_date?: Date | string | null
+    cod_tracking_id?: string | null
+    manifest_generated?: boolean
+    rto_reason?: string | null
+    rto_initiated_at?: Date | string | null
     user: UserCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
     payment?: PaymentCreateNestedOneWithoutOrderInput
@@ -32912,6 +33056,13 @@ export namespace Prisma {
     shipping_status?: string | null
     estimated_delivery_date?: Date | string | null
     tracking_url?: string | null
+    cod_amount?: number | null
+    cod_status?: string | null
+    cod_remitted_date?: Date | string | null
+    cod_tracking_id?: string | null
+    manifest_generated?: boolean
+    rto_reason?: string | null
+    rto_initiated_at?: Date | string | null
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     payment?: PaymentUncheckedCreateNestedOneWithoutOrderInput
     returnRequests?: ReturnRequestUncheckedCreateNestedManyWithoutOrderInput
@@ -32940,6 +33091,13 @@ export namespace Prisma {
     shipping_status?: NullableStringFieldUpdateOperationsInput | string | null
     estimated_delivery_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     tracking_url?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_amount?: NullableFloatFieldUpdateOperationsInput | number | null
+    cod_status?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_remitted_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cod_tracking_id?: NullableStringFieldUpdateOperationsInput | string | null
+    manifest_generated?: BoolFieldUpdateOperationsInput | boolean
+    rto_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    rto_initiated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
     payment?: PaymentUpdateOneWithoutOrderNestedInput
@@ -32970,6 +33128,13 @@ export namespace Prisma {
     shipping_status?: NullableStringFieldUpdateOperationsInput | string | null
     estimated_delivery_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     tracking_url?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_amount?: NullableFloatFieldUpdateOperationsInput | number | null
+    cod_status?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_remitted_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cod_tracking_id?: NullableStringFieldUpdateOperationsInput | string | null
+    manifest_generated?: BoolFieldUpdateOperationsInput | boolean
+    rto_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    rto_initiated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     payment?: PaymentUncheckedUpdateOneWithoutOrderNestedInput
     returnRequests?: ReturnRequestUncheckedUpdateManyWithoutOrderNestedInput
@@ -32999,6 +33164,13 @@ export namespace Prisma {
     shipping_status?: string | null
     estimated_delivery_date?: Date | string | null
     tracking_url?: string | null
+    cod_amount?: number | null
+    cod_status?: string | null
+    cod_remitted_date?: Date | string | null
+    cod_tracking_id?: string | null
+    manifest_generated?: boolean
+    rto_reason?: string | null
+    rto_initiated_at?: Date | string | null
   }
 
   export type OrderUpdateManyMutationInput = {
@@ -33024,6 +33196,13 @@ export namespace Prisma {
     shipping_status?: NullableStringFieldUpdateOperationsInput | string | null
     estimated_delivery_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     tracking_url?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_amount?: NullableFloatFieldUpdateOperationsInput | number | null
+    cod_status?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_remitted_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cod_tracking_id?: NullableStringFieldUpdateOperationsInput | string | null
+    manifest_generated?: BoolFieldUpdateOperationsInput | boolean
+    rto_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    rto_initiated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type OrderUncheckedUpdateManyInput = {
@@ -33050,6 +33229,13 @@ export namespace Prisma {
     shipping_status?: NullableStringFieldUpdateOperationsInput | string | null
     estimated_delivery_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     tracking_url?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_amount?: NullableFloatFieldUpdateOperationsInput | number | null
+    cod_status?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_remitted_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cod_tracking_id?: NullableStringFieldUpdateOperationsInput | string | null
+    manifest_generated?: BoolFieldUpdateOperationsInput | boolean
+    rto_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    rto_initiated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type OrderItemCreateInput = {
@@ -34856,11 +35042,19 @@ export namespace Prisma {
     shipping_status?: SortOrder
     estimated_delivery_date?: SortOrder
     tracking_url?: SortOrder
+    cod_amount?: SortOrder
+    cod_status?: SortOrder
+    cod_remitted_date?: SortOrder
+    cod_tracking_id?: SortOrder
+    manifest_generated?: SortOrder
+    rto_reason?: SortOrder
+    rto_initiated_at?: SortOrder
   }
 
   export type OrderAvgOrderByAggregateInput = {
     total_amount?: SortOrder
     shipping_cost?: SortOrder
+    cod_amount?: SortOrder
   }
 
   export type OrderMaxOrderByAggregateInput = {
@@ -34887,6 +35081,13 @@ export namespace Prisma {
     shipping_status?: SortOrder
     estimated_delivery_date?: SortOrder
     tracking_url?: SortOrder
+    cod_amount?: SortOrder
+    cod_status?: SortOrder
+    cod_remitted_date?: SortOrder
+    cod_tracking_id?: SortOrder
+    manifest_generated?: SortOrder
+    rto_reason?: SortOrder
+    rto_initiated_at?: SortOrder
   }
 
   export type OrderMinOrderByAggregateInput = {
@@ -34913,11 +35114,19 @@ export namespace Prisma {
     shipping_status?: SortOrder
     estimated_delivery_date?: SortOrder
     tracking_url?: SortOrder
+    cod_amount?: SortOrder
+    cod_status?: SortOrder
+    cod_remitted_date?: SortOrder
+    cod_tracking_id?: SortOrder
+    manifest_generated?: SortOrder
+    rto_reason?: SortOrder
+    rto_initiated_at?: SortOrder
   }
 
   export type OrderSumOrderByAggregateInput = {
     total_amount?: SortOrder
     shipping_cost?: SortOrder
+    cod_amount?: SortOrder
   }
 
   export type EnumOrderStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -38405,6 +38614,13 @@ export namespace Prisma {
     shipping_status?: string | null
     estimated_delivery_date?: Date | string | null
     tracking_url?: string | null
+    cod_amount?: number | null
+    cod_status?: string | null
+    cod_remitted_date?: Date | string | null
+    cod_tracking_id?: string | null
+    manifest_generated?: boolean
+    rto_reason?: string | null
+    rto_initiated_at?: Date | string | null
     items?: OrderItemCreateNestedManyWithoutOrderInput
     payment?: PaymentCreateNestedOneWithoutOrderInput
     returnRequests?: ReturnRequestCreateNestedManyWithoutOrderInput
@@ -38433,6 +38649,13 @@ export namespace Prisma {
     shipping_status?: string | null
     estimated_delivery_date?: Date | string | null
     tracking_url?: string | null
+    cod_amount?: number | null
+    cod_status?: string | null
+    cod_remitted_date?: Date | string | null
+    cod_tracking_id?: string | null
+    manifest_generated?: boolean
+    rto_reason?: string | null
+    rto_initiated_at?: Date | string | null
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     payment?: PaymentUncheckedCreateNestedOneWithoutOrderInput
     returnRequests?: ReturnRequestUncheckedCreateNestedManyWithoutOrderInput
@@ -38616,6 +38839,13 @@ export namespace Prisma {
     shipping_status?: StringNullableFilter<"Order"> | string | null
     estimated_delivery_date?: DateTimeNullableFilter<"Order"> | Date | string | null
     tracking_url?: StringNullableFilter<"Order"> | string | null
+    cod_amount?: FloatNullableFilter<"Order"> | number | null
+    cod_status?: StringNullableFilter<"Order"> | string | null
+    cod_remitted_date?: DateTimeNullableFilter<"Order"> | Date | string | null
+    cod_tracking_id?: StringNullableFilter<"Order"> | string | null
+    manifest_generated?: BoolFilter<"Order"> | boolean
+    rto_reason?: StringNullableFilter<"Order"> | string | null
+    rto_initiated_at?: DateTimeNullableFilter<"Order"> | Date | string | null
   }
 
   export type ReturnRequestUpsertWithWhereUniqueWithoutUserInput = {
@@ -39188,6 +39418,13 @@ export namespace Prisma {
     shipping_status?: string | null
     estimated_delivery_date?: Date | string | null
     tracking_url?: string | null
+    cod_amount?: number | null
+    cod_status?: string | null
+    cod_remitted_date?: Date | string | null
+    cod_tracking_id?: string | null
+    manifest_generated?: boolean
+    rto_reason?: string | null
+    rto_initiated_at?: Date | string | null
     user: UserCreateNestedOneWithoutOrdersInput
     payment?: PaymentCreateNestedOneWithoutOrderInput
     returnRequests?: ReturnRequestCreateNestedManyWithoutOrderInput
@@ -39217,6 +39454,13 @@ export namespace Prisma {
     shipping_status?: string | null
     estimated_delivery_date?: Date | string | null
     tracking_url?: string | null
+    cod_amount?: number | null
+    cod_status?: string | null
+    cod_remitted_date?: Date | string | null
+    cod_tracking_id?: string | null
+    manifest_generated?: boolean
+    rto_reason?: string | null
+    rto_initiated_at?: Date | string | null
     payment?: PaymentUncheckedCreateNestedOneWithoutOrderInput
     returnRequests?: ReturnRequestUncheckedCreateNestedManyWithoutOrderInput
   }
@@ -39301,6 +39545,13 @@ export namespace Prisma {
     shipping_status?: NullableStringFieldUpdateOperationsInput | string | null
     estimated_delivery_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     tracking_url?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_amount?: NullableFloatFieldUpdateOperationsInput | number | null
+    cod_status?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_remitted_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cod_tracking_id?: NullableStringFieldUpdateOperationsInput | string | null
+    manifest_generated?: BoolFieldUpdateOperationsInput | boolean
+    rto_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    rto_initiated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutOrdersNestedInput
     payment?: PaymentUpdateOneWithoutOrderNestedInput
     returnRequests?: ReturnRequestUpdateManyWithoutOrderNestedInput
@@ -39330,6 +39581,13 @@ export namespace Prisma {
     shipping_status?: NullableStringFieldUpdateOperationsInput | string | null
     estimated_delivery_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     tracking_url?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_amount?: NullableFloatFieldUpdateOperationsInput | number | null
+    cod_status?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_remitted_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cod_tracking_id?: NullableStringFieldUpdateOperationsInput | string | null
+    manifest_generated?: BoolFieldUpdateOperationsInput | boolean
+    rto_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    rto_initiated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     payment?: PaymentUncheckedUpdateOneWithoutOrderNestedInput
     returnRequests?: ReturnRequestUncheckedUpdateManyWithoutOrderNestedInput
   }
@@ -39404,6 +39662,13 @@ export namespace Prisma {
     shipping_status?: string | null
     estimated_delivery_date?: Date | string | null
     tracking_url?: string | null
+    cod_amount?: number | null
+    cod_status?: string | null
+    cod_remitted_date?: Date | string | null
+    cod_tracking_id?: string | null
+    manifest_generated?: boolean
+    rto_reason?: string | null
+    rto_initiated_at?: Date | string | null
     user: UserCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
     returnRequests?: ReturnRequestCreateNestedManyWithoutOrderInput
@@ -39433,6 +39698,13 @@ export namespace Prisma {
     shipping_status?: string | null
     estimated_delivery_date?: Date | string | null
     tracking_url?: string | null
+    cod_amount?: number | null
+    cod_status?: string | null
+    cod_remitted_date?: Date | string | null
+    cod_tracking_id?: string | null
+    manifest_generated?: boolean
+    rto_reason?: string | null
+    rto_initiated_at?: Date | string | null
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     returnRequests?: ReturnRequestUncheckedCreateNestedManyWithoutOrderInput
   }
@@ -39476,6 +39748,13 @@ export namespace Prisma {
     shipping_status?: NullableStringFieldUpdateOperationsInput | string | null
     estimated_delivery_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     tracking_url?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_amount?: NullableFloatFieldUpdateOperationsInput | number | null
+    cod_status?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_remitted_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cod_tracking_id?: NullableStringFieldUpdateOperationsInput | string | null
+    manifest_generated?: BoolFieldUpdateOperationsInput | boolean
+    rto_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    rto_initiated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
     returnRequests?: ReturnRequestUpdateManyWithoutOrderNestedInput
@@ -39505,6 +39784,13 @@ export namespace Prisma {
     shipping_status?: NullableStringFieldUpdateOperationsInput | string | null
     estimated_delivery_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     tracking_url?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_amount?: NullableFloatFieldUpdateOperationsInput | number | null
+    cod_status?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_remitted_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cod_tracking_id?: NullableStringFieldUpdateOperationsInput | string | null
+    manifest_generated?: BoolFieldUpdateOperationsInput | boolean
+    rto_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    rto_initiated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     returnRequests?: ReturnRequestUncheckedUpdateManyWithoutOrderNestedInput
   }
@@ -39532,6 +39818,13 @@ export namespace Prisma {
     shipping_status?: string | null
     estimated_delivery_date?: Date | string | null
     tracking_url?: string | null
+    cod_amount?: number | null
+    cod_status?: string | null
+    cod_remitted_date?: Date | string | null
+    cod_tracking_id?: string | null
+    manifest_generated?: boolean
+    rto_reason?: string | null
+    rto_initiated_at?: Date | string | null
     user: UserCreateNestedOneWithoutOrdersInput
     items?: OrderItemCreateNestedManyWithoutOrderInput
     payment?: PaymentCreateNestedOneWithoutOrderInput
@@ -39561,6 +39854,13 @@ export namespace Prisma {
     shipping_status?: string | null
     estimated_delivery_date?: Date | string | null
     tracking_url?: string | null
+    cod_amount?: number | null
+    cod_status?: string | null
+    cod_remitted_date?: Date | string | null
+    cod_tracking_id?: string | null
+    manifest_generated?: boolean
+    rto_reason?: string | null
+    rto_initiated_at?: Date | string | null
     items?: OrderItemUncheckedCreateNestedManyWithoutOrderInput
     payment?: PaymentUncheckedCreateNestedOneWithoutOrderInput
   }
@@ -39641,6 +39941,13 @@ export namespace Prisma {
     shipping_status?: NullableStringFieldUpdateOperationsInput | string | null
     estimated_delivery_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     tracking_url?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_amount?: NullableFloatFieldUpdateOperationsInput | number | null
+    cod_status?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_remitted_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cod_tracking_id?: NullableStringFieldUpdateOperationsInput | string | null
+    manifest_generated?: BoolFieldUpdateOperationsInput | boolean
+    rto_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    rto_initiated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutOrdersNestedInput
     items?: OrderItemUpdateManyWithoutOrderNestedInput
     payment?: PaymentUpdateOneWithoutOrderNestedInput
@@ -39670,6 +39977,13 @@ export namespace Prisma {
     shipping_status?: NullableStringFieldUpdateOperationsInput | string | null
     estimated_delivery_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     tracking_url?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_amount?: NullableFloatFieldUpdateOperationsInput | number | null
+    cod_status?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_remitted_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cod_tracking_id?: NullableStringFieldUpdateOperationsInput | string | null
+    manifest_generated?: BoolFieldUpdateOperationsInput | boolean
+    rto_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    rto_initiated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     payment?: PaymentUncheckedUpdateOneWithoutOrderNestedInput
   }
@@ -40924,6 +41238,13 @@ export namespace Prisma {
     shipping_status?: string | null
     estimated_delivery_date?: Date | string | null
     tracking_url?: string | null
+    cod_amount?: number | null
+    cod_status?: string | null
+    cod_remitted_date?: Date | string | null
+    cod_tracking_id?: string | null
+    manifest_generated?: boolean
+    rto_reason?: string | null
+    rto_initiated_at?: Date | string | null
   }
 
   export type ReturnRequestCreateManyUserInput = {
@@ -41030,6 +41351,13 @@ export namespace Prisma {
     shipping_status?: NullableStringFieldUpdateOperationsInput | string | null
     estimated_delivery_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     tracking_url?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_amount?: NullableFloatFieldUpdateOperationsInput | number | null
+    cod_status?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_remitted_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cod_tracking_id?: NullableStringFieldUpdateOperationsInput | string | null
+    manifest_generated?: BoolFieldUpdateOperationsInput | boolean
+    rto_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    rto_initiated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     items?: OrderItemUpdateManyWithoutOrderNestedInput
     payment?: PaymentUpdateOneWithoutOrderNestedInput
     returnRequests?: ReturnRequestUpdateManyWithoutOrderNestedInput
@@ -41058,6 +41386,13 @@ export namespace Prisma {
     shipping_status?: NullableStringFieldUpdateOperationsInput | string | null
     estimated_delivery_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     tracking_url?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_amount?: NullableFloatFieldUpdateOperationsInput | number | null
+    cod_status?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_remitted_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cod_tracking_id?: NullableStringFieldUpdateOperationsInput | string | null
+    manifest_generated?: BoolFieldUpdateOperationsInput | boolean
+    rto_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    rto_initiated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     items?: OrderItemUncheckedUpdateManyWithoutOrderNestedInput
     payment?: PaymentUncheckedUpdateOneWithoutOrderNestedInput
     returnRequests?: ReturnRequestUncheckedUpdateManyWithoutOrderNestedInput
@@ -41086,6 +41421,13 @@ export namespace Prisma {
     shipping_status?: NullableStringFieldUpdateOperationsInput | string | null
     estimated_delivery_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     tracking_url?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_amount?: NullableFloatFieldUpdateOperationsInput | number | null
+    cod_status?: NullableStringFieldUpdateOperationsInput | string | null
+    cod_remitted_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cod_tracking_id?: NullableStringFieldUpdateOperationsInput | string | null
+    manifest_generated?: BoolFieldUpdateOperationsInput | boolean
+    rto_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    rto_initiated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type ReturnRequestUpdateWithoutUserInput = {
