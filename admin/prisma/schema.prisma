@@ -370,6 +370,28 @@ model AnnouncementSettings {
   updated_at DateTime @updatedAt
 }
 
+model Banner {
+  id               String   @id @default(uuid())
+  badge_text       String?
+  title            String
+  description      String?
+  cta_text         String?
+  cta_link         String?
+  background_image String?
+  is_active        Boolean  @default(true)
+  sort_order       Int      @default(0)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+}
+
+model ContactInfo {
+  id         String   @id @default("contact-info")
+  email      String?
+  phone      String?
+  address    String?
+  updated_at DateTime @updatedAt
+}
+
 enum Role {
   ADMIN
   SUPERADMIN

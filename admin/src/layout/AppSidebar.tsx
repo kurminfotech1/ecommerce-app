@@ -24,6 +24,8 @@ import {
   ShoppingCart,
   StarIcon,
   Tags,
+  Phone,
+  LayoutTemplate,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/rootReducer";
@@ -114,6 +116,20 @@ const navItems: NavItem[] = [
         moduleName: "Announcement Bar",
         pro: false,
         icon: <Megaphone size={18} />,
+      },
+      {
+        name: "Contact Info",
+        path: "/contact-info",
+        moduleName: "Contact Info",
+        pro: false,
+        icon: <Phone size={18} />,
+      },
+      {
+        name: "Hero Banner",
+        path: "/hero-banner",
+        moduleName: "Hero Banner",
+        pro: false,
+        icon: <LayoutTemplate size={18} />,
       },
       {
         name: "Manage Logo",

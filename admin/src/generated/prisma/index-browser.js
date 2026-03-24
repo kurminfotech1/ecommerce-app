@@ -402,6 +402,28 @@ exports.Prisma.AnnouncementSettingsScalarFieldEnum = {
   updated_at: 'updated_at'
 };
 
+exports.Prisma.BannerScalarFieldEnum = {
+  id: 'id',
+  badge_text: 'badge_text',
+  title: 'title',
+  description: 'description',
+  cta_text: 'cta_text',
+  cta_link: 'cta_link',
+  background_image: 'background_image',
+  is_active: 'is_active',
+  sort_order: 'sort_order',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.ContactInfoScalarFieldEnum = {
+  id: 'id',
+  email: 'email',
+  phone: 'phone',
+  address: 'address',
+  updated_at: 'updated_at'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -478,7 +500,9 @@ exports.Prisma.ModelName = {
   OtpVerification: 'OtpVerification',
   SiteLogo: 'SiteLogo',
   AnnouncementBar: 'AnnouncementBar',
-  AnnouncementSettings: 'AnnouncementSettings'
+  AnnouncementSettings: 'AnnouncementSettings',
+  Banner: 'Banner',
+  ContactInfo: 'ContactInfo'
 };
 
 /**
