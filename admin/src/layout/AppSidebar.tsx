@@ -466,7 +466,7 @@ const AppSidebar: React.FC = () => {
             // eslint-disable-next-line @next/next/no-img-element
             <img
               className="w-full object-cover"
-              src={logoData?.light_url ?? "/images/logo/e-comm-logo-resize.png"}
+              src={logoData?.light_url ?? "/images/logo/default-sitebar-logo.png"}
               alt="Logo"
             />
           )}

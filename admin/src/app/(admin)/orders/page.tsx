@@ -369,7 +369,7 @@ const OrderRowDetail = ({
 };
 
 // ── Generate Invoice ───────────────────────────────────────────────
-const generateInvoice = (order: Order) => {
+const generateInvoice = (order: Order, logoUrl?: string | null) => {
   const { date } = formatDate(order.created_at);
   const total = order.total_amount;
   const subtotal = Math.round((total / 1.05) * 100) / 100; 
@@ -415,7 +415,7 @@ const generateInvoice = (order: Order) => {
   <!-- Header -->
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:36px">
     <div>
-      <img src="${origin}/images/logo/e-comm-logo-resize.png" alt="Logo" style="height:44px;width:auto" />
+      <img src="${logoUrl || `${origin}/images/logo/default-sitebar-logo.png`}" alt="Logo" style="height:44px;width:auto" />
       <div style="font-size:12px;color:#888;margin-top:4px">Your trusted e-commerce store</div>
     </div>
     <div style="text-align:right">
@@ -911,8 +911,9 @@ interface RowMenuProps {
   onDelete: (o: Order) => void;
   onView: (o: Order) => void;
   canDelete: boolean;
+  logoUrl?: string | null;
 }
-const RowMenu = ({ order, onDelete, onView, canDelete }: RowMenuProps) => {
+const RowMenu = ({ order, onDelete, onView, canDelete, logoUrl }: RowMenuProps) => {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, right: 0 });
   const btnRef = React.useRef<HTMLButtonElement>(null);
@@ -961,7 +962,7 @@ const RowMenu = ({ order, onDelete, onView, canDelete }: RowMenuProps) => {
             </button>
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); generateInvoice(order); setOpen(false); }}
+              onClick={(e) => { e.stopPropagation(); generateInvoice(order, logoUrl); setOpen(false); }}
               className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition"
             >
               <Printer size={13} /> Generate Invoice
@@ -987,7 +988,7 @@ const RowMenu = ({ order, onDelete, onView, canDelete }: RowMenuProps) => {
 };
 
 // ── Order Detail Modal ─────────────────────────────────────────────
-const OrderDetailModal = ({ order: initialOrder, onClose, onOrderUpdate }: { order: Order; onClose: () => void; onOrderUpdate?: (id: string, updates: Partial<Order>) => void }) => {
+const OrderDetailModal = ({ order: initialOrder, onClose, onOrderUpdate, logoUrl }: { order: Order; onClose: () => void; onOrderUpdate?: (id: string, updates: Partial<Order>) => void, logoUrl?: string | null }) => {
   const [order, setOrderState] = React.useState<Order>(initialOrder);
   const { date, time } = formatDate(order.created_at);
   const [activeTab, setActiveTab] = React.useState<"details" | "shipping">("details");
@@ -1127,7 +1128,7 @@ const OrderDetailModal = ({ order: initialOrder, onClose, onOrderUpdate }: { ord
 
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
           <button
-            onClick={() => generateInvoice(order)}
+            onClick={() => generateInvoice(order, logoUrl)}
             className="px-2 flex items-center justify-center gap-2 bg-[#157f3c] hover:bg-[#126631] text-white py-2.5 rounded-xl text-sm font-semibold transition shadow-sm"
           >
             <FileText size={15} /> Download Invoice
@@ -1150,6 +1151,7 @@ export default function OrdersPage() {
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [logoData, setLogoData] = useState<{ light_url: string | null } | null>(null);
 
   // ── Permission flags ────────────────────────────────────────────
   const { canUpdate, canDelete } = usePermission("Orders");
@@ -1198,6 +1200,11 @@ export default function OrdersPage() {
     axios.get("/api/orders?limit=1000").then((res) => {
       setAllOrders(res.data?.data ?? []);
     }).catch(() => { });
+
+    // Fetch site logo
+    axios.get("/api/logo")
+      .then((res) => setLogoData(res.data?.data))
+      .catch(() => { });
   }, []);
 
   // ── Auto-open order detail modal ───────────────
@@ -1732,6 +1739,7 @@ export default function OrdersPage() {
                                 onDelete={(o) => setDeleteOrder(o)}
                                 onView={(o) => setViewOrder(o)}
                                 canDelete={canDelete}
+                                logoUrl={logoData?.light_url}
                               />
                             </div>
                           </td>
@@ -1833,6 +1841,7 @@ export default function OrdersPage() {
             setAllOrders(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o));
             setViewOrder(prev => prev && prev.id === id ? { ...prev, ...updates } : prev);
           }}
+          logoUrl={logoData?.light_url}
         />
       )}
 

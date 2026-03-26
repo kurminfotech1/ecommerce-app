@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { LayoutTemplate, Plus, Edit2, Trash2, Loader2, Save, Image as ImageIcon, X } from "lucide-react";
 import { usePermission } from "@/hooks/usePermission";
+import { DeleteModal } from "@/components/common/DeleteModal";
 
 type Banner = {
   id: string;
@@ -24,6 +25,8 @@ export default function HeroBannerPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<Banner | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -153,18 +156,20 @@ export default function HeroBannerPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this banner?")) return;
-    
+  const handleDelete = async (banner: Banner) => {
+    setDeleting(true);
     try {
-      const res = await fetch(`/api/hero-banner?id=${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/hero-banner?id=${banner.id}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to delete banner");
       
       toast.success(data.message || "Banner deleted");
       fetchBanners();
+      setConfirmDelete(null);
     } catch (err: any) {
       toast.error(err.message);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -235,7 +240,7 @@ export default function HeroBannerPage() {
                   )}
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white line-clamp-1">{banner.title}</h3>
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 flex-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400 flex-1">
                   {banner.description || <span className="italic text-gray-300">No description</span>}
                 </p>
                 <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
@@ -247,7 +252,7 @@ export default function HeroBannerPage() {
                       </button>
                     )}
                     {canDelete && (
-                      <button onClick={() => handleDelete(banner.id)} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors">
+                      <button onClick={() => setConfirmDelete(banner)} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     )}
@@ -413,6 +418,17 @@ export default function HeroBannerPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {confirmDelete && (
+        <DeleteModal
+          open={!!confirmDelete}
+          onClose={() => setConfirmDelete(null)}
+          onConfirm={() => handleDelete(confirmDelete)}
+          parentTitle="Delete Banner?"
+          childTitle="Are you sure you want to delete this banner? This action cannot be undone."
+          loading={deleting}
+        />
       )}
     </div>
   );

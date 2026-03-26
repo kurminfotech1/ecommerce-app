@@ -22,8 +22,8 @@ type SlotConfig = {
 };
 
 const SLOTS: SlotConfig[] = [
-  { key: "light",   label: "Site Logo",  hint: "Shown in header/sidebar and footer", bg: "bg-gray-50" },
-  { key: "favicon", label: "Favicon",    hint: "16×16 or 32×32 px .ico / .png",      bg: "bg-gray-50" },
+  { key: "light",   label: "Site Logo",  hint: "Appears in Admin Header/Sidebar and Storefront Navbar/Footer", bg: "bg-gray-50" },
+  { key: "favicon", label: "Favicon",    hint: "Used for browser tabs and mobile home screen icons",      bg: "bg-gray-50" },
 ];
 
 export default function ManageLogoPage() {
@@ -243,35 +243,35 @@ export default function ManageLogoPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 bg-white dark:bg-gray-900">
           {/* Site Logo Preview */}
           <div className="p-6 border-b md:border-b-0 md:border-r border-gray-100 dark:border-gray-800">
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4">Sidebar / Header</p>
+            <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4">Main Navigation / Branding</p>
             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-8 flex items-center justify-center min-h-[120px]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
-                src={logo?.light_url ?? "/images/logo/e-comm-logo.png"} 
+                src={logo?.light_url ?? "/images/logo/default-sitebar-logo.png"} 
                 alt="sidebar logo" 
                 className="max-h-12 object-contain" 
               />
             </div>
-            <p className="text-xs text-gray-400 mt-3 text-center">Full logo used in main navigation</p>
+            <p className="text-xs text-gray-400 mt-3 text-center">Full logo used across both Admin and Storefront</p>
           </div>
 
           {/* Favicon Preview */}
           <div className="p-6">
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4">Collapsed Sidebar / Browser Tab</p>
+            <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4">Site Icon / Browser Tab</p>
             <div className="flex flex-col gap-6">
               {/* Sidebar Icon */}
               <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
                 <div className="w-12 h-12 flex items-center justify-center bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-100 dark:border-gray-600">
                    {/* eslint-disable-next-line @next/next/no-img-element */}
                    <img 
-                    src={logo?.favicon_url ?? logo?.light_url ?? "/icon.png"} 
+                    src={logo?.favicon_url ?? logo?.light_url ?? "/default-fav.png"} 
                     alt="favicon preview" 
                     className="w-8 h-8 object-contain" 
                   />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">Sidebar Icon</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">Appears when sidebar is collapsed</p>
+                  <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">Site Icon</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">Used in collapsed sidebar and site shortcut</p>
                 </div>
               </div>
 
@@ -281,12 +281,12 @@ export default function ManageLogoPage() {
                   <div className="w-4 h-4 rounded-sm flex items-center justify-center">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img 
-                      src={logo?.favicon_url ?? "/icon.png"} 
+                      src={logo?.favicon_url ?? "/default-fav.png"} 
                       alt="browser favicon" 
                       className="w-3.5 h-3.5 object-contain" 
                     />
                   </div>
-                  <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate font-medium">Site Admin Panel</span>
+                  <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate font-medium">Storefront / Admin Panel</span>
                   <div className="ml-auto flex gap-1">
                     <div className="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-gray-500"></div>
                   </div>

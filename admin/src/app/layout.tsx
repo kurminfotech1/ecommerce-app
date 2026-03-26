@@ -25,7 +25,7 @@ export default function RootLayout({
       fetch('/api/logo')
         .then((res) => res.json())
         .then((json) => {
-          const faviconUrl = json?.data?.favicon_url || '/icon.png';
+          const faviconUrl = json?.data?.favicon_url || '/default-fav.png';
           let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
           if (!link) {
             link = document.createElement('link');
