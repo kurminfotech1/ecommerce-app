@@ -1640,7 +1640,7 @@ export default function OrdersPage() {
                           {/* Order Number */}
                           <td className="px-4 py-3">
                             <span
-                              onClick={() => setViewOrder(order)}
+                              onClick={() => setViewOrder({ order, tab: "details" })}
                               className="font-mono text-[10px] font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 cursor-pointer px-2 py-1 rounded-lg transition-colors border border-blue-100 hover:border-blue-200"
                             >
                               {order.order_number}
