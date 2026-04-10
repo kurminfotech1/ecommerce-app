@@ -36,7 +36,7 @@ const Badge = ({ children, color = "gray" }: { children: React.ReactNode; color?
     blue: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30",
     amber: "bg-warning-50 text-warning-700 border-warning-200 dark:bg-warning-500/20 dark:text-warning-400 dark:border-warning-500/30",
     gray: "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-500/20 dark:text-gray-400 dark:border-gray-500/30",
-    purple: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/20 dark:text-purple-400 dark:border-purple-500/30",
+    purple: "bg-[#157f3c]/10 text-[#157f3c] border-[#157f3c]/20 dark:bg-[#157f3c]/20 dark:text-[#157f3c] dark:border-[#157f3c]/30",
   };
   return (
     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${colors[color]}`}>
@@ -121,7 +121,7 @@ export default function BlogDetailPage() {
           <div className="flex flex-wrap gap-3 items-center justify-between">
             <Link
               href="/blog"
-              className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-[#155dfc] transition"
+              className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-[#157f3c] transition"
             >
               <ArrowLeft size={16} /> Back to Blog
             </Link>
@@ -219,7 +219,7 @@ export default function BlogDetailPage() {
                   label="Author"
                   value={
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-[#155dfc]/10 text-[#155dfc] flex items-center justify-center text-[10px] font-bold">
+                      <div className="w-6 h-6 rounded-full bg-[#157f3c]/10 text-[#157f3c] flex items-center justify-center text-[10px] font-bold">
                         {blog.author?.[0]?.toUpperCase() || "?"}
                       </div>
                       <span>{blog.author || "—"}</span>
@@ -275,7 +275,7 @@ export default function BlogDetailPage() {
                     icon={<ExternalLink size={14} />}
                     label="Canonical URL"
                     value={
-                      <a href={blog.canonical_url} target="_blank" rel="noopener noreferrer" className="text-[#155dfc] hover:underline break-all">
+                      <a href={blog.canonical_url} target="_blank" rel="noopener noreferrer" className="text-[#157f3c] hover:underline break-all">
                         {blog.canonical_url}
                       </a>
                     }
@@ -293,7 +293,7 @@ export default function BlogDetailPage() {
                     {blog.tags.map((tag) => (
                       <span
                         key={tag.id}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-lg text-xs font-medium border border-violet-100 dark:border-violet-500/20"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#157f3c]/10 dark:bg-[#157f3c]/20 text-[#157f3c] dark:text-[#157f3c] rounded-lg text-xs font-medium border border-[#157f3c]/20 dark:border-[#157f3c]/30"
                       >
                         <Tag size={10} /> {tag.name}
                       </span>
@@ -308,7 +308,7 @@ export default function BlogDetailPage() {
                 const words = text.split(/\s+/).filter(Boolean).length;
                 const readMin = Math.max(1, Math.ceil(words / 200));
                 return (
-                  <div className="bg-gradient-to-br from-[#155dfc] to-[#1246cc] rounded-2xl shadow-sm p-5 text-white">
+                  <div className="bg-gradient-to-br from-[#157f3c] to-[#0e5a2a] rounded-2xl shadow-sm p-5 text-white">
                     <p className="text-xs font-bold text-white/60 uppercase tracking-wider mb-4">Quick Stats</p>
                     <div className="grid grid-cols-3 gap-3 text-center">
                       <div>

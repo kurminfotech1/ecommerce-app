@@ -857,7 +857,7 @@ export default function ProductsPage() {
                     <div className="col-span-2 -mt-1">
                       <p className="text-[11px] text-gray-400">
                         Selected:{" "}
-                        <span className="font-semibold text-[#155dfc]">
+                        <span className="font-semibold text-[#157f3c]">
                           {[catL1, catL2, catL3]
                             .filter(Boolean)
                             .map((id) => findCatNode(categories as Category[], id)?.name)
@@ -1067,14 +1067,14 @@ export default function ProductsPage() {
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest flex items-center gap-2">
                     <Layers size={12} /> Variants
-                    <span className="ml-1 px-1.5 py-0.5 bg-[#155dfc]/10 text-[#155dfc] rounded-full text-[10px] font-bold">
+                    <span className="ml-1 px-1.5 py-0.5 bg-[#157f3c]/10 text-[#157f3c] rounded-full text-[10px] font-bold">
                       {variants.length}
                     </span>
                   </p>
                   <button
                     type="button"
                     onClick={addVariant}
-                    className="flex items-center gap-1.5 text-xs font-semibold text-[#155dfc] hover:text-[#1246cc] bg-[#155dfc]/10 hover:bg-[#155dfc]/20 px-3 py-1.5 rounded-lg transition"
+                    className="flex items-center gap-1.5 text-xs font-semibold text-[#157f3c] hover:text-[#1246cc] bg-[#157f3c]/10 hover:bg-[#157f3c]/20 px-3 py-1.5 rounded-lg transition"
                   >
                     <Plus size={12} /> Add Variant
                   </button>
@@ -1264,10 +1264,10 @@ export default function ProductsPage() {
                                     <img
                                       src={objUrl}
                                       onClick={() => setPreviewImage(objUrl)}
-                                      className="w-16 h-16 object-cover rounded-lg border-2 border-dashed border-[#155dfc]/40 cursor-zoom-in"
+                                      className="w-16 h-16 object-cover rounded-lg border-2 border-dashed border-[#157f3c]/40 cursor-zoom-in"
                                     />
                                     <div className="absolute inset-0 bg-blue-500/10 rounded-lg flex items-end justify-center pb-1 pointer-events-none">
-                                      <span className="text-[9px] text-[#155dfc] font-bold bg-white/80 px-1 rounded">Pending</span>
+                                      <span className="text-[9px] text-[#157f3c] font-bold bg-white/80 px-1 rounded">Pending</span>
                                     </div>
                                     <button
                                       type="button"
@@ -1283,9 +1283,9 @@ export default function ProductsPage() {
                           )}
 
                           {/* Upload trigger */}
-                          <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-gray-300 dark:border-gray-600 hover:border-[#155dfc] dark:hover:border-[#155dfc] hover:bg-[#155dfc]/10 dark:hover:bg-[#155dfc]/10 rounded-xl cursor-pointer transition group">
-                            <Upload size={14} className="text-gray-400 dark:text-gray-500 group-hover:text-[#155dfc] transition shrink-0" />
-                            <span className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-[#155dfc] transition">
+                          <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-gray-300 dark:border-gray-600 hover:border-[#157f3c] dark:hover:border-[#157f3c] hover:bg-[#157f3c]/10 dark:hover:bg-[#157f3c]/10 rounded-xl cursor-pointer transition group">
+                            <Upload size={14} className="text-gray-400 dark:text-gray-500 group-hover:text-[#157f3c] transition shrink-0" />
+                            <span className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-[#157f3c] transition">
                               {v.uploadedImages.length + v.pendingFiles.length > 0
                                 ? `Add more images for this variant`
                                 : `Upload images for this variant`}
@@ -1308,7 +1308,7 @@ export default function ProductsPage() {
                 <button
                   type="button"
                   onClick={addVariant}
-                  className="mt-3 w-full border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-[#155dfc] dark:hover:border-[#155dfc] hover:bg-[#155dfc]/10 dark:hover:bg-[#155dfc]/10 text-gray-400 dark:text-gray-500 hover:text-[#155dfc] py-2.5 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2"
+                  className="mt-3 w-full border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-[#157f3c] dark:hover:border-[#157f3c] hover:bg-[#157f3c]/10 dark:hover:bg-[#157f3c]/10 text-gray-400 dark:text-gray-500 hover:text-[#157f3c] py-2.5 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2"
                 >
                   <Plus size={14} /> Add Another Variant
                 </button>
@@ -1342,7 +1342,7 @@ export default function ProductsPage() {
                 <label className="flex items-center gap-2.5 cursor-pointer select-none">
                   <div
                     onClick={() => setForm({ ...form, is_active: !form.is_active })}
-                    className={`w-10 h-5 rounded-full transition-colors relative ${form.is_active ? "bg-[#155dfc]" : "bg-gray-200 dark:bg-gray-600"}`}
+                    className={`w-10 h-5 rounded-full transition-colors relative ${form.is_active ? "bg-[#157f3c]" : "bg-gray-200 dark:bg-gray-600"}`}
                   >
                     <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.is_active ? "translate-x-5" : "translate-x-0.5"}`} />
                   </div>
@@ -1397,7 +1397,7 @@ export default function ProductsPage() {
               <button
                 onClick={handleSubmit}
                 disabled={submitting || uploading}
-                className=" flex items-center justify-center gap-2 bg-[#155dfc] hover:bg-[#1246cc] disabled:opacity-60 text-white px-2 py-2.5 rounded-xl text-sm font-semibold transition"
+                className=" flex items-center justify-center gap-2 bg-[#157f3c] hover:bg-[#1246cc] disabled:opacity-60 text-white px-2 py-2.5 rounded-xl text-sm font-semibold transition"
               >
                 {(submitting || uploading) && <Loader2 size={15} className="animate-spin" />}
                 {uploading ? "Uploading images..." : submitting ? "Saving..." : editId ? "Update Product" : "Create Product"}

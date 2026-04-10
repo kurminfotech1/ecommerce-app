@@ -250,7 +250,7 @@ export default function CategoriesPage() {
                 background: "#fff",
                 transition: "border-color .2s",
               }}
-              onFocus={e => (e.target.style.borderColor = "#818cf8")}
+              onFocus={e => (e.target.style.borderColor = "#157f3c")}
               onBlur={e => (e.target.style.borderColor = "#e5e7eb")}
             />
           </div>
@@ -350,7 +350,7 @@ export default function CategoriesPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {categories.map((cat, idx) => (
-                      <tr key={cat.id} className="hover:bg-violet-50/30 transition group">
+                      <tr key={cat.id} className="hover:bg-[#157f3c]/5 transition group">
                         <td className="px-6 py-4 text-gray-500 font-medium">
                           {(currentPage - 1) * limit + idx + 1}
                         </td>
@@ -444,9 +444,9 @@ export default function CategoriesPage() {
                         onClick={() => setPage(pg as number)}
                         style={{
                           ...pgBtnBase,
-                          background: pg === currentPage ? "#0F6B30" : "#fff",
+                          background: pg === currentPage ? "#157f3c" : "#fff",
                           color: pg === currentPage ? "#fff" : "#374151",
-                          borderColor: pg === currentPage ? "#0F6B30" : "#e5e7eb",
+                          borderColor: pg === currentPage ? "#157f3c" : "#e5e7eb",
                           fontWeight: pg === currentPage ? 600 : 500,
                         }}
                       >

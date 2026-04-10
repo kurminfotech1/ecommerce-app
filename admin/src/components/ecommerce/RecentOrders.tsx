@@ -5,7 +5,7 @@ import { DashboardData } from "@/types/dashboard";
 
 type RecentOrder = DashboardData["recentOrders"][number];
 
-const AVATAR_COLORS = ["bg-violet-500","bg-blue-500","bg-emerald-500","bg-rose-500","bg-amber-500","bg-indigo-500","bg-pink-500","bg-teal-500","bg-orange-500","bg-cyan-500"];
+const AVATAR_COLORS = ["bg-[#157f3c]","bg-blue-500","bg-emerald-500","bg-rose-500","bg-amber-500","bg-indigo-500","bg-pink-500","bg-teal-500","bg-orange-500","bg-cyan-500"];
 function getAvatarColor(name: string) { return AVATAR_COLORS[(name.charCodeAt(0) || 0) % AVATAR_COLORS.length]; }
 function getInitials(name: string) {
   const parts = name.trim().split(" ");
@@ -22,7 +22,7 @@ function formatDateTime(dateStr: string) {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; icon: string; colorClass: string; bgClass: string; borderClass: string }> = {
-  PLACED:     { label: "Placed",     icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",                                                                          colorClass: "text-blue-600 dark:text-blue-400",   bgClass: "bg-blue-50 dark:bg-blue-500/10",   borderClass: "border-blue-200 dark:border-blue-500/20"   },
+  PLACED:     { label: "Placed",     icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",                                                                          colorClass: "text-[#157f3c] dark:text-[#157f3c]",   bgClass: "bg-[#157f3c]/10 dark:bg-[#157f3c]/20",   borderClass: "border-[#157f3c]/20 dark:border-[#157f3c]/30"   },
   CONFIRMED:  { label: "Confirmed",  icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",                                                                          colorClass: "text-indigo-600 dark:text-indigo-400", bgClass: "bg-indigo-50 dark:bg-indigo-500/10", borderClass: "border-indigo-200 dark:border-indigo-500/20" },
   PROCESSING: { label: "Processing", icon: "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15",          colorClass: "text-amber-600 dark:text-amber-400",  bgClass: "bg-amber-50 dark:bg-amber-500/10",  borderClass: "border-amber-200 dark:border-amber-500/20"  },
   SHIPPED:    { label: "Shipped",    icon: "M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4",                                     colorClass: "text-orange-600 dark:text-orange-400", bgClass: "bg-orange-50 dark:bg-orange-500/10", borderClass: "border-orange-200 dark:border-orange-500/20" },
@@ -153,8 +153,7 @@ export default function RecentOrders({ orders, loading }: RecentOrdersProps) {
                   <tr key={order.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50/60 dark:hover:bg-white/[0.02] transition-colors">
                     <td className="px-4 py-3.5">
                       <span 
-                        // onClick={() => router.push(`/orders?open_order=${order.id}`)}
-                        className="text-xs font-bold text-blue-600 dark:text-blue-400 font-mono tracking-tight hover:underline"
+                        className="text-xs font-bold text-[#157f3c] dark:text-[#157f3c]/80 font-mono tracking-tight hover:underline"
                       >
                         {order.order_number}
                       </span>

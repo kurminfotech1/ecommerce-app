@@ -38,7 +38,7 @@ const Badge = ({ children, color = "gray" }: { children: React.ReactNode; color?
     blue: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30",
     amber: "bg-warning-50 text-warning-700 border-warning-200 dark:bg-warning-500/20 dark:text-warning-400 dark:border-warning-500/30",
     gray: "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-500/20 dark:text-gray-400 dark:border-gray-500/30",
-    purple: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/20 dark:text-purple-400 dark:border-purple-500/30",
+    purple: "bg-[#157f3c]/10 text-[#157f3c] border-[#157f3c]/20 dark:bg-[#157f3c]/20 dark:text-[#157f3c] dark:border-[#157f3c]/30",
   };
   return (
     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${colors[color]}`}>
@@ -199,7 +199,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#155dfc] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-12 h-12 border-4 border-[#157f3c] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-500 dark:text-gray-400">Loading product details...</p>
         </div>
       </div>
@@ -217,7 +217,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
           <p className="text-gray-500 mb-6">The product you&apos;re looking for doesn&apos;t exist or has been removed.</p>
           <button
             onClick={() => router.push("/products")}
-            className="bg-violet-600 hover:bg-violet-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm"
+            className="bg-[#157f3c] hover:bg-[#126a32] text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm"
           >
             ← Back to Products
           </button>
@@ -245,7 +245,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
           {/* <div className="flex gap-2">
             <button
               onClick={() => router.push(`/products/edit/${product.id}`)}
-              className="flex items-center gap-2 bg-[#155dfc] hover:bg-[#1246cc] text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-[0_2px_10px_rgba(21,93,252,.28)] hover:-translate-y-px hover:shadow-[0_4px_14px_rgba(21,93,252,.38)]"
+              className="flex items-center gap-2 bg-[#157f3c] hover:bg-[#1246cc] text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-[0_2px_10px_rgba(21,93,252,.28)] hover:-translate-y-px hover:shadow-[0_4px_14px_rgba(21,93,252,.38)]"
             >
               <Edit size={16} /> Edit Product
             </button>
@@ -301,7 +301,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                   <button
                     key={index}
                     onClick={() => setActiveImageIndex(index)}
-                    className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${activeImageIndex === index ? 'border-[#155dfc]' : 'border-gray-200 dark:border-gray-700'}`}
+                    className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${activeImageIndex === index ? 'border-[#157f3c]' : 'border-gray-200 dark:border-gray-700'}`}
                   >
                     <Image 
                       src={imgUrl} 
@@ -391,8 +391,8 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                             onClick={() => handleWeightSelect(weight)}
                             className={`px-4 py-2 border rounded-xl text-sm font-semibold transition-all ${
                               isSelected
-                                ? 'border-[#155dfc] text-[#155dfc] bg-blue-50 dark:bg-[#155dfc]/10 shadow-sm'
-                                : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-[#155dfc] hover:text-[#155dfc]'
+                                ? 'border-[#157f3c] text-[#157f3c] bg-[#157f3c]/5 dark:bg-[#157f3c]/10 shadow-sm'
+                                : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-[#157f3c] hover:text-[#157f3c]'
                             }`}
                           >
                             {weight}
@@ -416,8 +416,8 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                             onClick={() => handleSizeSelect(size)}
                             className={`px-4 py-2 border rounded-xl text-sm font-semibold transition-all ${
                               isSelected
-                                ? 'border-[#155dfc] text-[#155dfc] bg-blue-50 dark:bg-[#155dfc]/10 shadow-sm'
-                                : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-[#155dfc] hover:text-[#155dfc]'
+                                ? 'border-[#157f3c] text-[#157f3c] bg-[#157f3c]/5 dark:bg-[#157f3c]/10 shadow-sm'
+                                : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-[#157f3c] hover:text-[#157f3c]'
                             }`}
                           >
                             {size}
@@ -441,7 +441,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                             onClick={() => handleColorSelect(color)}
                             className={`flex flex-col items-center p-1.5 rounded-xl border-2 transition-all ${
                               isSelected
-                                ? 'border-[#155dfc] bg-blue-50 dark:bg-[#155dfc]/10 shadow-sm'
+                                ? 'border-[#157f3c] bg-[#157f3c]/5 dark:bg-[#157f3c]/10 shadow-sm'
                                 : 'border-transparent hover:bg-gray-100 dark:hover:bg-gray-800'
                             }`}
                           >
@@ -464,7 +464,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
               <div className="flex gap-3">
                 <button
                   onClick={() => router.push(`/products/edit/${product.id}`)}
-                  className="flex-1 flex items-center justify-center gap-2 bg-[#155dfc] hover:bg-[#1246cc] text-white py-3 px-4 rounded-lg text-base font-medium transition shadow-[0_2px_10px_rgba(21,93,252,.28)] hover:-translate-y-px hover:shadow-[0_4px_14px_rgba(21,93,252,.38)]"
+                  className="flex-1 flex items-center justify-center gap-2 bg-[#157f3c] hover:bg-[#1246cc] text-white py-3 px-4 rounded-lg text-base font-medium transition shadow-[0_2px_10px_rgba(21,93,252,.28)] hover:-translate-y-px hover:shadow-[0_4px_14px_rgba(21,93,252,.38)]"
                 >
                   <Edit size={20} />
                   Edit Product
@@ -485,8 +485,8 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
             <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center">
-                    <Package size={18} className="text-[#155dfc]" />
+                  <div className="w-10 h-10 rounded-full bg-[#157f3c]/10 dark:bg-[#157f3c]/20 flex items-center justify-center">
+                    <Package size={18} className="text-[#157f3c]" />
                   </div>
                   <div>
                     <p className="font-medium text-gray-900 dark:text-white">Total Variants</p>
@@ -495,8 +495,8 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center">
-                    <Star size={18} className="text-[#155dfc]" />
+                  <div className="w-10 h-10 rounded-full bg-[#157f3c]/10 dark:bg-[#157f3c]/20 flex items-center justify-center">
+                    <Star size={18} className="text-[#157f3c]" />
                   </div>
                   <div>
                     <p className="font-medium text-gray-900 dark:text-white">Avg Rating</p>
@@ -515,43 +515,43 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
             <div className="border-b border-gray-200 dark:border-gray-700">
               <nav className="flex flex-nowrap overflow-x-auto w-full -mb-px scrollbar-hide">
                 <button
-                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm ${activeTab === 'description' ? 'text-[#155dfc] border-b-2 border-[#155dfc]' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm ${activeTab === 'description' ? 'text-[#157f3c] border-b-2 border-[#157f3c]' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
                   onClick={() => setActiveTab('description')}
                 >
                   Description
                 </button>
                 <button
-                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'additional' ? 'text-[#155dfc] border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'additional' ? 'text-[#157f3c] border-[#157f3c]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
                   onClick={() => setActiveTab('additional')}
                 >
                   Additional Info
                 </button>
                 <button
-                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'benefits' ? 'text-[#155dfc] border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'benefits' ? 'text-[#157f3c] border-[#157f3c]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
                   onClick={() => setActiveTab('benefits')}
                 >
                   Benefits
                 </button>
                 <button
-                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'certifications' ? 'text-[#155dfc] border-b-2 border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'certifications' ? 'text-[#157f3c] border-b-2 border-[#157f3c]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
                   onClick={() => setActiveTab('certifications')}
                 >
                   Certifications
                 </button>
                 <button
-                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'key_benefits' ? 'text-[#155dfc] border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'key_benefits' ? 'text-[#157f3c] border-[#157f3c]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
                   onClick={() => setActiveTab('key_benefits')}
                 >
                   Key Benefits
                 </button>
                 <button
-                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'why_choose_us' ? 'text-[#155dfc] border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'why_choose_us' ? 'text-[#157f3c] border-[#157f3c]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
                   onClick={() => setActiveTab('why_choose_us')}
                 >
                   Why Choose Us
                 </button>
                 <button
-                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'how_to_use' ? 'text-[#155dfc] border-[#155dfc]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                  className={`py-4 px-6 whitespace-nowrap shrink-0 text-center font-medium text-sm transition-all border-b-2 ${activeTab === 'how_to_use' ? 'text-[#157f3c] border-[#157f3c]' : 'text-gray-500 border-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
                   onClick={() => setActiveTab('how_to_use')}
                 >
                   How To Use
@@ -623,8 +623,8 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                   {product.benefits && product.benefits.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {product.benefits.map((b, i) => (
-                        <div key={i} className="flex items-start gap-3 p-4 bg-violet-50 dark:bg-violet-500/5 rounded-xl border border-violet-100 dark:border-violet-500/10">
-                          <CheckCircle2 size={18} className="text-violet-500 shrink-0 mt-0.5" />
+                        <div key={i} className="flex items-start gap-3 p-4 bg-[#157f3c]/5 dark:bg-[#157f3c]/10 rounded-xl border border-[#157f3c]/10 dark:border-[#157f3c]/20">
+                          <CheckCircle2 size={18} className="text-[#157f3c] shrink-0 mt-0.5" />
                           <span className="text-gray-800 dark:text-gray-200 font-medium">{b}</span>
                         </div>
                       ))}
@@ -686,7 +686,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {items.map((item, i) => (
                           <div key={i} className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-500/5 rounded-xl border border-blue-100 dark:border-blue-500/10">
-                            <Star size={18} className="text-blue-500 shrink-0 mt-0.5" fill="currentColor" />
+                            <Star size={18} className="text-[#157f3c] shrink-0 mt-0.5" fill="currentColor" />
                             <div>
                               <p className="font-semibold text-gray-900 dark:text-white text-sm">{item.title}</p>
                               {item.description && <p className="text-gray-600 dark:text-gray-300 text-xs mt-0.5">{item.description}</p>}
@@ -759,10 +759,10 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Layers size={18} className="text-[#155dfc]" />
+                <Layers size={18} className="text-[#157f3c]" />
                 Variants Inventory
               </h2>
-              <Badge color="blue">{product.variants?.length || 0} Total Variants</Badge>
+              <Badge color="green">{product.variants?.length || 0} Total Variants</Badge>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -780,7 +780,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                   {product.variants?.map((v: any, idx) => (
                     <tr 
                       key={v.id} 
-                      className={`group hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${currentVariant?.id === v.id ? 'bg-blue-50/30 dark:bg-[#155dfc]/5' : ''}`}
+                      className={`group hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${currentVariant?.id === v.id ? 'bg-[#157f3c]/10 dark:bg-[#157f3c]/5' : ''}`}
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -829,7 +829,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                             setSelectedWeight(v.weight || null);
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                           }}
-                          className="p-2 text-[#155dfc] hover:bg-[#155dfc]/10 rounded-lg transition"
+                          className="p-2 text-[#157f3c] hover:bg-[#157f3c]/10 rounded-lg transition"
                           title="View Details"
                         >
                           <Eye size={18} />

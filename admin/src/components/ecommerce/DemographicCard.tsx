@@ -27,11 +27,11 @@ const COUNTRY_EMOJI: Record<string, string> = {
 };
 
 const BRAND_COLORS = [
-  "bg-brand-500",
-  "bg-blue-400",
-  "bg-indigo-400",
-  "bg-violet-400",
-  "bg-purple-400",
+  "bg-[#157f3c]",
+  "bg-emerald-500",
+  "bg-green-400",
+  "bg-[#157f3c]/70",
+  "bg-emerald-300",
 ];
 
 interface DemographicCardProps {

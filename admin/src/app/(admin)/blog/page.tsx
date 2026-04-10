@@ -42,7 +42,7 @@ const Badge = ({ children, color = "gray" }: { children: React.ReactNode; color?
     blue: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30",
     amber: "bg-warning-50 text-warning-700 border-warning-200 dark:bg-warning-500/20 dark:text-warning-400 dark:border-warning-500/30",
     gray: "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-500/20 dark:text-gray-400 dark:border-gray-500/30",
-    purple: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/20 dark:text-purple-400 dark:border-purple-500/30",
+    purple: "bg-[#157f3c]/10 text-[#157f3c] border-[#157f3c]/20 dark:bg-[#157f3c]/20 dark:text-[#157f3c] dark:border-[#157f3c]/30",
   };
   return (
     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${colors[color]}`}>
@@ -59,7 +59,7 @@ const Field = ({ label, children, span = 1 }: { label: string; children: React.R
   </div>
 );
 
-const inputCls = "w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#155dfc] focus:bg-white dark:focus:bg-gray-700 transition placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-white";
+const inputCls = "w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#157f3c] focus:bg-white dark:focus:bg-gray-700 transition placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-white";
 
 // ── TagInput ───────────────────────────────────────────────────────
 const TagInput = ({ tags, setTags, placeholder }: { tags: string[], setTags: (t: string[]) => void, placeholder: string }) => {
@@ -112,9 +112,9 @@ const TagInput = ({ tags, setTags, placeholder }: { tags: string[], setTags: (t:
       </div>
       <div className="flex flex-wrap gap-2">
         {tags.map((t, i) => (
-          <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1 bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-lg text-[13px] font-medium border border-violet-100 dark:border-violet-500/20">
+          <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#157f3c]/10 dark:bg-[#157f3c]/20 text-[#157f3c] dark:text-[#157f3c] rounded-lg text-[13px] font-medium border border-[#157f3c]/20 dark:border-[#157f3c]/30">
             {t}
-            <button type="button" onClick={() => setTags(tags.filter((_, idx) => idx !== i))} className="hover:text-violet-800 dark:hover:text-white transition cursor-pointer">
+            <button type="button" onClick={() => setTags(tags.filter((_, idx) => idx !== i))} className="hover:text-[#157f3c]/80 dark:hover:text-white transition cursor-pointer">
               <X size={12} />
             </button>
           </span>
@@ -157,8 +157,8 @@ type SortDir = "asc" | "desc";
 const SortIcon = ({ field, activeField, dir }: { field: SortField; activeField: SortField; dir: SortDir }) => {
   if (activeField !== field) return <ArrowUpDown size={12} className="text-gray-300" />;
   return dir === "asc"
-    ? <ArrowUp size={12} className="text-[#155dfc]" />
-    : <ArrowDown size={12} className="text-[#155dfc]" />;
+    ? <ArrowUp size={12} className="text-[#157f3c]" />
+    : <ArrowDown size={12} className="text-[#157f3c]" />;
 };
 
 // ════════════════════════════════════════════════════════════════════
@@ -415,7 +415,7 @@ export default function BlogPage() {
           <div className="flex flex-wrap gap-3 justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <FileText size={22} className="text-[#155dfc]" />
+                <FileText size={22} className="text-[#157f3c]" />
                 Blog Posts
               </h1>
               <p className="text-sm text-gray-500 mt-0.5">
@@ -444,7 +444,7 @@ export default function BlogPage() {
             <select
               value={publishedFilter}
               onChange={(e) => { setPublishedFilter(e.target.value); setPage(1); }}
-              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm px-3 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition text-gray-900 dark:text-white cursor-pointer"
+              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm px-3 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#157f3c] transition text-gray-900 dark:text-white cursor-pointer"
             >
               <option value="">Status: All</option>
               <option value="true">Published</option>
@@ -454,7 +454,7 @@ export default function BlogPage() {
             <select
               value={draftFilter}
               onChange={(e) => { setDraftFilter(e.target.value); setPage(1); }}
-              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm px-3 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition text-gray-900 dark:text-white cursor-pointer"
+              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm px-3 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#157f3c] transition text-gray-900 dark:text-white cursor-pointer"
             >
               <option value="">Draft: All</option>
               <option value="true">Drafts Only</option>
@@ -463,7 +463,7 @@ export default function BlogPage() {
             <select
               value={featuredFilter}
               onChange={(e) => { setFeaturedFilter(e.target.value); setPage(1); }}
-              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm px-3 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#155dfc] transition text-gray-900 dark:text-white cursor-pointer"
+              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm px-3 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#157f3c] transition text-gray-900 dark:text-white cursor-pointer"
             >
               <option value="">Featured: All</option>
               <option value="true">Featured Only</option>
@@ -538,7 +538,7 @@ export default function BlogPage() {
                               )}
                             </div>
                             <div className="min-w-0">
-                              <Link href={`/blog/${blog.id}`} title={blog.title} className="font-semibold text-gray-800 dark:text-white hover:text-[#155dfc] transition text-sm block truncate max-w-[200px] lg:max-w-[300px]">
+                              <Link href={`/blog/${blog.id}`} title={blog.title} className="font-semibold text-gray-800 dark:text-white hover:text-[#157f3c] transition text-sm block truncate max-w-[200px] lg:max-w-[300px]">
                                 {blog.title}
                               </Link>
                               {blog.excerpt && (
@@ -566,7 +566,7 @@ export default function BlogPage() {
                         {/* Author */}
                         <td className="px-4 py-3 hidden lg:table-cell">
                           <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-[#155dfc]/10 text-[#155dfc] flex items-center justify-center text-[10px] font-bold shrink-0">
+                            <div className="w-6 h-6 rounded-full bg-[#157f3c]/10 text-[#157f3c] flex items-center justify-center text-[10px] font-bold shrink-0">
                               {blog.author?.[0]?.toUpperCase() || "?"}
                             </div>
                             <span className="text-xs text-gray-700 dark:text-gray-300 font-medium">
@@ -669,7 +669,7 @@ export default function BlogPage() {
                         onClick={() => setPage(p as number)}
                         className={`min-w-[34px] h-[34px] text-sm rounded-xl border transition cursor-pointer ${
                           page === p
-                            ? "bg-[#155dfc] text-white border-[#155dfc] font-semibold shadow-sm"
+                            ? "bg-[#157f3c] text-white border-[#157f3c] font-semibold shadow-sm"
                             : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         }`}
                       >
@@ -780,7 +780,7 @@ export default function BlogPage() {
                           onClick={() => setContentTab("code")}
                           className={`px-4 py-2 text-xs font-semibold transition cursor-pointer ${
                             contentTab === "code"
-                              ? "text-[#155dfc] border-b-2 border-[#155dfc] bg-white dark:bg-gray-800"
+                              ? "text-[#157f3c] border-b-2 border-[#157f3c] bg-white dark:bg-gray-800"
                               : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                           }`}
                         >
@@ -791,7 +791,7 @@ export default function BlogPage() {
                           onClick={() => setContentTab("preview")}
                           className={`px-4 py-2 text-xs font-semibold transition cursor-pointer ${
                             contentTab === "preview"
-                              ? "text-[#155dfc] border-b-2 border-[#155dfc] bg-white dark:bg-gray-800"
+                              ? "text-[#157f3c] border-b-2 border-[#157f3c] bg-white dark:bg-gray-800"
                               : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                           }`}
                         >
@@ -861,10 +861,10 @@ export default function BlogPage() {
                           src={URL.createObjectURL(pendingFile)}
                           alt="Pending upload"
                           onClick={() => setPreviewImage(URL.createObjectURL(pendingFile))}
-                          className="w-24 h-24 object-cover rounded-xl border-2 border-dashed border-violet-300 dark:border-violet-500 cursor-zoom-in"
+                          className="w-24 h-24 object-cover rounded-xl border-2 border-dashed border-[#157f3c]/40 dark:border-[#157f3c]/60 cursor-zoom-in"
                         />
-                        <div className="absolute inset-0 bg-violet-500/10 rounded-xl flex items-end justify-center pb-1.5 pointer-events-none">
-                          <span className="text-[9px] text-violet-700 dark:text-violet-300 font-bold bg-white/80 dark:bg-gray-800/80 px-1.5 rounded">Pending</span>
+                        <div className="absolute inset-0 bg-[#157f3c]/10 rounded-xl flex items-end justify-center pb-1.5 pointer-events-none">
+                          <span className="text-[9px] text-[#157f3c] dark:text-[#157f3c]/80 font-bold bg-white/80 dark:bg-gray-800/80 px-1.5 rounded">Pending</span>
                         </div>
                         <button
                           type="button"
@@ -879,9 +879,9 @@ export default function BlogPage() {
                 )}
 
                 {/* Upload trigger */}
-                <label className="flex items-center gap-2 px-3 py-2.5 border border-dashed border-gray-300 dark:border-gray-600 hover:border-[#155dfc] dark:hover:border-[#155dfc] hover:bg-[#155dfc]/5 dark:hover:bg-[#155dfc]/10 rounded-xl cursor-pointer transition group">
-                  <Upload size={14} className="text-gray-400 dark:text-gray-500 group-hover:text-[#155dfc] transition shrink-0" />
-                  <span className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-[#155dfc] transition">
+                <label className="flex items-center gap-2 px-3 py-2.5 border border-dashed border-gray-300 dark:border-gray-600 hover:border-[#157f3c] dark:hover:border-[#157f3c] hover:bg-[#157f3c]/5 dark:hover:bg-[#157f3c]/10 rounded-xl cursor-pointer transition group">
+                  <Upload size={14} className="text-gray-400 dark:text-gray-500 group-hover:text-[#157f3c] transition shrink-0" />
+                  <span className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-[#157f3c] transition">
                     {form.featured_image || pendingFile
                       ? "Replace featured image"
                       : "Upload featured image"}
@@ -961,7 +961,7 @@ export default function BlogPage() {
                           ...(!e.target.checked && { is_featured: false }), // If unpublishing, remove featured
                         })
                       }
-                      className="w-4 h-4 rounded border-gray-300 text-[#155dfc] focus:ring-[#155dfc]"
+                      className="w-4 h-4 rounded border-gray-300 text-[#157f3c] focus:ring-[#157f3c]"
                     />
                     <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">Published</span>
                   </label>
@@ -992,7 +992,7 @@ export default function BlogPage() {
                           ...(e.target.checked && { is_published: true, is_draft: false }), // Featured implies published
                         })
                       }
-                      className="w-4 h-4 rounded border-gray-300 text-[#155dfc] focus:ring-[#155dfc]"
+                      className="w-4 h-4 rounded border-gray-300 text-[#157f3c] focus:ring-[#157f3c]"
                     />
                     <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">Featured</span>
                   </label>

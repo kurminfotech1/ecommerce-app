@@ -30,8 +30,8 @@ const ALL_KEY = "ALL";
 
 const TABS = [
   { key: ALL_KEY,       label: "All",        dotColor: "bg-gray-400",    bgActive: "bg-gray-800 dark:bg-gray-600", textActive: "text-white" },
-  { key: "PLACED",      label: "Placed",     dotColor: "bg-blue-500",    bgActive: "bg-blue-600",                  textActive: "text-white" },
-  { key: "CONFIRMED",   label: "Confirmed",  dotColor: "bg-indigo-500",  bgActive: "bg-indigo-600",                textActive: "text-white" },
+  { key: "PLACED",      label: "Placed",     dotColor: "bg-[#157f3c]",    bgActive: "bg-[#157f3c]",                  textActive: "text-white" },
+  { key: "CONFIRMED",   label: "Confirmed",  dotColor: "bg-emerald-500",  bgActive: "bg-emerald-600",                textActive: "text-white" },
   { key: "PROCESSING",  label: "Processing", dotColor: "bg-amber-500",   bgActive: "bg-amber-500",                 textActive: "text-white" },
   { key: "SHIPPED",     label: "Shipped",    dotColor: "bg-orange-500",  bgActive: "bg-orange-500",                textActive: "text-white" },
   { key: "DELIVERED",   label: "Delivered",  dotColor: "bg-green-500",   bgActive: "bg-green-600",                 textActive: "text-white" },
@@ -39,15 +39,15 @@ const TABS = [
 ];
 
 const STATUS_CONFIG: Record<string, { label: string; icon: string; colorClass: string; bgClass: string; borderClass: string }> = {
-  PLACED:     { label: "Placed",     icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",                                                                          colorClass: "text-blue-600 dark:text-blue-400",   bgClass: "bg-blue-50 dark:bg-blue-500/10",   borderClass: "border-blue-200 dark:border-blue-500/20"   },
-  CONFIRMED:  { label: "Confirmed",  icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",                                                                          colorClass: "text-indigo-600 dark:text-indigo-400", bgClass: "bg-indigo-50 dark:bg-indigo-500/10", borderClass: "border-indigo-200 dark:border-indigo-500/20" },
+  PLACED:     { label: "Placed",     icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",                                                                          colorClass: "text-[#157f3c] dark:text-[#157f3c]",   bgClass: "bg-[#157f3c]/10 dark:bg-[#157f3c]/20",   borderClass: "border-[#157f3c]/20 dark:border-[#157f3c]/30"   },
+  CONFIRMED:  { label: "Confirmed",  icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",                                                                          colorClass: "text-[#157f3c] dark:text-[#157f3c]", bgClass: "bg-[#157f3c]/10 dark:bg-[#157f3c]/20", borderClass: "border-[#157f3c]/20 dark:border-[#157f3c]/30" },
   PROCESSING: { label: "Processing", icon: "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15",          colorClass: "text-amber-600 dark:text-amber-400",  bgClass: "bg-amber-50 dark:bg-amber-500/10",  borderClass: "border-amber-200 dark:border-amber-500/20"  },
   SHIPPED:    { label: "Shipped",    icon: "M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4",                                     colorClass: "text-orange-600 dark:text-orange-400", bgClass: "bg-orange-50 dark:bg-orange-500/10", borderClass: "border-orange-200 dark:border-orange-500/20" },
   DELIVERED:  { label: "Delivered",  icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",                                                                          colorClass: "text-green-600 dark:text-green-400",  bgClass: "bg-green-50 dark:bg-green-500/10",  borderClass: "border-green-200 dark:border-green-500/20"  },
   CANCELLED:  { label: "Cancelled",  icon: "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z",                                                  colorClass: "text-red-600 dark:text-red-400",      bgClass: "bg-red-50 dark:bg-red-500/10",      borderClass: "border-red-200 dark:border-red-500/20"      },
 };
 
-const AVATAR_COLORS = ["bg-violet-500","bg-blue-500","bg-emerald-500","bg-rose-500","bg-amber-500","bg-indigo-500","bg-pink-500","bg-teal-500","bg-orange-500","bg-cyan-500"];
+const AVATAR_COLORS = ["bg-[#157f3c]","bg-blue-500","bg-emerald-500","bg-rose-500","bg-amber-500","bg-indigo-500","bg-pink-500","bg-teal-500","bg-orange-500","bg-cyan-500"];
 
 function getAvatarColor(name: string) { return AVATAR_COLORS[(name.charCodeAt(0) || 0) % AVATAR_COLORS.length]; }
 function getInitials(name: string) {
@@ -137,7 +137,7 @@ function OrderRow({ order }: { order: StatusOrder }) {
       <td className="px-4 py-3.5">
         <span 
           onClick={() => router.push(`/orders?open_order=${order.id}`)}
-          className="text-xs font-bold text-blue-600 dark:text-blue-400 font-mono tracking-tight cursor-pointer hover:underline"
+          className="text-xs font-bold text-[#157f3c] dark:text-[#157f3c]/80 font-mono tracking-tight cursor-pointer hover:underline"
         >
           {order.order_number}
         </span>
@@ -364,7 +364,7 @@ export default function StatusWiseOrder({ data, loading }: StatusWiseOrderProps)
             </svg>
             <input
               ref={datePickerRef}
-              className="w-full sm:w-56 pl-9 pr-8 py-2 rounded-lg border border-gray-300 bg-white text-xs font-medium text-gray-700 outline-none hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 focus:ring-1 focus:ring-blue-500 cursor-pointer shadow-sm transition-colors"
+              className="w-full sm:w-56 pl-9 pr-8 py-2 rounded-lg border border-gray-300 bg-white text-xs font-medium text-gray-700 outline-none hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 focus:ring-1 focus:ring-[#157f3c] cursor-pointer shadow-sm transition-colors"
               placeholder="Select date range"
             />
             {(startDate || endDate) && (

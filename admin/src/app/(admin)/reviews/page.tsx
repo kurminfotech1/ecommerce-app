@@ -40,8 +40,8 @@ const formatDate = (iso: string) => {
 };
 
 const AVATAR_COLORS = [
-  "bg-violet-500", "bg-blue-500", "bg-emerald-500",
-  "bg-amber-500", "bg-rose-500", "bg-purple-500", "bg-teal-500",
+  "bg-[#157f3c]", "bg-blue-500", "bg-emerald-500",
+  "bg-amber-500", "bg-rose-500", "bg-teal-500", "bg-indigo-500",
 ];
 const avatarColor = (name: string) => {
   if (!name) return AVATAR_COLORS[0];
@@ -162,7 +162,7 @@ const RowMenu = ({
           <div className="absolute right-0 top-8 z-20 bg-white rounded-xl border border-gray-100 shadow-xl py-1 min-w-[150px]">
           <button
             onClick={() => { onView(); setOpen(false); }}
-            className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition"
+            className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-[#157f3c]/10 hover:text-[#157f3c] transition"
           >
             <Eye size={13} /> View Full Review
           </button>
@@ -241,7 +241,7 @@ const ReviewDetailModal = ({ review, onClose, onApprove, onReject, canUpdate }: 
           </div>
           <div>
             <p className="font-semibold text-gray-800">{review.product.name}</p>
-            <span className="inline-flex items-center mt-1 gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-purple-50 text-purple-700 border-purple-200">
+            <span className="inline-flex items-center mt-1 gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-[#157f3c]/10 text-[#157f3c] border-[#157f3c]/20">
               <ShoppingBag size={9} />{review.product.category}
             </span>
           </div>
@@ -303,7 +303,7 @@ const ReviewRowDetail = ({ review }: { review: Review }) => (
     <td colSpan={7} className="px-0 pb-1 pt-0">
       <div className="mx-4 mb-3 bg-gray-50 rounded-xl border border-gray-100 p-5 space-y-3">
         <div className="flex items-start gap-3">
-          <MessageSquare size={14} className="text-violet-500 mt-0.5 shrink-0" />
+          <MessageSquare size={14} className="text-[#157f3c] mt-0.5 shrink-0" />
           <div className="flex-1">
             <p className="text-xs font-bold text-gray-700 mb-1">&quot;{review.title}&quot;</p>
             <p className="text-sm text-gray-600 leading-relaxed">{review.body}</p>
@@ -419,14 +419,14 @@ export default function ReviewsPage() {
                   placeholder="Search by customer, product, title..."
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                  className="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-violet-400 w-64 transition"
+                  className="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#157f3c]/50 w-64 transition"
                 />
               </div>
               {/* Status filter */}
               <select
                 value={statusFilter}
                 onChange={(e) => handleFilter(setStatusFilter)(e.target.value)}
-                className="border border-gray-200 bg-white text-sm px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
+                className="border border-gray-200 bg-white text-sm px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#157f3c]/50 transition"
               >
                 {ALL_STATUSES.map((s) => (
                   <option key={s} value={s}>{s === "All" ? "All Statuses" : s}</option>
@@ -436,7 +436,7 @@ export default function ReviewsPage() {
               <select
                 value={ratingFilter}
                 onChange={(e) => handleFilter(setRatingFilter)(e.target.value)}
-                className="border border-gray-200 bg-white text-sm px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
+                className="border border-gray-200 bg-white text-sm px-3 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#157f3c]/50 transition"
               >
                 {ALL_RATINGS.map((r) => (
                   <option key={r} value={r}>{r === "All" ? "All Ratings" : `${r} Star${r === "1" ? "" : "s"}`}</option>
@@ -454,7 +454,7 @@ export default function ReviewsPage() {
                 value={String(stats.total)}
                 sub="All time"
                 icon={<MessageSquare size={18} />}
-                gradient="bg-gradient-to-br from-violet-600 to-violet-800"
+                gradient="bg-gradient-to-br from-[#157f3c] to-[#126631]"
                 iconBg="bg-white/20"
               />
               <StatCard
@@ -504,8 +504,8 @@ export default function ReviewsPage() {
           {/* ── Table ── */}
           {reviews.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl border border-dashed border-gray-200">
-              <div className="w-16 h-16 bg-violet-50 rounded-2xl flex items-center justify-center mb-4">
-                <MessageSquare size={28} className="text-violet-400" />
+              <div className="w-16 h-16 bg-[#157f3c]/10 rounded-2xl flex items-center justify-center mb-4">
+                <MessageSquare size={28} className="text-[#157f3c]" />
               </div>
               <p className="text-lg font-semibold text-gray-700 mb-1">No reviews found</p>
               <p className="text-sm text-gray-400">Try adjusting your search or filters.</p>
@@ -531,7 +531,7 @@ export default function ReviewsPage() {
                       const isExpanded = expandedRows.has(review.id);
                       return (
                         <React.Fragment key={review.id}>
-                          <tr className="hover:bg-violet-50/30 transition group">
+                          <tr className="hover:bg-[#157f3c]/5 transition group">
                             {/* Number */}
                             <td className="px-4 py-3">
                               <span className="font-mono text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded-lg">
@@ -675,7 +675,7 @@ export default function ReviewsPage() {
                     key={pg}
                     onClick={() => setPage(pg)}
                     className={`px-3 py-1.5 text-sm border rounded-lg transition ${pg === page
-                        ? "bg-violet-600 border-violet-600 text-white font-semibold"
+                        ? "bg-[#157f3c] border-[#157f3c] text-white font-semibold"
                         : "border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
                       }`}
                   >

@@ -23,7 +23,8 @@ import * as Yup from "yup";
 
 const Badge = ({ children, color = "gray" }: { children: React.ReactNode; color?: string }) => {
   const colors: Record<string, string> = {
-    dark: "bg-[#1D4ED8] text-white border-[#1D4ED8]",
+    dark: "bg-[#157f3c] text-white border-[#157f3c]",
+    green: "bg-[#157f3c]/10 text-[#157f3c] border-[#157f3c]/20",
   };
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${colors[color] || colors.dark}`}>
@@ -234,7 +235,7 @@ export default function UsersPage() {
                 background: "#fff",
                 transition: "border-color .2s",
               }}
-              onFocus={e => (e.target.style.borderColor = "#818cf8")}
+               onFocus={e => (e.target.style.borderColor = "#157f3c")}
               onBlur={e => (e.target.style.borderColor = "#e5e7eb")}
               />
             </div>
@@ -276,14 +277,14 @@ export default function UsersPage() {
                     </tr>
                   ) : null}
                   {filteredUsers.map((u: Admin) => (
-                    <tr key={u.id} className="hover:bg-violet-50/30 transition group">
+                    <tr key={u.id} className="hover:bg-[#157f3c]/5 transition group">
                       <td className="px-4 py-3 font-semibold text-gray-800">
                         {u.full_name || "—"}
                       </td>
                       <td className="px-4 py-3 text-gray-600">{u.email}</td>
                       <td className="px-4 py-3 text-gray-600">{u.phone || "—"}</td>
                       <td className="px-4 py-3">
-                        <Badge color="purple">
+                        <Badge color="green">
                           {u.role}
                         </Badge>
                       </td>
@@ -349,9 +350,9 @@ export default function UsersPage() {
                     style={{
                       width: "100%", paddingLeft: 12, paddingRight: 12, paddingTop: 8, paddingBottom: 8, fontSize: ".82rem",
                       border: "1px solid #e5e7eb", borderRadius: 10, outline: "none", background: "#fff", transition: "border-color .2s",
-                      borderColor: formik.touched.first_name && formik.errors.first_name ? "red" : "#e5e7eb"
+                       borderColor: formik.touched.first_name && formik.errors.first_name ? "red" : "#e5e7eb"
                     }}
-                    onFocus={e => (e.target.style.borderColor = "#818cf8")}
+                    onFocus={e => (e.target.style.borderColor = "#157f3c")}
                     onBlur={formik.handleBlur}
                   />
                   {formik.touched.first_name && formik.errors.first_name ? (
@@ -367,9 +368,9 @@ export default function UsersPage() {
                     style={{
                       width: "100%", paddingLeft: 12, paddingRight: 12, paddingTop: 8, paddingBottom: 8, fontSize: ".82rem",
                       border: "1px solid #e5e7eb", borderRadius: 10, outline: "none", background: "#fff", transition: "border-color .2s",
-                      borderColor: formik.touched.last_name && formik.errors.last_name ? "red" : "#e5e7eb"
+                       borderColor: formik.touched.last_name && formik.errors.last_name ? "red" : "#e5e7eb"
                     }}
-                    onFocus={e => (e.target.style.borderColor = "#818cf8")}
+                    onFocus={e => (e.target.style.borderColor = "#157f3c")}
                     onBlur={formik.handleBlur}
                   />
                   {formik.touched.last_name && formik.errors.last_name ? (
@@ -389,9 +390,9 @@ export default function UsersPage() {
                       width: "100%", paddingLeft: 12, paddingRight: 12, paddingTop: 8, paddingBottom: 8, fontSize: ".82rem",
                       border: "1px solid #e5e7eb", borderRadius: 10, outline: "none", background: "#fff", transition: "border-color .2s",
                       opacity: editId ? 0.5 : 1, cursor: editId ? "not-allowed" : "text",
-                      borderColor: formik.touched.email && formik.errors.email ? "red" : "#e5e7eb"
+                       borderColor: formik.touched.email && formik.errors.email ? "red" : "#e5e7eb"
                     }}
-                    onFocus={e => !editId && (e.target.style.borderColor = "#818cf8")}
+                    onFocus={e => !editId && (e.target.style.borderColor = "#157f3c")}
                     onBlur={formik.handleBlur}
                   />
                   {formik.touched.email && formik.errors.email ? (
@@ -413,9 +414,9 @@ export default function UsersPage() {
                     style={{
                       width: "100%", paddingLeft: 12, paddingRight: 12, paddingTop: 8, paddingBottom: 8, fontSize: ".82rem",
                       border: "1px solid #e5e7eb", borderRadius: 10, outline: "none", background: "#fff", transition: "border-color .2s",
-                      borderColor: formik.touched.phone && formik.errors.phone ? "red" : "#e5e7eb"
+                       borderColor: formik.touched.phone && formik.errors.phone ? "red" : "#e5e7eb"
                     }}
-                    onFocus={e => (e.target.style.borderColor = "#818cf8")}
+                    onFocus={e => (e.target.style.borderColor = "#157f3c")}
                     onBlur={formik.handleBlur}
                   />
                   {formik.touched.phone && formik.errors.phone ? (
@@ -434,9 +435,9 @@ export default function UsersPage() {
                       style={{
                         width: "100%", paddingLeft: 12, paddingRight: 12, paddingTop: 8, paddingBottom: 8, fontSize: ".82rem",
                         border: "1px solid #e5e7eb", borderRadius: 10, outline: "none", background: "#fff", transition: "border-color .2s",
-                        borderColor: formik.touched.password && formik.errors.password ? "red" : "#e5e7eb"
+                         borderColor: formik.touched.password && formik.errors.password ? "red" : "#e5e7eb"
                       }}
-                      onFocus={e => (e.target.style.borderColor = "#818cf8")}
+                      onFocus={e => (e.target.style.borderColor = "#157f3c")}
                       onBlur={formik.handleBlur}
                     />
                     {formik.touched.password && formik.errors.password ? (

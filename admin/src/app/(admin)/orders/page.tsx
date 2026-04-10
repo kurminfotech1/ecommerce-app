@@ -149,7 +149,7 @@ const initials = (name: string) =>
     .slice(0, 2);
 
 const AVATAR_COLORS = [
-  "bg-blue-500", "bg-[#155dfc]", "bg-emerald-500",
+  "bg-blue-500", "bg-[#157f3c]", "bg-emerald-500",
   "bg-amber-500", "bg-rose-500", "bg-purple-500", "bg-teal-500",
 ];
 const avatarColor = (name: string) =>
@@ -622,7 +622,7 @@ const CreateShipmentPanel = ({
           <button
             onClick={fetchCouriers}
             disabled={loading}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50 font-medium"
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-[#157f3c] hover:bg-[#126631] text-white rounded-lg transition disabled:opacity-50 font-medium"
           >
             {loading ? <Loader2 size={12} className="animate-spin" /> : <Truck size={12} />}
             Check Couriers
@@ -644,8 +644,8 @@ const CreateShipmentPanel = ({
                 key={c.courier_id}
                 className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition ${
                   selectedCourierId === c.courier_id
-                    ? "bg-blue-50 border-blue-400"
-                    : "bg-white border-gray-200 hover:border-blue-200"
+                    ? "bg-[#157f3c]/10 border-[#157f3c]"
+                    : "bg-white border-gray-200 hover:border-[#157f3c]/50"
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -655,7 +655,7 @@ const CreateShipmentPanel = ({
                     value={c.courier_id}
                     checked={selectedCourierId === c.courier_id}
                     onChange={() => setSelectedCourierId(c.courier_id)}
-                    className="accent-blue-600"
+                    className="accent-[#157f3c]"
                   />
                   <div>
                     <p className="text-xs font-semibold text-gray-800">
@@ -909,21 +909,35 @@ const ShippingManagementPanel = ({
 interface RowMenuProps {
   order: Order;
   onDelete: (o: Order) => void;
-  onView: (o: Order) => void;
+  onView: (o: Order, tab?: "details" | "shipping") => void;
   canDelete: boolean;
   logoUrl?: string | null;
 }
 const RowMenu = ({ order, onDelete, onView, canDelete, logoUrl }: RowMenuProps) => {
   const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState({ top: 0, right: 0 });
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [pos, setPos] = useState({ top: 0, bottom: 0, right: 0 });
   const btnRef = React.useRef<HTMLButtonElement>(null);
 
   const handleOpen = () => {
     if (!open && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect();
+      const menuWidth = 180;
+      
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      
+      // Flip if space below is less than ~200px and there's more space above
+      const flipped = spaceBelow < 200 && spaceAbove > spaceBelow;
+      setIsFlipped(flipped);
+      
+      let right = window.innerWidth - rect.right;
+      right = Math.max(10, Math.min(window.innerWidth - menuWidth - 10, right));
+
       setPos({
-        top: rect.bottom + 4,
-        right: window.innerWidth - rect.right,
+        top: rect.bottom + 2,
+        bottom: window.innerHeight - rect.top + 2,
+        right: right
       });
     }
     setOpen((p) => !p);
@@ -943,27 +957,31 @@ const RowMenu = ({ order, onDelete, onView, canDelete, logoUrl }: RowMenuProps) 
         <>
           <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.stopPropagation(); setOpen(false); }} />
           <div
-            style={{ top: pos.top, right: pos.right }}
-            className="fixed z-[9999] bg-white rounded-xl border border-gray-100 shadow-2xl py-1 min-w-[180px]"
+            style={{ 
+              top: isFlipped ? undefined : pos.top, 
+              bottom: isFlipped ? pos.bottom : undefined,
+              right: pos.right 
+            }}
+            className="fixed z-[9999] bg-white rounded-xl border border-gray-100 shadow-2xl py-1 min-w-[180px] max-h-[calc(100vh-20px)] overflow-y-auto"
           >
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); onView(order); setOpen(false); }}
-              className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition"
+              onClick={(e) => { e.stopPropagation(); onView(order, "details"); setOpen(false); }}
+              className="flex items-center gap-2 w-full px-4 py-2 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition"
             >
               <Eye size={13} /> View Details
             </button>
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); onView(order); setOpen(false); }}
-              className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition"
+              onClick={(e) => { e.stopPropagation(); onView(order, "shipping"); setOpen(false); }}
+              className="flex items-center gap-2 w-full px-4 py-2 text-xs font-medium text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition"
             >
               <Truck size={13} /> Manage Shipping
             </button>
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); generateInvoice(order, logoUrl); setOpen(false); }}
-              className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition"
+              className="flex items-center gap-2 w-full px-4 py-2 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition"
             >
               <Printer size={13} /> Generate Invoice
             </button>
@@ -973,7 +991,7 @@ const RowMenu = ({ order, onDelete, onView, canDelete, logoUrl }: RowMenuProps) 
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onDelete(order); setOpen(false); }}
-                  className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50 transition"
+                  className="flex items-center gap-2 w-full px-4 py-2 text-xs font-medium text-red-600 hover:bg-red-50 transition"
                 >
                   <Trash2 size={13} /> Delete Order
                 </button>
@@ -988,10 +1006,22 @@ const RowMenu = ({ order, onDelete, onView, canDelete, logoUrl }: RowMenuProps) 
 };
 
 // ── Order Detail Modal ─────────────────────────────────────────────
-const OrderDetailModal = ({ order: initialOrder, onClose, onOrderUpdate, logoUrl }: { order: Order; onClose: () => void; onOrderUpdate?: (id: string, updates: Partial<Order>) => void, logoUrl?: string | null }) => {
+const OrderDetailModal = ({ 
+  order: initialOrder, 
+  onClose, 
+  onOrderUpdate, 
+  logoUrl,
+  initialTab = "details"
+}: { 
+    order: Order; 
+    onClose: () => void; 
+    onOrderUpdate?: (id: string, updates: Partial<Order>) => void, 
+    logoUrl?: string | null,
+    initialTab?: "details" | "shipping"
+}) => {
   const [order, setOrderState] = React.useState<Order>(initialOrder);
   const { date, time } = formatDate(order.created_at);
-  const [activeTab, setActiveTab] = React.useState<"details" | "shipping">("details");
+  const [activeTab, setActiveTab] = React.useState<"details" | "shipping">(initialTab);
 
   const handleShippingUpdate = (updates: Partial<Order>) => {
     setOrderState(prev => ({ ...prev, ...updates }));
@@ -1008,7 +1038,7 @@ const OrderDetailModal = ({ order: initialOrder, onClose, onOrderUpdate, logoUrl
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10 gap-3">
           <div>
             <h2 className="text-lg font-bold text-gray-900">Order #{order.order_number}</h2>
             <p className="text-xs text-gray-400 mt-0.5">Placed on {date} at {time}</p>
@@ -1062,8 +1092,8 @@ const OrderDetailModal = ({ order: initialOrder, onClose, onOrderUpdate, logoUrl
               </div>
 
               {/* Items */}
-              <div className="rounded-xl border border-gray-100 overflow-hidden">
-                <table className="w-full text-sm">
+              <div className="rounded-xl border border-gray-100 overflow-x-auto">
+                <table className="w-full text-sm min-w-[500px]">
                   <thead>
                     <tr className="bg-[#157f3c] text-xs font-semibold text-white uppercase tracking-wide border-b border-[#157f3c]">
                       <th className="px-4 py-3 text-left">Product</th>
@@ -1303,7 +1333,7 @@ export default function OrdersPage() {
   const [deleteOrder, setDeleteOrder] = useState<Order | null>(null);
 
   // ── View detail modal ──────────────────────────────────────────
-  const [viewOrder, setViewOrder] = useState<Order | null>(null);
+  const [viewOrder, setViewOrder] = useState<{ order: Order, tab: "details" | "shipping" } | null>(null);
 
   // ── Stats (always from full unfiltered list) ───────────────────
   const stats = React.useMemo(() => {
@@ -1437,7 +1467,7 @@ export default function OrdersPage() {
               value={formatCurrency(stats.totalIncome)}
               sub={`From ${stats.delivered} delivered orders`}
               icon={<DollarSign size={18} />}
-              gradient="bg-gradient-to-br from-[#155dfc] to-[#1246cc]"
+              gradient="bg-gradient-to-br from-[#157f3c] to-[#1246cc]"
               iconBg="bg-white/20"
             />
             <StatCard
@@ -1737,7 +1767,7 @@ export default function OrdersPage() {
                               <RowMenu
                                 order={order}
                                 onDelete={(o) => setDeleteOrder(o)}
-                                onView={(o) => setViewOrder(o)}
+                                onView={(o, tab) => setViewOrder({ order: o, tab: tab ?? "details" })}
                                 canDelete={canDelete}
                                 logoUrl={logoData?.light_url}
                               />
@@ -1834,12 +1864,13 @@ export default function OrdersPage() {
       {/* ── Order Detail Modal ── */}
       {viewOrder && (
         <OrderDetailModal
-          order={viewOrder}
+          order={viewOrder.order}
+          initialTab={viewOrder.tab}
           onClose={() => setViewOrder(null)}
           onOrderUpdate={(id, updates) => {
             setOrders(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o));
             setAllOrders(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o));
-            setViewOrder(prev => prev && prev.id === id ? { ...prev, ...updates } : prev);
+            setViewOrder(prev => prev && prev.order.id === id ? { ...prev, order: { ...prev.order, ...updates } } : prev);
           }}
           logoUrl={logoData?.light_url}
         />
