@@ -1246,7 +1246,7 @@ export default function OrdersPage() {
       if (openOrderId) {
         const orderToOpen = allOrders.find((o) => o.id === openOrderId);
         if (orderToOpen) {
-          setViewOrder(orderToOpen);
+          setViewOrder({ order: orderToOpen, tab: "details" });
           hasAutoOpened.current = true;
           // Clean the URL so reload or re-renders don't keep opening the modal
           const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
