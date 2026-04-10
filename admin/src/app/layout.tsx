@@ -10,6 +10,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Provider } from 'react-redux';
 import { store } from '@/redux/store';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -51,6 +52,7 @@ export default function RootLayout({
             <SidebarProvider>{children}</SidebarProvider>
           </ThemeProvider>
         </Provider>
+        <SpeedInsights />
       </body>
     </html>
   );
